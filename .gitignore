@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+
+# cache files
+.DS_Store
+__pycache__
+.nvimlog
+.vscode
+
