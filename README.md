@@ -3,15 +3,13 @@
 
 ## 安装
    ```sh
-   mkdir build
-   cd build
-   cmake ..
-   make
+chmod +x scripts/build.sh
+./scripts/build.sh
    ```
 
 ## 使用
    ```sh
-   ./iad
+   ./build/iad
    ```
 
 ## 贡献
