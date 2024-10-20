@@ -78,8 +78,12 @@ std::string planToJson(const std::vector<cv::Point>& plan) {
 }
 
 int main() {
-    // 读取输入JSON
-    std::string inputJson = ""; // 从文件或命令行参数读取
+    // 从标准输入读取 JSON 数据
+    std::string inputJson;
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        inputJson += line + "\n";
+    }
     
     // 解析房间数据和规划参数
     Room room = parseRoomFromJson(inputJson);
