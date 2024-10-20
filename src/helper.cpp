@@ -2,7 +2,7 @@
 // Created by Wang Tai on 2024/10/20.
 //
 
-#include "../include/helper.h"
+#include "helper.h"
 
 void drawLines(const std::vector<JLine>& lines, cv::Mat& image) {
     for (const auto& line : lines) {
