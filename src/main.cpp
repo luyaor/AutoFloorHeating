@@ -42,36 +42,55 @@ std::vector<JLine> parseDataFromJson(const std::string& jsonData) {
     return lines;
 }
 
+// 定义房间结构
+struct Room {
+    std::vector<cv::Point> outline;
+    std::vector<cv::Point> obstacles;
+};
+
+// 定义管线规划参数
+struct PlanningParams {
+    double pipeWidth;
+    bool isSnakePattern; // true for snake pattern, false for parallel
+    double minDistance;  // minimum distance between pipes
+};
+
+// 解析输入JSON
+Room parseRoomFromJson(const std::string& jsonData) {
+    // ... 实现从JSON解析房间数据的逻辑
+}
+
+// 解析规划参数
+PlanningParams parsePlanningParams(const std::string& jsonData) {
+    // ... 实现从JSON解析规划参数的逻辑
+}
+
+// 生成管线规划
+std::vector<cv::Point> generatePipePlan(const Room& room, const PlanningParams& params) {
+    std::vector<cv::Point> pipePlan;
+    // ... 实现管线规划算法
+    return pipePlan;
+}
+
+// 将规划结果转换为JSON
+std::string planToJson(const std::vector<cv::Point>& plan) {
+    // ... 实现将规划结果转换为JSON的逻辑
+}
+
 int main() {
-    // Create an empty white image
-    int width = 1000, height = 1000;
-    cv::Mat image = cv::Mat::zeros(height, width, CV_8UC3);
-    image = cv::Scalar(255, 255, 255); // Set the background to white
-
-    // Assume we have the input JSON data as a string
-    std::string jsonData = R"({
-        "lines": [
-            {
-                "StartPoint": {"X": 100, "Y": 200, "Z": 0},
-                "EndPoint": {"X": 300, "Y": 400, "Z": 0}
-            },
-            {
-                "StartPoint": {"X": 400, "Y": 500, "Z": 0},
-                "EndPoint": {"X": 700, "Y": 300, "Z": 0}
-            }
-        ]
-    })";
-
-    // Parse the JSON data
-    std::vector<JLine> lines = parseDataFromJson(jsonData);
-
-    // Draw lines on the image
-    drawLines(lines, image);
-
-    // Save the image to file
-    cv::imwrite("output.png", image);
-
-    std::cout << "Image saved to output.png" << std::endl;
-
+    // 读取输入JSON
+    std::string inputJson = ""; // 从文件或命令行参数读取
+    
+    // 解析房间数据和规划参数
+    Room room = parseRoomFromJson(inputJson);
+    PlanningParams params = parsePlanningParams(inputJson);
+    
+    // 生成管线规划
+    std::vector<cv::Point> pipePlan = generatePipePlan(room, params);
+    
+    // 将结果转换为JSON并输出
+    std::string outputJson = planToJson(pipePlan);
+    std::cout << outputJson << std::endl;
+    
     return 0;
 }
