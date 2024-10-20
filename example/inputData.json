@@ -1,0 +1,515 @@
+{
+	"AssistData": {
+		"AssistCollector": [
+			{
+				"Id": "1",
+				"Loc": {
+					"x": 10800.0,
+					"y": 8700.0,
+					"z": 0.0
+				},
+				"LevelName": 1,
+				"Boundary": []
+		}, {
+			"Id": "1",
+			"Loc": {
+				"x": 10800.0,
+				"y": 8700.0,
+				"z": 0.0
+			},
+			"LevelName": 1,
+			"Boundary": [
+				{
+					"Borders": [
+						{
+							"StartPoint": {
+								"x": 16900.0,
+								"y": -100.0,
+								"z": 0.0
+							},
+							"EndPoint": {
+								"x": 21100.0,
+								"y": -100.0,
+								"z": 0.0
+							},
+							"ColorIndex": 0,
+							"CurveType": 0
+						}, {
+							"StartPoint": {
+								"x": 21100.0,
+								"y": -100.0,
+								"z": 0.0
+							},
+							"EndPoint": {
+								"x": 21100.0,
+								"y": -1550.0,
+								"z": 0.0
+							},
+							"ColorIndex": 0,
+							"CurveType": 0
+						}, {
+							"StartPoint": {
+								"x": 21100.0,
+								"y": -1550.0,
+								"z": 0.0
+							},
+							"EndPoint": {
+								"x": 16900.0,
+								"y": -1550.0,
+								"z": 0.0
+							},
+							"ColorIndex": 0,
+							"CurveType": 0
+						}, {
+							"StartPoint": {
+								"x": 16900.0,
+								"y": -1550.0,
+								"z": 0.0
+							},
+							"EndPoint": {
+								"x": 16900.0,
+								"y": -100.0,
+								"z": 0.0
+							},
+							"ColorIndex": 0,
+							"CurveType": 0
+						}
+					],
+					"Offset": 0.0
+				}
+			]
+		}, {
+			"Id": "2",
+			"Loc": {
+				"x": 10800.0,
+				"y": 8700.0,
+				"z": 0.0
+			},
+			"LevelName": 2,
+			"Boundary": []
+	}, {
+		"Id": "3",
+		"Loc": {
+			"x": 10800.0,
+			"y": 8700.0,
+			"z": 0.0
+		},
+		"LevelName": 2,
+		"Boundary": []
+}, {
+	"Id": "4",
+	"Loc": {
+		"x": 10800.0,
+		"y": 8700.0,
+		"z": 0.0
+	},
+	"LevelName": "3~24",
+	"Boundary": []
+}
+]
+},
+"WebData": {
+	"ImbalanceRatio": 15,
+	"JointPipeSpan": 100,
+	"DenseAreaWallSpan": 2000,
+	"DenseAreaSpanLess": 20,
+	"LoopSpanSet": [
+		{
+			"TypeName": "回折型盘管",
+			"MinSpan": 100,
+			"MaxSpan": 300,
+			"Curvity": 100
+		}, {
+			"TypeName": "平行型盘管",
+			"MinSpan": 150,
+			"MaxSpan": 300,
+			"Curvity": 75
+		}, {
+			"TypeName": "回折型中心环",
+			"MinSpan": 150,
+			"MaxSpan": 400,
+			"Curvity": 75
+		}, {
+			"TypeName": "相邻环路之间",
+			"MinSpan": 100,
+			"MaxSpan": 300,
+			"Curvity": 0
+		}
+	],
+	"ObsSpanSet": [
+		{
+			"ObsName": "外墙",
+			"MinSpan": 100,
+			"MaxSpan": 200
+		}, {
+			"ObsName": "内墙",
+			"MinSpan": 100,
+			"MaxSpan": 200
+		}, {
+			"ObsName": "柱",
+			"MinSpan": 50,
+			"MaxSpan": 100
+		}, {
+			"ObsName": "洁具",
+			"MinSpan": 50,
+			"MaxSpan": 100
+		}
+	],
+	"DeliverySpanSet": [
+		{
+			"ObsName": "入户管距墙",
+			"MinSpan": 100,
+			"MaxSpan": 200
+		}, {
+			"ObsName": "入户管距柱",
+			"MinSpan": 50,
+			"MaxSpan": 100
+		}, {
+			"ObsName": "入户管间隔",
+			"MinSpan": 50,
+			"MaxSpan": 100
+		}, {
+			"ObsName": "入户管间隔地暖管",
+			"MinSpan": 50,
+			"MaxSpan": 200
+		}
+	],
+	"PipeSpanSet": [
+		{
+			"LevelDesc": "中间楼层",
+			"FuncName": "会客类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 1,
+			"PipeSpan": 275.0
+		}, {
+			"LevelDesc": "中间楼层",
+			"FuncName": "会客类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 2,
+			"PipeSpan": 250.0
+		}, {
+			"LevelDesc": "中间楼层",
+			"FuncName": "会客类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 3,
+			"PipeSpan": 225.0
+		}, {
+			"LevelDesc": "中间楼层",
+			"FuncName": "休息类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 1,
+			"PipeSpan": 275.0
+		}, {
+			"LevelDesc": "中间楼层",
+			"FuncName": "休息类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 2,
+			"PipeSpan": 250.0
+		}, {
+			"LevelDesc": "中间楼层",
+			"FuncName": "休息类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 3,
+			"PipeSpan": 225.0
+		}, {
+			"LevelDesc": "中间楼层",
+			"FuncName": "会客类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 1,
+			"PipeSpan": 250.0
+		}, {
+			"LevelDesc": "中间楼层",
+			"FuncName": "会客类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 2,
+			"PipeSpan": 225.0
+		}, {
+			"LevelDesc": "中间楼层",
+			"FuncName": "会客类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 3,
+			"PipeSpan": 200.0
+		}, {
+			"LevelDesc": "中间楼层",
+			"FuncName": "休息类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 1,
+			"PipeSpan": 250.0
+		}, {
+			"LevelDesc": "中间楼层",
+			"FuncName": "休息类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 2,
+			"PipeSpan": 225.0
+		}, {
+			"LevelDesc": "中间楼层",
+			"FuncName": "休息类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 3,
+			"PipeSpan": 200.0
+		}, {
+			"LevelDesc": "首层",
+			"FuncName": "会客类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 1,
+			"PipeSpan": 275.0
+		}, {
+			"LevelDesc": "首层",
+			"FuncName": "会客类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 2,
+			"PipeSpan": 250.0
+		}, {
+			"LevelDesc": "首层",
+			"FuncName": "会客类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 3,
+			"PipeSpan": 225.0
+		}, {
+			"LevelDesc": "首层",
+			"FuncName": "休息类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 1,
+			"PipeSpan": 275.0
+		}, {
+			"LevelDesc": "首层",
+			"FuncName": "休息类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 2,
+			"PipeSpan": 250.0
+		}, {
+			"LevelDesc": "首层",
+			"FuncName": "休息类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 3,
+			"PipeSpan": 225.0
+		}, {
+			"LevelDesc": "首层",
+			"FuncName": "会客类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 1,
+			"PipeSpan": 250.0
+		}, {
+			"LevelDesc": "首层",
+			"FuncName": "会客类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 2,
+			"PipeSpan": 225.0
+		}, {
+			"LevelDesc": "首层",
+			"FuncName": "会客类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 3,
+			"PipeSpan": 200.0
+		}, {
+			"LevelDesc": "首层",
+			"FuncName": "休息类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 1,
+			"PipeSpan": 250.0
+		}, {
+			"LevelDesc": "首层",
+			"FuncName": "休息类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 2,
+			"PipeSpan": 225.0
+		}, {
+			"LevelDesc": "首层",
+			"FuncName": "休息类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 3,
+			"PipeSpan": 200.0
+		}, {
+			"LevelDesc": "顶层",
+			"FuncName": "会客类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 1,
+			"PipeSpan": 275.0
+		}, {
+			"LevelDesc": "顶层",
+			"FuncName": "会客类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 2,
+			"PipeSpan": 250.0
+		}, {
+			"LevelDesc": "顶层",
+			"FuncName": "会客类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 3,
+			"PipeSpan": 225.0
+		}, {
+			"LevelDesc": "顶层",
+			"FuncName": "休息类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 1,
+			"PipeSpan": 275.0
+		}, {
+			"LevelDesc": "顶层",
+			"FuncName": "休息类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 2,
+			"PipeSpan": 250.0
+		}, {
+			"LevelDesc": "顶层",
+			"FuncName": "休息类",
+			"Directions": [
+				"南向", "东南向", "西南向"
+			],
+			"ExterWalls": 3,
+			"PipeSpan": 225.0
+		}, {
+			"LevelDesc": "顶层",
+			"FuncName": "会客类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 1,
+			"PipeSpan": 250.0
+		}, {
+			"LevelDesc": "顶层",
+			"FuncName": "会客类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 2,
+			"PipeSpan": 225.0
+		}, {
+			"LevelDesc": "顶层",
+			"FuncName": "会客类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 3,
+			"PipeSpan": 200.0
+		}, {
+			"LevelDesc": "顶层",
+			"FuncName": "休息类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 1,
+			"PipeSpan": 250.0
+		}, {
+			"LevelDesc": "顶层",
+			"FuncName": "休息类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 2,
+			"PipeSpan": 225.0
+		}, {
+			"LevelDesc": "顶层",
+			"FuncName": "休息类",
+			"Directions": [
+				"北向", "东北向", "西北向"
+			],
+			"ExterWalls": 3,
+			"PipeSpan": 200.0
+		}
+	],
+	"ElasticSpanSet": [
+		{
+			"FuncName": "公区类",
+			"PriorSpan": 250.0,
+			"MinSpan": 100.0,
+			"MaxSpan": 300.0
+		}, {
+			"FuncName": "卫生间类",
+			"PriorSpan": 150.0,
+			"MinSpan": 100.0,
+			"MaxSpan": 250.0
+		}, {
+			"FuncName": "餐厨类",
+			"PriorSpan": 250.0,
+			"MinSpan": 200.0,
+			"MaxSpan": 300.0
+		}
+	],
+	"FuncRooms": [
+		{
+			"FuncName": "会客类",
+			"RoomNames": [
+				"客厅", "影音室", "娱乐间", "棋牌室", "封闭阳台"
+			]
+		}, {
+			"FuncName": "休息类",
+			"RoomNames": [
+				"卧室", "书房", "保姆间", "老人房", "衣帽间"
+			]
+		}, {
+			"FuncName": "卫生间类",
+			"RoomNames": [
+				"卫生间", "盥洗室", "淋浴间"
+			]
+		}, {
+			"FuncName": "公区类",
+			"RoomNames": [
+				"走道", "过道"
+			]
+		}, {
+			"FuncName": "餐厨类",
+			"RoomNames": [
+				"厨房", "餐厅"
+			]
+		}
+	]
+}
+}
