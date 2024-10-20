@@ -14,7 +14,7 @@ chmod +x scripts/build.sh
 
 准备一个包含房间平面图数据和规划参数的 JSON 文件，然后运行：
    ```sh
-./build/iad_planner < input.json > output.json
+./build/iad < input.json > output.json
    ```
 
 ## 贡献
