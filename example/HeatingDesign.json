@@ -1,0 +1,13 @@
+{
+	"Heating": {
+		"HeatingCoil": [
+			{
+				"LevelName": "1F",
+				"LevelNo": 1,
+				"LevelDesc": "首层",
+				"HouseName": "c1c37dc1a40f4302b6552a23cd1fd557"
+			}
+		],
+		"Risers": []
+	}
+}
