@@ -27,10 +27,10 @@ struct Construction {
 struct Floor {
     std::string Name;
     std::string Num;
-    std::string AllFloor;
     double LevelHeight;
-    double LevelElevation;
     Construction Construction;
+    // std::string AllFloor;
+    // double LevelElevation;
 };
 
 struct ARDesign {
