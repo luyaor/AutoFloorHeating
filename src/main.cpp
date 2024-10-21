@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
     CombinedData combinedData = parseJsonData(arDesignJson, inputDataJson);
     
     // 生成管线规划
-    std::vector<cv::Point> pipePlan = generatePipePlan(combinedData);
+    HeatingDesign pipePlan = generatePipePlan(combinedData);
     
     // 将结果转换为JSON并输出
     std::string outputJson = planToJson(pipePlan);

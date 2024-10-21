@@ -3,13 +3,105 @@
 //
 
 #include "helper.h"
+#include "pipe_layout_generator.h"
 
 
 
-std::string planToJson(const std::vector<cv::Point>& plan) {
-    // 实现将规划结果转换为JSON的逻辑
+std::string planToJson(const HeatingDesign& plan) {
     Json::Value root;
-    // ... 填充 root
+    // Convert HeatingDesign to JSON
+    for (const auto& heatingCoil : plan.HeatingCoils) {
+        Json::Value heatingCoilJson;
+        heatingCoilJson["LevelName"] = heatingCoil.LevelName;
+        heatingCoilJson["LevelNo"] = heatingCoil.LevelNo;
+        heatingCoilJson["LevelDesc"] = heatingCoil.LevelDesc;
+        heatingCoilJson["HouseName"] = heatingCoil.HouseName;
+
+        // Convert Expansions
+        Json::Value expansionsJson(Json::arrayValue);
+        for (const auto& expansion : heatingCoil.Expansions) {
+            Json::Value expansionJson;
+            expansionJson["StartPoint"]["x"] = expansion.StartPoint.x;
+            expansionJson["StartPoint"]["y"] = expansion.StartPoint.y;
+            expansionJson["StartPoint"]["z"] = expansion.StartPoint.z;
+            expansionJson["EndPoint"]["x"] = expansion.EndPoint.x;
+            expansionJson["EndPoint"]["y"] = expansion.EndPoint.y;
+            expansionJson["EndPoint"]["z"] = expansion.EndPoint.z;
+            expansionJson["ColorIndex"] = expansion.ColorIndex;
+            expansionJson["CurveType"] = expansion.CurveType;
+            expansionsJson.append(expansionJson);
+        }
+        heatingCoilJson["Expansions"] = expansionsJson;
+
+        // Convert CollectorCoils
+        Json::Value collectorCoilsJson(Json::arrayValue);
+        for (const auto& collectorCoil : heatingCoil.CollectorCoils) {
+            Json::Value collectorCoilJson;
+            collectorCoilJson["CollectorName"] = collectorCoil.CollectorName;
+            collectorCoilJson["Loops"] = collectorCoil.Loops;
+
+            // Convert CoilLoops
+            Json::Value coilLoopsJson(Json::arrayValue);
+            for (const auto& coilLoop : collectorCoil.CoilLoops) {
+                Json::Value coilLoopJson;
+                coilLoopJson["Length"] = coilLoop.Length;
+                coilLoopJson["Curvity"] = coilLoop.Curvity;
+
+                // Convert Areas
+                Json::Value areasJson(Json::arrayValue);
+                for (const auto& area : coilLoop.Areas) {
+                    Json::Value areaJson;
+                    areaJson["AreaName"] = area.AreaName;
+                    areasJson.append(areaJson);
+                }
+                coilLoopJson["Areas"] = areasJson;
+
+                // Convert Path
+                Json::Value pathJson(Json::arrayValue);
+                for (const auto& jLine : coilLoop.Path) {
+                    Json::Value jLineJson;
+                    jLineJson["StartPoint"]["x"] = jLine.StartPoint.x;
+                    jLineJson["StartPoint"]["y"] = jLine.StartPoint.y;
+                    jLineJson["StartPoint"]["z"] = jLine.StartPoint.z;
+                    jLineJson["EndPoint"]["x"] = jLine.EndPoint.x;
+                    jLineJson["EndPoint"]["y"] = jLine.EndPoint.y;
+                    jLineJson["EndPoint"]["z"] = jLine.EndPoint.z;
+                    jLineJson["ColorIndex"] = jLine.ColorIndex;
+                    jLineJson["CurveType"] = jLine.CurveType;
+                    pathJson.append(jLineJson);
+                }
+                coilLoopJson["Path"] = pathJson;
+
+                coilLoopsJson.append(coilLoopJson);
+            }
+            collectorCoilJson["CoilLoops"] = coilLoopsJson;
+
+            // Convert Deliverys
+            Json::Value deliverysJson(Json::arrayValue);
+            for (const auto& delivery : collectorCoil.Deliverys) {
+                Json::Value deliveryJson(Json::arrayValue);
+                for (const auto& jLine : delivery) {
+                    Json::Value jLineJson;
+                    jLineJson["StartPoint"]["x"] = jLine.StartPoint.x;
+                    jLineJson["StartPoint"]["y"] = jLine.StartPoint.y;
+                    jLineJson["StartPoint"]["z"] = jLine.StartPoint.z;
+                    jLineJson["EndPoint"]["x"] = jLine.EndPoint.x;
+                    jLineJson["EndPoint"]["y"] = jLine.EndPoint.y;
+                    jLineJson["EndPoint"]["z"] = jLine.EndPoint.z;
+                    jLineJson["ColorIndex"] = jLine.ColorIndex;
+                    jLineJson["CurveType"] = jLine.CurveType;
+                    deliveryJson.append(jLineJson);
+                }
+                deliverysJson.append(deliveryJson);
+            }
+            collectorCoilJson["Deliverys"] = deliverysJson;
+
+            collectorCoilsJson.append(collectorCoilJson);
+        }
+        heatingCoilJson["CollectorCoils"] = collectorCoilsJson;
+
+        root["HeatingCoils"].append(heatingCoilJson);
+    }
     Json::FastWriter writer;
     return writer.write(root);
 }
@@ -178,64 +270,31 @@ CombinedData parseJsonData(const std::string& arDesignJson, const std::string& i
 
     return combinedData;
 }
-std::vector<cv::Point> generatePipePlan(const CombinedData& combinedData){
-    std::vector<cv::Point> pipePlan;
 
-    // 获取楼层信息
-    const auto& floors = combinedData.arDesign.Floor;
-    if (floors.empty()) {
-        return pipePlan;  // 如果没有楼层信息，返回空的管线规划
-    }
+HeatingDesign generatePipePlan(const CombinedData& combinedData){
+    HeatingDesign heatingDesign;
 
-    // 假设我们只处理第一个楼层
-    const auto& floor = floors[0];
-    const auto& grids = floor.Construction.Grid;
+    // Iterate through each floor
+    for (const auto& floor : combinedData.arDesign.Floors) {
+        HeatingCoil heatingCoil;
+        heatingCoil.LevelName = floor.Name;
+        heatingCoil.LevelNo = std::stoi(floor.Num);
+        heatingCoil.LevelDesc = "Floor " + floor.Num;
 
-    // 创建一个网格来表示房间布局
-    int gridSize = 50;  // 假设网格大小为50x50
-    cv::Mat layout = cv::Mat::zeros(1000, 1000, CV_8UC1);  // 假设最大尺寸为1000x1000
+        // Iterate through each house type
+        for (const auto& houseType : floor.construction.houseTypes) {
+            heatingCoil.HouseName = houseType.houseName;
 
-    // 根据网格信息绘制房间布局
-    for (const auto& grid : grids) {
-        cv::Point start(static_cast<int>(grid.StartPoint.x * gridSize), 
-                        static_cast<int>(grid.StartPoint.y * gridSize));
-        cv::Point end(static_cast<int>(grid.EndPoint.x * gridSize), 
-                      static_cast<int>(grid.EndPoint.y * gridSize));
-        cv::line(layout, start, end, cv::Scalar(255), 2);
-    }
+            // Call the pipe layout generation function
+            CollectorCoil collectorCoil = generatePipeLayout(houseType, combinedData.inputData.webData);
 
-    // 找到房间的轮廓
-    std::vector<std::vector<cv::Point>> contours;
-    cv::findContours(layout, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-
-    // 对每个房间进行管线规划
-    for (const auto& contour : contours) {
-        cv::Rect roomRect = cv::boundingRect(contour);
-        
-        // 获取房间的功能类型（这里需要根据实际情况来判断）
-        std::string roomFunction = "公区类";  // 默认为公区类
-        
-        // 根据房间功能获取管线间距
-        double pipeSpan = 250.0;  // 默认间距
-        for (const auto& elasticSpan : combinedData.inputData.WebData.ElasticSpanSet) {
-            if (elasticSpan.FuncName == roomFunction) {
-                pipeSpan = elasticSpan.PriorSpan;
-                break;
-            }
+            // Add the generated CollectorCoil to HeatingCoil
+            heatingCoil.CollectorCoils.push_back(collectorCoil);
         }
 
-        // 在房间内生成管线
-        for (int y = roomRect.y; y < roomRect.y + roomRect.height; y += static_cast<int>(pipeSpan)) {
-            pipePlan.emplace_back(roomRect.x, y);
-            pipePlan.emplace_back(roomRect.x + roomRect.width, y);
-            
-            // 添加返回的管线（如果不是最后一行）
-            if (y + pipeSpan < roomRect.y + roomRect.height) {
-                pipePlan.emplace_back(roomRect.x + roomRect.width, y + static_cast<int>(pipeSpan/2));
-                pipePlan.emplace_back(roomRect.x, y + static_cast<int>(pipeSpan/2));
-            }
-        }
+        // Add the generated HeatingCoil to HeatingDesign
+        heatingDesign.HeatingCoils.push_back(heatingCoil);
     }
 
-    return pipePlan;
+    return heatingDesign;
 }
