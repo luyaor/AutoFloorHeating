@@ -1,9 +1,6 @@
 #ifndef DATA_STRUCTURES_H
 #define DATA_STRUCTURES_H
 
-#include <vector>
-#include <string>
-
 // 坐标点结构
 struct Point {
     double x;

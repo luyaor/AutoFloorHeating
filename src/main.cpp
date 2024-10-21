@@ -1,8 +1,5 @@
-#include <opencv2/opencv.hpp>
 #include <iostream>
-#include <vector>
 #include <string>
-#include <json/json.h> // Assuming JSON input is used.
 #include <fstream>
 #include "helper.h"
 

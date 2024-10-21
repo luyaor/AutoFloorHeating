@@ -1,8 +1,6 @@
 #ifndef HEATING_DESIGN_STRUCTURES_H
 #define HEATING_DESIGN_STRUCTURES_H
 
-#include "data_structures.h"
-
 // Structures for HeatingDesign.json
 // 坐标线段结构
 struct JLine {
