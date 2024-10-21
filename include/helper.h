@@ -2,9 +2,7 @@
 #define HELPER_H
 
 #include <opencv2/opencv.hpp>
-#include <vector>
 #include <string>
-#include <json/json.h>
 #include "ar_design_structures.h"
 #include "input_data_structures.h"
 #include "heating_design_structures.h"

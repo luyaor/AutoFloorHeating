@@ -3,9 +3,8 @@
 //
 
 #include "helper.h"
+#include <json/value.h>
 #include "pipe_layout_generator.h"
-
-
 
 std::string planToJson(const HeatingDesign& plan) {
     Json::Value root;
