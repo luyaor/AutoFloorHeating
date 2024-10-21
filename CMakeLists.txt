@@ -41,7 +41,8 @@ file(GLOB SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES}
         src/helper.cpp
         include/helper.h
-        src/pipe_layout_generator.cpp)
+        src/pipe_layout_generator.cpp
+        include/pipe_layout_generator.h)
 
 # Test target
 enable_testing()
