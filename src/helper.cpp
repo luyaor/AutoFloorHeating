@@ -17,108 +17,163 @@ std::string planToJson(const std::vector<cv::Point>& plan) {
 
 CombinedData parseJsonData(const std::string& arDesignJson, const std::string& inputDataJson){
     CombinedData combinedData;
-    Json::Value arDesignRoot, inputDataRoot;
-    Json::Reader reader;
 
     // Parse ARDesign.json
-    if (reader.parse(arDesignJson, arDesignRoot)) {
-        const Json::Value& floors = arDesignRoot["Floor"];
-        for (const auto& floor : floors) {
-            Floor f;
-            f.Name = floor["Name"].asString();
-            f.Num = floor["Num"].asString();
-            f.AllFloor = floor["AllFloor"].asString();
-            f.LevelHeight = floor["LevelHeight"].asDouble();
-            f.LevelElevation = floor["LevelElevation"].asDouble();
+    Json::Value arDesignRoot;
+    Json::Reader arDesignReader;
+    if (!arDesignReader.parse(arDesignJson, arDesignRoot)) {
+        throw std::runtime_error("Failed to parse ARDesign.json");
+    }
 
-            const Json::Value& construction = floor["Construction"];
-            const Json::Value& grids = construction["Grid"];
-            for (const auto& grid : grids) {
-                Grid g;
-                g.GridTextNote = grid["GridTextNote"].asString();
-                g.StartPoint = {grid["StartPoint"]["X"].asDouble(), grid["StartPoint"]["Y"].asDouble(), grid["StartPoint"]["Z"].asDouble()};
-                g.EndPoint = {grid["EndPoint"]["X"].asDouble(), grid["EndPoint"]["Y"].asDouble(), grid["EndPoint"]["Z"].asDouble()};
-                g.EP1Visible = grid["EP1Visible"].asInt();
-                g.EP2Visible = grid["EP2Visible"].asInt();
-                g.IsSub = grid["IsSub"].asInt();
-                f.Construction.Grid.push_back(g);
-            }
-            combinedData.arDesign.Floor.push_back(f);
+    // Parse Floors
+    const Json::Value& floorsJson = arDesignRoot["Floors"];
+    for (const auto& floorJson : floorsJson) {
+        Floor floor;
+        floor.Name = floorJson["Name"].asString();
+        floor.Num = floorJson["Num"].asString();
+        floor.LevelHeight = floorJson["LevelHeight"].asDouble();
+
+        // Parse Construction
+        const Json::Value& constructionJson = floorJson["Construction"];
+        
+        // Parse HouseTypes
+        const Json::Value& houseTypesJson = constructionJson["HouseType"];
+        for (const auto& houseTypeJson : houseTypesJson) {
+            HouseType houseType;
+            houseType.houseName = houseTypeJson["houseName"].asString();
+            for (const auto& roomName : houseTypeJson["RoomNames"])
+                houseType.RoomNames.push_back(roomName.asString());
+            for (const auto& pointJson : houseTypeJson["Boundary"])
+                houseType.Boundary.push_back(Point{pointJson["x"].asDouble(), pointJson["y"].asDouble(), pointJson["z"].asDouble()});
+            floor.construction.houseTypes.push_back(houseType);
         }
+
+        // Parse Rooms
+        const Json::Value& roomsJson = constructionJson["Room"];
+        for (const auto& roomJson : roomsJson) {
+            Room room;
+            room.Guid = roomJson["Guid"].asString();
+            room.Name = roomJson["Name"].asString();
+            room.NameType = roomJson["NameType"].asString();
+            for (const auto& doorId : roomJson["DoorIds"])
+                room.DoorIds.push_back(doorId.asString());
+            for (const auto& jcwGuidName : roomJson["JCWGuidNames"])
+                room.JCWGuidNames.push_back(jcwGuidName.asString());
+            for (const auto& wallName : roomJson["WallNames"])
+                room.WallNames.push_back(wallName.asString());
+            for (const auto& pointJson : roomJson["Boundary"])
+                room.Boundary.push_back(Point{pointJson["x"].asDouble(), pointJson["y"].asDouble(), pointJson["z"].asDouble()});
+            room.IsRecreationalRoom = roomJson["IsRecreationalRoom"].asBool();
+            floor.construction.rooms.push_back(room);
+        }
+
+        // Parse JCWs and Doors (similar to Rooms)
+        // ...
+
+        combinedData.arDesign.Floors.push_back(floor);
     }
 
     // Parse inputData.json
-    if (reader.parse(inputDataJson, inputDataRoot)) {
-        const Json::Value& webData = inputDataRoot["WebData"];
-        combinedData.inputData.WebData.ImbalanceRatio = webData["ImbalanceRatio"].asInt();
-        combinedData.inputData.WebData.JointPipeSpan = webData["JointPipeSpan"].asInt();
-        combinedData.inputData.WebData.DenseAreaWallSpan = webData["DenseAreaWallSpan"].asInt();
-        combinedData.inputData.WebData.DenseAreaSpanLess = webData["DenseAreaSpanLess"].asInt();
+    Json::Value inputDataRoot;
+    Json::Reader inputDataReader;
+    if (!inputDataReader.parse(inputDataJson, inputDataRoot)) {
+        throw std::runtime_error("Failed to parse inputData.json");
+    }
 
-        // Parse LoopSpanSet
-        const Json::Value& loopSpanSet = webData["LoopSpanSet"];
-        for (const auto& loopSpan : loopSpanSet) {
-            LoopSpan ls;
-            ls.TypeName = loopSpan["TypeName"].asString();
-            ls.MinSpan = loopSpan["MinSpan"].asInt();
-            ls.MaxSpan = loopSpan["MaxSpan"].asInt();
-            ls.Curvity = loopSpan["Curvity"].asInt();
-            combinedData.inputData.WebData.LoopSpanSet.push_back(ls);
+    // Parse AssistData
+    const Json::Value& assistDataJson = inputDataRoot["AssistData"];
+    for (const auto& collectorJson : assistDataJson["AssistCollectors"]) {
+        AssistCollector collector;
+        collector.Id = collectorJson["Id"].asString();
+        collector.Loc = Point{collectorJson["Loc"]["x"].asDouble(), collectorJson["Loc"]["y"].asDouble(), collectorJson["Loc"]["z"].asDouble()};
+        collector.LevelName = collectorJson["LevelName"].asString();
+        for (const auto& boundaryJson : collectorJson["Boundaries"]) {
+            AssistCollector::Boundary boundary;
+            boundary.Offset = boundaryJson["Offset"].asDouble();
+            for (const auto& borderJson : boundaryJson["Borders"]) {
+                Border border;
+                border.StartPoint = Point{borderJson["StartPoint"]["x"].asDouble(), borderJson["StartPoint"]["y"].asDouble(), borderJson["StartPoint"]["z"].asDouble()};
+                border.EndPoint = Point{borderJson["EndPoint"]["x"].asDouble(), borderJson["EndPoint"]["y"].asDouble(), borderJson["EndPoint"]["z"].asDouble()};
+                border.ColorIndex = borderJson["ColorIndex"].asInt();
+                border.CurveType = borderJson["CurveType"].asInt();
+                boundary.Borders.push_back(border);
+            }
+            collector.Boundaries.push_back(boundary);
         }
+        combinedData.inputData.assistData.AssistCollectors.push_back(collector);
+    }
 
-        // Parse ObsSpanSet
-        const Json::Value& obsSpanSet = webData["ObsSpanSet"];
-        for (const auto& obsSpan : obsSpanSet) {
-            ObsSpan os;
-            os.ObsName = obsSpan["ObsName"].asString();
-            os.MinSpan = obsSpan["MinSpan"].asInt();
-            os.MaxSpan = obsSpan["MaxSpan"].asInt();
-            combinedData.inputData.WebData.ObsSpanSet.push_back(os);
-        }
+    // Parse WebData
+    const Json::Value& webDataJson = inputDataRoot["WebData"];
+    combinedData.inputData.webData.ImbalanceRatio = webDataJson["ImbalanceRatio"].asInt();
+    combinedData.inputData.webData.JointPipeSpan = webDataJson["JointPipeSpan"].asDouble();
+    combinedData.inputData.webData.DenseAreaWallSpan = webDataJson["DenseAreaWallSpan"].asDouble();
+    combinedData.inputData.webData.DenseAreaSpanLess = webDataJson["DenseAreaSpanLess"].asDouble();
 
-        // Parse DeliverySpanSet
-        const Json::Value& deliverySpanSet = webData["DeliverySpanSet"];
-        for (const auto& deliverySpan : deliverySpanSet) {
-            ObsSpan ds;
-            ds.ObsName = deliverySpan["ObsName"].asString();
-            ds.MinSpan = deliverySpan["MinSpan"].asInt();
-            ds.MaxSpan = deliverySpan["MaxSpan"].asInt();
-            combinedData.inputData.WebData.DeliverySpanSet.push_back(ds);
-        }
+    // Parse LoopSpanSet, ObsSpanSet, DeliverySpanSet, PipeSpanSet, ElasticSpanSet, and FuncRooms
+    // Parse LoopSpanSet
+    const Json::Value& loopSpanSetJson = webDataJson["LoopSpanSet"];
+    for (const auto& loopSpanJson : loopSpanSetJson) {
+        LoopSpan loopSpan;
+        loopSpan.TypeName = loopSpanJson["TypeName"].asString();
+        loopSpan.MinSpan = loopSpanJson["MinSpan"].asDouble();
+        loopSpan.MaxSpan = loopSpanJson["MaxSpan"].asDouble();
+        loopSpan.Curvity = loopSpanJson["Curvity"].asDouble();
+        combinedData.inputData.webData.LoopSpanSet.push_back(loopSpan);
+    }
 
-        // Parse PipeSpanSet
-        const Json::Value& pipeSpanSet = webData["PipeSpanSet"];
-        for (const auto& pipeSpan : pipeSpanSet) {
-            PipeSpan ps;
-            ps.LevelDesc = pipeSpan["LevelDesc"].asString();
-            ps.FuncName = pipeSpan["FuncName"].asString();
-            for (const auto& direction : pipeSpan["Directions"])
-                ps.Directions.push_back(direction.asString());
-            ps.ExterWalls = pipeSpan["ExterWalls"].asInt();
-            ps.PipeSpan = pipeSpan["PipeSpan"].asDouble();
-            combinedData.inputData.WebData.PipeSpanSet.push_back(ps);
-        }
+    // Parse ObsSpanSet
+    const Json::Value& obsSpanSetJson = webDataJson["ObsSpanSet"];
+    for (const auto& obsSpanJson : obsSpanSetJson) {
+        ObstacleSpan obsSpan;
+        obsSpan.ObsName = obsSpanJson["ObsName"].asString();
+        obsSpan.MinSpan = obsSpanJson["MinSpan"].asDouble();
+        obsSpan.MaxSpan = obsSpanJson["MaxSpan"].asDouble();
+        combinedData.inputData.webData.ObsSpanSet.push_back(obsSpan);
+    }
 
-        // Parse ElasticSpanSet
-        const Json::Value& elasticSpanSet = webData["ElasticSpanSet"];
-        for (const auto& elasticSpan : elasticSpanSet) {
-            ElasticSpan es;
-            es.FuncName = elasticSpan["FuncName"].asString();
-            es.PriorSpan = elasticSpan["PriorSpan"].asDouble();
-            es.MinSpan = elasticSpan["MinSpan"].asDouble();
-            es.MaxSpan = elasticSpan["MaxSpan"].asDouble();
-            combinedData.inputData.WebData.ElasticSpanSet.push_back(es);
-        }
+    // Parse DeliverySpanSet
+    const Json::Value& deliverySpanSetJson = webDataJson["DeliverySpanSet"];
+    for (const auto& deliverySpanJson : deliverySpanSetJson) {
+        ObstacleSpan deliverySpan;
+        deliverySpan.ObsName = deliverySpanJson["ObsName"].asString();
+        deliverySpan.MinSpan = deliverySpanJson["MinSpan"].asDouble();
+        deliverySpan.MaxSpan = deliverySpanJson["MaxSpan"].asDouble();
+        combinedData.inputData.webData.DeliverySpanSet.push_back(deliverySpan);
+    }
 
-        // Parse FuncRooms
-        const Json::Value& funcRooms = webData["FuncRooms"];
-        for (const auto& funcRoom : funcRooms) {
-            FuncRoom fr;
-            fr.FuncName = funcRoom["FuncName"].asString();
-            for (const auto& roomName : funcRoom["RoomNames"])
-                fr.RoomNames.push_back(roomName.asString());
-            combinedData.inputData.WebData.FuncRooms.push_back(fr);
-        }
+    // Parse PipeSpanSet
+    const Json::Value& pipeSpanSetJson = webDataJson["PipeSpanSet"];
+    for (const auto& pipeSpanJson : pipeSpanSetJson) {
+        PipeSpanSet pipeSpan;
+        pipeSpan.LevelDesc = pipeSpanJson["LevelDesc"].asString();
+        pipeSpan.FuncName = pipeSpanJson["FuncName"].asString();
+        for (const auto& direction : pipeSpanJson["Directions"])
+            pipeSpan.Directions.push_back(direction.asString());
+        pipeSpan.ExterWalls = pipeSpanJson["ExterWalls"].asInt();
+        pipeSpan.PipeSpan = pipeSpanJson["PipeSpan"].asDouble();
+        combinedData.inputData.webData.PipeSpanSet.push_back(pipeSpan);
+    }
+
+    // Parse ElasticSpanSet
+    const Json::Value& elasticSpanSetJson = webDataJson["ElasticSpanSet"];
+    for (const auto& elasticSpanJson : elasticSpanSetJson) {
+        ElasticSpan elasticSpan;
+        elasticSpan.FuncName = elasticSpanJson["FuncName"].asString();
+        elasticSpan.PriorSpan = elasticSpanJson["PriorSpan"].asDouble();
+        elasticSpan.MinSpan = elasticSpanJson["MinSpan"].asDouble();
+        elasticSpan.MaxSpan = elasticSpanJson["MaxSpan"].asDouble();
+        combinedData.inputData.webData.ElasticSpanSet.push_back(elasticSpan);
+    }
+
+    // Parse FuncRooms
+    const Json::Value& funcRoomsJson = webDataJson["FuncRooms"];
+    for (const auto& funcRoomJson : funcRoomsJson) {
+        FuncRoom funcRoom;
+        funcRoom.FuncName = funcRoomJson["FuncName"].asString();
+        for (const auto& roomName : funcRoomJson["RoomNames"])
+            funcRoom.RoomNames.push_back(roomName.asString());
+        combinedData.inputData.webData.FuncRooms.push_back(funcRoom);
     }
 
     return combinedData;
