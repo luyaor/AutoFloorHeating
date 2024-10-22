@@ -47,6 +47,15 @@ add_executable(${PROJECT_NAME} ${SOURCES}
         include/types/input_data_structures.hpp
         include/types/heating_design_structures.hpp)
 
+# Create a library target for the main project code
+add_library(${PROJECT_NAME}_lib STATIC ${SOURCES})
+
+# Link OpenCV and JsonCpp to the library
+target_link_libraries(${PROJECT_NAME}_lib ${OpenCV_LIBS} ${JSONCPP_LIBRARY})
+
+# Link the library to the main executable
+target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
+
 # Test target
 enable_testing()
 add_subdirectory(tests)
@@ -54,9 +63,6 @@ add_subdirectory(tests)
 # Install rules
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 install(DIRECTORY include/ DESTINATION include)
-
-# Link OpenCV and JsonCpp
-target_link_libraries(iad ${OpenCV_LIBS} ${JSONCPP_LIBRARY})
 
 # Print JsonCpp information for debugging
 message(STATUS "JSONCPP_LIBRARY: ${JSONCPP_LIBRARY}")
