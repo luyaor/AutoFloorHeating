@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include "helper.h"
+#include "helper.hpp"
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {

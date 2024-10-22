@@ -2,9 +2,9 @@
 // Created by Wang Tai on 2024/10/20.
 //
 
-#include "helper.h"
+#include "helper.hpp"
 #include <json/json.h>
-#include "pipe_layout_generator.h"
+#include "pipe_layout_generator.hpp"
 
 std::string planToJson(const HeatingDesign& plan) {
     Json::Value root;

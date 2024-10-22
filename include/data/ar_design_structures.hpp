@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <string>
-#include "data_structures.h"
+#include "data_structures.hpp"
 
 // Structures for ARDesign.json
 // 尺寸结构
