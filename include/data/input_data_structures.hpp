@@ -1,7 +1,7 @@
 #ifndef INPUT_DATA_STRUCTURES_H
 #define INPUT_DATA_STRUCTURES_H
 
-#include "data_structures.h"
+#include "data_structures.hpp"
 
 // Structures for inputData.json
 // 边界结构

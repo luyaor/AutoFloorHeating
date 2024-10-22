@@ -39,13 +39,13 @@ file(GLOB SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 # Executable
 add_executable(${PROJECT_NAME} ${SOURCES}
+        include/helper.hpp
         src/helper.cpp
-        include/helper.h
+        include/pipe_layout_generator.hpp
         src/pipe_layout_generator.cpp
-        include/pipe_layout_generator.h
-        include/ar_design_structures.h
-        include/input_data_structures.h
-        include/heating_design_structures.h)
+        include/data/ar_design_structures.hpp
+        include/data/input_data_structures.hpp
+        include/data/heating_design_structures.hpp)
 
 # Test target
 enable_testing()
