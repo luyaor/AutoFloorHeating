@@ -43,9 +43,9 @@ add_executable(${PROJECT_NAME} ${SOURCES}
         src/helper.cpp
         include/pipe_layout_generator.hpp
         src/pipe_layout_generator.cpp
-        include/data/ar_design_structures.hpp
-        include/data/input_data_structures.hpp
-        include/data/heating_design_structures.hpp)
+        include/types/ar_design_structures.hpp
+        include/types/input_data_structures.hpp
+        include/types/heating_design_structures.hpp)
 
 # Test target
 enable_testing()
