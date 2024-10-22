@@ -1,6 +1,6 @@
-// tests/test_sample.cpp
+// tests/test_main.cpp
 #include <gtest/gtest.h>
 
-   TEST(SampleTest, Test1) {
-       EXPECT_EQ(1, 1);
-   }
+TEST(SampleTest, Test1) {
+    EXPECT_EQ(1, 1);
+}
