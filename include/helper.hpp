@@ -3,9 +3,9 @@
 
 #include <opencv2/opencv.hpp>
 #include <string>
-#include "data/ar_design_structures.hpp"
-#include "data/input_data_structures.hpp"
-#include "data/heating_design_structures.hpp"
+#include "types/ar_design_structures.hpp"
+#include "types/input_data_structures.hpp"
+#include "types/heating_design_structures.hpp"
 
 // Combined structure for both JSON files
 struct CombinedData {
