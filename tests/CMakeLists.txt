@@ -45,9 +45,6 @@ target_link_libraries(tests Threads::Threads)
 # Include the project's include directory
 target_include_directories(tests PRIVATE ${PROJECT_SOURCE_DIR}/include)
 
-# 添加测试可执行文件
-# add_executable(tests test_main.cpp)
-
 # 链接必要的库
 target_link_libraries(tests
     GTest::GTest
@@ -56,4 +53,4 @@ target_link_libraries(tests
 )
 
 # 添加测试
-add_test(NAME AllTests COMMAND tests)
+gtest_discover_tests(tests)

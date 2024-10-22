@@ -59,6 +59,7 @@ target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
 # Test target
 enable_testing()
 add_subdirectory(tests)
+include(GoogleTest)
 
 # Install rules
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
