@@ -284,6 +284,7 @@ public:
                 cur_fa->sons.push_back(on_edge_node_m0);
                 cur_fa = on_edge_node_m0;
             }
+            // 把关键点加回来
             cur_fa->sons.push_back(key_nodes[eid + 1]);
         }
         return rt;
