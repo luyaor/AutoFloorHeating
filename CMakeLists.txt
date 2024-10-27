@@ -3,6 +3,7 @@ project(iad)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
 
@@ -31,6 +32,15 @@ endif()
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
+# Find Eigen3
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
+
+# Find Matplotplusplus
+find_package(Matplot++ REQUIRED)
+include_directories(${Matplot++_INCLUDE_DIRS})
+
+
 # Include directories
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
@@ -51,7 +61,7 @@ add_executable(${PROJECT_NAME} ${SOURCES}
 add_library(${PROJECT_NAME}_lib STATIC ${SOURCES})
 
 # Link OpenCV and JsonCpp to the library
-target_link_libraries(${PROJECT_NAME}_lib ${OpenCV_LIBS} ${JSONCPP_LIBRARY})
+target_link_libraries(${PROJECT_NAME}_lib ${OpenCV_LIBS} ${JSONCPP_LIBRARY} Matplot++::matplot)
 
 # Link the library to the main executable
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
