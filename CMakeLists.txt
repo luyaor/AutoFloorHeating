@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.28)
 project(iad)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -8,6 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
 # Find OpenCV
+set(OpenCV_DIR /opt/homebrew/Cellar/opencv/4.10.0_12/lib/cmake/opencv4)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
@@ -70,6 +71,9 @@ target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
 enable_testing()
 add_subdirectory(tests)
 include(GoogleTest)
+
+# Add timeout setting for test discovery
+set(GTEST_DISCOVERY_TIMEOUT 60) # Increase timeout to 60 seconds (default is 5)
 
 # Install rules
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
