@@ -1,0 +1,14 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build IAD",
+            "type": "shell",
+            "command": "cd ${workspaceFolder} && chmod +x scripts/build.sh && ./scripts/build.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+} 
