@@ -70,9 +70,28 @@ struct Floor {
     Construction construction;  // 楼层的建筑结构
 };
 
+// Level结构
+struct Level {
+    std::string Name;        // 楼层名称
+    std::string Num;         // 楼层号
+    double Elevation;        // 标高
+    double AbsElevation;     // 绝对标高
+    double LevelHeight;      // 层高
+    int LineWidth;          // 线宽
+    int EP1Visible;         // EP1可见性
+    int EP2Visible;         // EP2可见性
+    std::string Type;       // 类型
+    std::string Sign;       // 标记
+    std::string Pattern;    // 图案
+    double LevelOffSet;     // 偏移量
+    int ElementId;          // 元素ID
+    std::vector<double> OffSet;  // 偏移数组
+};
+
 // 建筑设计数据结构
 struct ARDesign {
     std::vector<Floor> Floors;
+    std::vector<Level> Levels;  // 添加Level数组
 };
 
 #endif // AR_DESIGN_STRUCTURES_H
