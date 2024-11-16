@@ -763,6 +763,6 @@ fabric.properties
 
 # cache files
 build
-.vscode
+#.vscode
 .idea
 .cache
