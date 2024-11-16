@@ -161,7 +161,7 @@ CombinedData parseJsonData(const std::string& arDesignJson, const std::string& i
         // Parse JCWs and Doors (similar to Rooms)
         // ...
 
-        combinedData.arDesign.Floors.push_back(floor);
+        combinedData.arDesign.Floor.push_back(floor);
     }
 
     // Parse inputData.json
@@ -274,7 +274,7 @@ HeatingDesign generatePipePlan(const CombinedData& combinedData){
     HeatingDesign heatingDesign;
 
     // Iterate through each floor
-    for (const auto& floor : combinedData.arDesign.Floors) {
+    for (const auto& floor : combinedData.arDesign.Floor) {
         HeatingCoil heatingCoil;
         heatingCoil.LevelName = floor.Name;
         heatingCoil.LevelNo = std::stoi(floor.Num);
