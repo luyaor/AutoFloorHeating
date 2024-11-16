@@ -6,6 +6,7 @@
 #include "data_structures.hpp"
 #include <map>
 
+struct Window;
 struct ToiletAndKitchenConditionHole;
 struct Pipe;
 struct StairArea;
