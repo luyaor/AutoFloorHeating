@@ -125,20 +125,21 @@ struct Construction {
     std::vector<StairArea> StairArea; // 楼梯区域列表
     std::vector<Pipe> Pipe; // 管道列表
     std::vector<CurveInfo> SourceWallLines; // 源墙线列表
+    std::vector<Window> windows;  // 窗户列表
 };
 
 // 曲线结构（直线或弧线）
 struct CurveInfo {
-    Point StartPoint; // 起点
-    Point EndPoint; // 终点
-    Point MidPoint; // 中点（弧线时使用）
-    Point Normal; // 法线方向（弧线时使用）
-    Point Center; // 圆心（弧线时使用）
-    double Radius; // 半径（弧线时使用）
-    double StartAngle; // 起始角度（弧线时使用）
-    double EndAngle; // 结束角度（弧线时使用）
-    int ColorIndex; // 颜色索引
-    int CurveType; // 曲线类型：0-直线，1-圆弧
+    Point StartPoint;        // 起点
+    Point EndPoint;          // 终点
+    Point MidPoint;         // 中点（弧线时使用）
+    Point Normal;           // 法线方向（弧线时使用）
+    Point Center;           // 圆心（弧线时使用）
+    double Radius;          // 半径（弧线时使用）
+    double StartAngle;      // 起始角度（弧线时使用）
+    double EndAngle;        // 结束角度（弧线时使用）
+    int ColorIndex;         // 颜色索引
+    int CurveType;          // 曲线类型：0-直线，1-圆弧
 };
 
 // 轴网结构
@@ -243,21 +244,21 @@ struct ARDesign {
 
 // 弧形墙结构
 struct ArcWall {
-    std::string WallName; // 墙体名称
-    std::string Category; // 类别
-    std::string Type; // 类型
-    CurveInfo Curve; // 中心线
-    CurveInfo FirstLine; // 第一条边线
-    CurveInfo SecondLine; // 第二条边线
-    double Height; // 高度
-    double Thickness; // 厚度
-    int RoomBoundary; // 房间边界
-    Point Normal; // 法线方向
-    double BottomHeight; // 底部高度
-    int ElevationType; // 标高类型
+    std::string WallName;    // 墙体名称
+    std::string Category;    // 类别
+    std::string Type;        // 类型
+    CurveInfo Curve;         // 中心线
+    CurveInfo FirstLine;     // 第一条边线
+    CurveInfo SecondLine;    // 第二条边线
+    double Height;           // 高度
+    double Thickness;        // 厚度
+    int RoomBoundary;        // 房间边界
+    Point Normal;            // 法线方向
+    double BottomHeight;     // 底部高度
+    int ElevationType;       // 标高类型
     std::string MaterialType; // 材料类型
-    std::string ElevationId; // 标高ID
-    bool IsUnknownElevation; // 是否未知标高
+    std::string ElevationId; // 标高ID，可以为 null
+    bool IsUnknownElevation; // 是否未知标高，可以为 null
 };
 
 // 管道结构
@@ -274,6 +275,64 @@ struct Pipe {
 struct StairArea {
     std::vector<CurveInfo> Borders; // 边界线列表
     double Offset; // 偏移量
+};
+
+// 窗户样式单元格结构
+struct StyleCell {
+    std::vector<Point> Vertices;  // 顶点列表
+    bool IsErased;               // 是否被擦除
+    std::map<std::string, int> Parameters;  // 参数列表，如"开启扇": 1
+};
+
+// 窗户视图结构
+struct StyleView {
+    std::vector<Point> Verticals;  // 垂直线列表
+    std::vector<StyleCell> Cells;  // 单元格列表
+    std::vector<CurveInfo> BorderLines;  // 边界线列表
+};
+
+// 窗户样式结构
+struct WindowStyle {
+    int StyleId;                // 样式ID
+    std::string StyleName;      // 样式名称
+    double SSMHeight;           // SSM高度
+    double SSMWidth;            // SSM宽度
+    double SSMBottomHeight;     // SSM底部高度
+    std::vector<Point> Vertices;  // 顶点列表
+    std::vector<StyleCell> Cells; // 单元格列表
+    std::vector<StyleView> Views; // 视图列表
+    std::string WindowsMaterial;  // 窗户材料
+    std::string GlassMaterial;    // 玻璃材料
+    std::map<std::string, bool> GlassConfig;    // 玻璃配置
+    std::map<std::string, std::string> OtherConfig;  // 其他配置
+};
+
+// 窗户结构
+struct Window {
+    std::string Guid;           // 全局唯一标识符
+    std::string FamilyName;     // 族名称
+    std::string Name;           // 名称
+    std::string Type;           // 类型
+    int DoorType;              // 门类型
+    std::string HostWall;      // 所属墙体
+    Point Location;            // 位置
+    double BottomHeight;       // 底部高度
+    double TopHeight;          // 顶部高度
+    Size Size;                 // 尺寸
+    Point FlipFaceNormal;      // 翻转面法线
+    Point FlipHandNormal;      // 翻转手法线
+    bool IsVisible;            // 是否可见
+    bool IsMirror;            // 是否镜像
+    std::string NumberSign;    // 编号标记
+    int VisibleElevationPlan; // 可见立面图
+    double LevelOffset;        // 标高偏移
+    CurveInfo BaseLine;        // 基准线
+    bool IsFire;              // 是否防火
+    WindowStyle Style;         // 窗户样式
+    std::vector<double> TwoSideDepths;  // 两侧深度
+    std::string GroupNo;       // 组号
+    std::vector<std::string> Items;  // 项目列表
+    bool IsSpecialShap;       // 是否特殊形状
 };
 
 #endif // AR_DESIGN_STRUCTURES_H
