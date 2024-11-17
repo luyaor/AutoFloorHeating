@@ -194,9 +194,47 @@ CombinedData parseJsonData(const std::string& arDesignJson, const std::string& i
                 room.JCWGuidNames.push_back(jcwGuidName.asString());
             for (const auto& wallName : roomJson["WallNames"])
                 room.WallNames.push_back(wallName.asString());
-            for (const auto& pointJson : roomJson["Boundary"])
-                room.Boundary.push_back(Point{pointJson["x"].asDouble(), pointJson["y"].asDouble(), pointJson["z"].asDouble()});
-            room.IsRecreationalRoom = roomJson["IsRecreationalRoom"].asBool();
+            for (const auto& boundaryJson : roomJson["Boundary"]) {
+                CurveInfo curve;
+                curve.StartPoint = Point{
+                    boundaryJson["StartPoint"]["x"].asDouble(),
+                    boundaryJson["StartPoint"]["y"].asDouble(),
+                    boundaryJson["StartPoint"]["z"].asDouble()
+                };
+                curve.EndPoint = Point{
+                    boundaryJson["EndPoint"]["x"].asDouble(),
+                    boundaryJson["EndPoint"]["y"].asDouble(),
+                    boundaryJson["EndPoint"]["z"].asDouble()
+                };
+                curve.ColorIndex = boundaryJson["ColorIndex"].asInt();
+                curve.CurveType = boundaryJson["CurveType"].asInt();
+                
+                if (boundaryJson.isMember("MidPoint")) {
+                    curve.MidPoint = Point{
+                        boundaryJson["MidPoint"]["x"].asDouble(),
+                        boundaryJson["MidPoint"]["y"].asDouble(),
+                        boundaryJson["MidPoint"]["z"].asDouble()
+                    };
+                }
+                if (boundaryJson.isMember("Center")) {
+                    curve.Center = Point{
+                        boundaryJson["Center"]["x"].asDouble(),
+                        boundaryJson["Center"]["y"].asDouble(),
+                        boundaryJson["Center"]["z"].asDouble()
+                    };
+                }
+                if (boundaryJson.isMember("Radius")) {
+                    curve.Radius = boundaryJson["Radius"].asDouble();
+                }
+                if (boundaryJson.isMember("StartAngle")) {
+                    curve.StartAngle = boundaryJson["StartAngle"].asDouble();
+                }
+                if (boundaryJson.isMember("EndAngle")) {
+                    curve.EndAngle = boundaryJson["EndAngle"].asDouble();
+                }
+
+                room.Boundary.push_back(curve);
+            }
             floor.construction.rooms.push_back(room);
         }
 
@@ -254,7 +292,7 @@ CombinedData parseJsonData(const std::string& arDesignJson, const std::string& i
         // Parse Doors
         const Json::Value& doorsJson = constructionJson["Door"];
         for (const auto& doorJson : doorsJson) {
-            Door door;
+            DoorAndWindow door;
             door.Guid = doorJson["Guid"].asString();
             door.FamilyName = doorJson["FamilyName"].asString();
             door.Name = doorJson["Name"].asString();
@@ -270,7 +308,7 @@ CombinedData parseJsonData(const std::string& arDesignJson, const std::string& i
             };
 
             const Json::Value& sizeJson = doorJson["DoorSize"];
-            door.DoorSize = Size{
+            door.Size = Size{
                 sizeJson["Height"].asDouble(),
                 sizeJson["Width"].asDouble(),
                 sizeJson["Thickness"].asDouble()
@@ -292,13 +330,13 @@ CombinedData parseJsonData(const std::string& arDesignJson, const std::string& i
             door.OpenDirection = doorJson["OpenDirection"].asString();
             door.FireClass = doorJson["FireClass"].asString();
             
-            floor.construction.doors.push_back(door);
+            floor.construction.doorAndWindows.push_back(door);
         }
 
         // Parse Windows
         const Json::Value& windowsJson = constructionJson["Window"];
         for (const auto& windowJson : windowsJson) {
-            Window window;
+            DoorAndWindow window;
             window.Guid = windowJson["Guid"].asString();
             window.FamilyName = windowJson["FamilyName"].asString();
             window.Name = windowJson["Name"].asString();
@@ -327,7 +365,7 @@ CombinedData parseJsonData(const std::string& arDesignJson, const std::string& i
             window.IsMirror = windowJson["IsMirror"].asBool();
             window.IsFire = windowJson["IsFire"].asBool();
             
-            floor.construction.windows.push_back(window);
+            floor.construction.doorAndWindows.push_back(window);
         }
 
         combinedData.arDesign.Floor.push_back(floor);
