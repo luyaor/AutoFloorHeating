@@ -116,7 +116,7 @@ struct Construction {
     std::vector<JCW> jcws; // 家具列表
     std::vector<Door> doors; // 门列表
     std::vector<Grid> Grid; // 轴网列表
-    std::vector<Room> Elevation; // 标高列表
+    std::vector<Elevation> Elevation; // 标高列表
     std::vector<WallHole> WallHole; // 墙洞列表
     std::vector<ToiletAndKitchenConditionHole> ToiletAndKitchenConditionHole; // 卫生间和厨房的空调洞列表
     std::vector<CurveInfo> DrainageDitch; // 排水沟列表
@@ -174,17 +174,17 @@ struct Grid {
 
 // 标高结构
 struct Elevation {
-    std::string DimentionText; // 尺寸文本
-    CurveInfo DimentionLine; // 尺寸线
-    std::vector<CurveInfo> TriangleLines; // 三角形线条
-    Point TrianglePt; // 三角形点
-    Point TextLocation; // 文本位置
-    Point DimDirection; // 尺寸方向
-    int ElementId; // 元素ID
-    std::string TextType; // 文本类型
-    std::string Id; // 标识符
-    std::string DescribeText; // 描述文本
-    bool IsUnknownElevation; // 是否未知标高
+    std::string DimentionText;     // 尺寸文本
+    CurveInfo DimentionLine;       // 尺寸线
+    std::vector<CurveInfo> TriangleLines;  // 三角形线条
+    Point TrianglePt;             // 三角形点
+    Point TextLocation;           // 文本位置
+    Point DimDirection;           // 尺寸方向
+    int ElementId;                // 元素ID
+    std::string TextType;         // 文本类型
+    std::string Id;               // 标识符
+    std::string DescribeText;     // 描述文本
+    bool IsUnknownElevation;      // 是否未知标高
 };
 
 // 墙洞结构
