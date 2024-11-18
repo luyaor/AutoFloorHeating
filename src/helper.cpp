@@ -257,7 +257,7 @@ CombinedData parseJsonData(const std::string& arDesignJson, const std::string& i
             // Parse ShowCurves, MaxBoundaryCurves, and BoundaryLines
             if (jcwJson.isMember("ShowCurves")) {
                 for (const auto& curveJson : jcwJson["ShowCurves"]) {
-                    CurveInfo curve;
+                    CurveInfo curve{};
                     parseCurveInfo(curveJson, curve);
                     jcw.ShowCurves.push_back(curve);
                 }
@@ -265,7 +265,7 @@ CombinedData parseJsonData(const std::string& arDesignJson, const std::string& i
 
             if (jcwJson.isMember("MaxBoundaryCurves")) {
                 for (const auto& curveJson : jcwJson["MaxBoundaryCurves"]) {
-                    CurveInfo curve;
+                    CurveInfo curve{};
                     parseCurveInfo(curveJson, curve);
                     jcw.MaxBoundaryCurves.push_back(curve);
                 }
@@ -273,7 +273,7 @@ CombinedData parseJsonData(const std::string& arDesignJson, const std::string& i
 
             if (jcwJson.isMember("BoundaryLines")) {
                 for (const auto& curveJson : jcwJson["BoundaryLines"]) {
-                    CurveInfo curve;
+                    CurveInfo curve{};
                     parseCurveInfo(curveJson, curve);
                     jcw.BoundaryLines.push_back(curve);
                 }
@@ -389,7 +389,7 @@ CombinedData parseJsonData(const std::string& arDesignJson, const std::string& i
             AssistCollector::Boundary boundary;
             boundary.Offset = boundaryJson["Offset"].asDouble();
             for (const auto& borderJson : boundaryJson["Borders"]) {
-                Border border;
+                Border border{};
                 border.StartPoint = Point{borderJson["StartPoint"]["x"].asDouble(), borderJson["StartPoint"]["y"].asDouble(), borderJson["StartPoint"]["z"].asDouble()};
                 border.EndPoint = Point{borderJson["EndPoint"]["x"].asDouble(), borderJson["EndPoint"]["y"].asDouble(), borderJson["EndPoint"]["z"].asDouble()};
                 border.ColorIndex = borderJson["ColorIndex"].asInt();
