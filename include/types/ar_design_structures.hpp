@@ -535,6 +535,13 @@ struct DoorAndWindow {
     std::string ShutterType;   // 百叶类型
     bool IsCross;             // 是否交叉
     double Elevation;         // 标高
+
+    std::map<std::string, std::string> Parameters; // 参数列表
+    std::string Material; // 材料
+    std::vector<CurveInfo> WindowFrame; // 窗框
+    std::vector<CurveInfo> WindowGlassModel; // 窗玻璃模型
+    std::map<std::string, std::string> OpenInfo; // 开启信息
+    CurveInfo WindowWidthLine; // 窗宽度线
 };
 
 
@@ -612,6 +619,82 @@ struct ARDesign {
     std::vector<FloorWaterDustpan> WaterDustpan;  // 集水槽列表
     std::vector<void*> Ditchs;                    // 沟槽列表
     std::vector<Pit> Pit;                         // 坑列表
+};
+
+// 公司统一标准配置
+struct CompanyUnifiedStandarsConfig {
+    struct {
+        bool IsDimension_inHouse; // 是否在户内标注
+    } InternalDimensionConfig;
+    
+    struct {
+        std::string Style;
+        std::string Location;
+    } Rail_balconyConfig, Rail_protectWinConfig;
+    
+    struct {
+        std::string Style_Elevation;
+        std::string WindowFrameWidth;
+        struct {
+            bool IsHasGlassSymbol_FixedWin;
+            bool IsHasGlassSymbol_OpenWin;
+        } GlassSymbolStyle;
+        std::string WinOpenLineStyle;
+    } DoorAndWinStyleConfig;
+    
+    struct {
+        std::string Type;
+        std::string PlaneStyle;
+        std::string HouseTypeStyle;
+        std::string StairSectionStyle;
+        std::string WallSectionStyle;
+    } MaterialFillingConfig;
+};
+
+// 天正元素类型配置
+struct TianZhengElementTypeConfig {
+    struct ElementTypeInfo {
+        std::string Position;
+        std::string TextStyle;
+        double TextHeight;
+        double Scale_Plane;
+        double Scale_ElevationAndSection;
+        double Scale_HouseType;
+        double Scale_Core;
+        double Scale_StairSection;
+        double Scale_WallSection;
+        std::string Note;
+    };
+    
+    ElementTypeInfo DoorAndWinNumber;
+    ElementTypeInfo Index;
+    ElementTypeInfo Index2;
+    ElementTypeInfo Arrow;
+    ElementTypeInfo HouseNumber;
+    ElementTypeInfo PlaneName;
+    ElementTypeInfo PlaneScaleText;
+    ElementTypeInfo WallSectionPlaneName;
+    ElementTypeInfo WallSectionPlaneScale;
+    ElementTypeInfo SectionLineName;
+    ElementTypeInfo Compass;
+    ElementTypeInfo ThreeDimitions;
+    ElementTypeInfo InternalDimitions;
+};
+
+// 项目统一标准配置
+struct ProjectUnifiedStandarsConfig {
+    TianZhengElementTypeConfig TianZhengElementTypeConfig;
+    struct {
+        std::string Style;
+        std::string Materials;
+        double Thickness;
+    } ARInsulationConfig;
+};
+
+// 建筑统一标准
+struct ARUniformStanDards {
+    CompanyUnifiedStandarsConfig CompanyUnifiedStandarsConfig;
+    ProjectUnifiedStandarsConfig ProjectUnifiedStandarsConfig;
 };
 
 #endif // AR_DESIGN_STRUCTURES_H
