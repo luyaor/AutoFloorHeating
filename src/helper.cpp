@@ -148,7 +148,15 @@ std::string planToJson(const HeatingDesign& plan) {
     return writer.write(root);
 }
 
-// Helper function to parse ARDesign.json
+// Add new helper function for parsing WindowStyle
+void parseWindowStyle(const Json::Value& json, WindowStyle& style) {
+    style.StyleId = json["StyleId"].asInt();
+    style.StyleName = json["StyleName"].asString();
+    style.SSMHeight = json["SSMHeight"].asDouble();
+    style.SSMWidth = json["SSMWidth"].asDouble();
+    style.SSMBottomHeight = json["SSMBottomHeight"].asDouble();
+}
+
 ARDesign parseARDesign(const std::string& arDesignJson) {
     ARDesign arDesign;
     Json::Value root;
@@ -556,6 +564,38 @@ ARDesign parseARDesign(const std::string& arDesignJson) {
                 config.ARInsulationConfig.Materials = insConfig["Materials"].asString();
                 config.ARInsulationConfig.Thickness = insConfig["Thickness"].asDouble();
             }
+
+            // Add SlopeStyleConfig parsing
+            if (projectConfig.isMember("SlopeStyleConfig")) {
+                const auto& slopeConfig = projectConfig["SlopeStyleConfig"];
+                auto parseSlopeConfig = [](const Json::Value& json) {
+                    ProjectUnifiedStandarsConfig::SlopeConfig config;
+                    config.Position = json["Position"].asString();
+                    config.SlopeValue = json["SlopeValue"].asString();
+                    return config;
+                };
+
+                const std::vector<std::pair<std::string, ProjectUnifiedStandarsConfig::SlopeConfig&>> slopes = {
+                    {"Toilet", config.SlopeStyleConfig.Toilet},
+                    {"Shower", config.SlopeStyleConfig.Shower},
+                    {"Lanai", config.SlopeStyleConfig.Lanai},
+                    {"Balcony", config.SlopeStyleConfig.Balcony},
+                    {"Aircondition", config.SlopeStyleConfig.Aircondition},
+                    {"OutsideWindowSill", config.SlopeStyleConfig.OutsideWindowSill},
+                    {"Parapet", config.SlopeStyleConfig.Parapet},
+                    {"Roof", config.SlopeStyleConfig.Roof},
+                    {"Canopy", config.SlopeStyleConfig.Canopy},
+                    {"GarageRoof", config.SlopeStyleConfig.GarageRoof},
+                    {"WaterWell", config.SlopeStyleConfig.WaterWell},
+                    {"WaistLine", config.SlopeStyleConfig.WaistLine}
+                };
+
+                for (const auto& [key, slope] : slopes) {
+                    if (slopeConfig.isMember(key)) {
+                        slope = parseSlopeConfig(slopeConfig[key]);
+                    }
+                }
+            }
         }
     }
 
@@ -584,7 +624,7 @@ ARDesign parseARDesign(const std::string& arDesignJson) {
 
             // Parse CurveArray
             for (const auto& curveJson : gridJson["CurveArray"]) {
-                CurveInfo curve;
+                CurveInfo curve{};
                 parseCurveInfo(curveJson, curve);
                 grid.CurveArray.push_back(curve);
             }
@@ -632,7 +672,7 @@ ARDesign parseARDesign(const std::string& arDesignJson) {
 
             // Parse Boundary
             for (const auto& curveJson : slabJson["Boundary"]) {
-                CurveInfo curve;
+                CurveInfo curve{};
                 parseCurveInfo(curveJson, curve);
                 slab.Boundary.push_back(curve);
             }
