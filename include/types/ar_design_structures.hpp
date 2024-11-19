@@ -6,18 +6,6 @@
 #include "data_structures.hpp"
 #include <map>
 
-struct StyleView;
-struct StyleCell;
-struct Elevation;
-struct Wall;
-struct ToiletAndKitchenConditionHole;
-struct Pipe;
-struct StairArea;
-struct ArcWall;
-struct WallHole;
-struct CurveInfo;
-struct Grid;
-struct WindowStyle;
 // Structures for ARDesign.json
 // 尺寸结构
 struct Size {
@@ -25,6 +13,21 @@ struct Size {
     double Width; // 宽度
     double Thickness; // 厚度
 };
+
+// 曲线结构（直线或弧线）
+struct CurveInfo {
+    Point StartPoint;        // 起点
+    Point EndPoint;          // 终点
+    Point MidPoint;         // 中点（弧线时使用）
+    Point Normal;           // 法线方向（弧线时使用）
+    Point Center;           // 圆心（弧线时使用）
+    double Radius;          // 半径（弧线时使用）
+    double StartAngle;      // 起始角度（弧线时使用）
+    double EndAngle;        // 结束角度（弧线时使用）
+    int ColorIndex;         // 颜色索引
+    int CurveType;          // 曲线类型：0-直线，1-圆弧
+};
+
 
 // JCW (家具等) 结构
 struct JCW {
@@ -85,107 +88,6 @@ struct HouseType {
     std::vector<Point> Boundary; // 户型边界点列表
 };
 
-// 曲线结构（直线或弧线）
-struct CurveInfo {
-    Point StartPoint;        // 起点
-    Point EndPoint;          // 终点
-    Point MidPoint;         // 中点（弧线时使用）
-    Point Normal;           // 法线方向（弧线时使用）
-    Point Center;           // 圆心（弧线时使用）
-    double Radius;          // 半径（弧线时使用）
-    double StartAngle;      // 起始角度（弧线时使用）
-    double EndAngle;        // 结束角度（弧线时使用）
-    int ColorIndex;         // 颜色索引
-    int CurveType;          // 曲线类型：0-直线，1-圆弧
-};
-
-// 窗户样式结构
-struct WindowStyle {
-    int StyleId;                      // 样式ID
-    std::string StyleName;            // 样式名称
-    double SSMHeight;                 // SSM高度
-    double SSMWidth;                  // SSM宽度
-    double SSMBottomHeight;           // SSM底部高度
-    std::vector<Point> Vertices;    // 顶点数组
-    std::vector<StyleCell> Cells; // 单元格列表
-    std::vector<StyleView> Views; // 视图列表
-    std::string WindowsMaterial;  // 窗户材料
-    std::string GlassMaterial;    // 玻璃材料
-    std::map<std::string, bool> GlassConfig;    // 玻璃配置，如 "安全玻璃": true
-    std::map<std::string, std::string> OtherConfig;  // 其他配置，如 "otherconfig5": "0"
-};
-
-
-// 门窗结构（统一处理门和窗）
-struct DoorAndWindow {
-    std::string Guid;          // 全局唯一标识符
-    std::string FamilyName;    // 族名称
-    std::string Name;          // 名称
-    std::string Type;          // 类型（"门"或"窗"）
-    int DoorType;             // 门类型
-    std::string HostWall;      // 所属墙体
-    Point Location;            // 位置
-    double BottomHeight;       // 底部高度
-    double TopHeight;          // 顶部高度
-    Size dimensions;          // 尺寸 (renamed from Size)
-    Point FlipFaceNormal;      // 翻转面法线
-    Point FlipHandNormal;      // 翻转手法线
-    int IsVisible;            // 是否可见
-    int IsMirror;             // 是否镜像
-    std::string NumberSign;    // 编号标记
-    int VisibleElevationPlan; // 可见立面图
-    double LevelOffset;        // 标高偏移
-    CurveInfo BaseLine;        // 基准线
-    bool IsFire;              // 是否防火
-    WindowStyle Style;         // 窗户样式
-    std::vector<double> TwoSideDepths;  // 两侧深度
-    std::string GroupNo;       // 组号
-    std::vector<std::string> Items;  // 项目列表
-    bool IsSpecialShap;       // 是否特殊形状
-
-    // 门特有属性
-    std::string Number;        // 编号
-    std::string NumberForModeling; // 建模编号
-    bool IsHaveShutter;       // 是否有百叶
-    Size Size;  // 尺寸数组
-    double MortarThickness;   // 砂浆厚度
-    double AirArea;           // 通风面积
-    std::string OpenDirection; // 开启方向
-    std::string FamilyType;    // 族类型
-    std::string SectionSymbolName; // 剖面符号名称
-    bool IsHaveHole;          // 是否有洞
-    bool IsDimension;         // 是否标注
-    int WindowBorderType;     // 窗框类型
-    bool IsFireWindow;        // 是否防火窗
-    std::string FireClass;    // 防火等级
-    std::string DoorTypeForNum; // 门类型编号
-    std::string WindowType;    // 窗类型
-    std::string ShutterType;   // 百叶类型
-    bool IsCross;             // 是否交叉
-    double Elevation;         // 标高
-};
-
-
-// 建筑结构
-struct Construction {
-    std::vector<HouseType> houseTypes;     // 户型列表
-    std::vector<Room> rooms;               // 房间列表
-    std::vector<JCW> jcws;                 // 家具列表
-    std::vector<DoorAndWindow> doorAndWindows;  // 门窗列表
-    std::vector<Grid> Grid;                // 轴网列表
-    std::vector<Elevation> Elevation; // 标高列表
-    std::vector<WallHole> WallHole; // 墙洞列表
-    std::vector<ToiletAndKitchenConditionHole> ToiletAndKitchenConditionHole; // 卫生间和厨房的空调洞列表
-    std::vector<CurveInfo> DrainageDitch; // 排水沟列表
-    std::vector<CurveInfo> StepAndRampRailing; // 台阶和坡道栏杆列表
-    std::vector<CurveInfo> RegionBreak; // 区域打断列表
-    std::vector<ArcWall> ArcWall; // 弧形墙列表
-    std::vector<StairArea> StairArea; // 楼梯区域列表
-    std::vector<Pipe> Pipe; // 管道列表
-    std::vector<CurveInfo> SourceWallLines; // 源墙线列表
-    std::vector<Wall> walls; // 墙体列表
-};
-
 
 // 轴网结构
 struct Grid {
@@ -233,26 +135,26 @@ struct Elevation {
 
 // 墙洞结构
 struct WallHole {
-    // 待补充字段
+    std::string HoleName;           // 洞名称
+    double HoleDisToFloor;          // 距地高度
+    double HoleDiameter;            // 洞直径
+    std::string HostWallName;       // 所属墙体名称
+    Point JHolePosition;            // 洞位置
+    Point JHostWallDir;             // 墙体方向
+    Point JHostWallNormal;          // 墙体法线
+    double HostWallThickness;       // 墙体厚度
+    CurveInfo JHostWallLine;        // 墙体线
+    int IsCreat;                    // 是否创建
+    int IsInWindow;                 // 是否在窗内
+    std::string WindowName;         // 窗户名称
+    int HoleType;                   // 洞类型
+    std::string HostJCW;            // 所属构件
 };
 
 // 空调洞结构
 struct ToiletAndKitchenConditionHole {
     std::string AirConditionName; // 空调名称
     std::vector<WallHole> AirConditionHoles; // 空调洞列表
-};
-
-// 楼层结构
-struct Floor {
-    std::string Name; // 楼层名称
-    std::string Num; // 楼层号
-    std::string AllFloor; // 所有楼层
-    double LevelHeight; // 层高度
-    double LevelElevation; // 楼层标高
-    Construction construction; // 楼层的建筑结构
-    Point BasePoint; // 基准点
-    std::string RNum; // 房间编号
-    std::string DrawingFrameNo; // 图框编号
 };
 
 // 标高结构
@@ -422,24 +324,6 @@ struct DWParam {
     double WindowThickness;         // 窗户厚度
 };
 
-// Web参数结构
-struct WebParam {
-    std::vector<Construction> Constructions;
-    DWParam DoorWindowParam;
-    ProjArIndexs ProjArIndexs;
-    std::string PlotTime;
-    std::string PlotStage;
-    std::string NorthAngle;
-    std::string Climatepart;
-    std::string Province;
-    std::string City;
-    std::vector<std::string> RoomTypes;
-    std::string STOffsetDirction;
-    std::string STTpye;
-    std::string MGTpye;
-    std::string Guadcbwhd;
-};
-
 // 剖面信息结构
 struct SectionInfo {
     std::string SectionSymbolName;      // 剖面符号名称
@@ -470,6 +354,242 @@ struct FrameInfo {
     double Width;                       // 宽度
 };
 
+// 楼板结构
+struct STSlab {
+    std::string FloorNum;              // 楼层号
+    std::string RoomName;              // 房间名称
+    std::vector<CurveInfo> Boundary;   // 边界线列表
+    std::string Type;                  // 类型
+    double Thickness;                  // 厚度
+    Point Location;                    // 位置
+    std::string RoomGuid;             // 房间GUID
+    std::string ID;                    // ID
+    double Height;                     // 高度
+    std::string ElementId;             // 元素ID
+    int IsLowerPlate;                  // 是否为下板
+    std::vector<Wall> Walls;           // 墙体列表
+    int RoomIsHole;                    // 房间是否为洞
+    std::string Guid;                  // GUID
+    std::string MaterialType;          // 材料类型
+    std::string SlabName;              // 楼板名称
+};
+
+// 楼层类型结构
+struct FloorType {
+    std::string FloorNum;              // 楼层号
+    std::string Type;                  // 楼层类型（如"平面图"、"屋面层平面图"等）
+};
+
+// 防火信息结构
+struct FireInfo {
+};
+
+// 建筑通用信息结构
+struct ARGeneralInfo {
+    std::string Company;           // 公司名称
+    std::string BuildingName;      // 建筑名称
+    std::string Address;           // 地址
+    double Area;                   // 面积
+    std::string Floors;           // 楼层数
+    double Height;                // 高度
+    std::string Intensity;        // 强度
+    int SeismicDegree;           // 抗震等级
+    std::string STType;          // 结构类型
+    std::string PlotTime;        // 绘图时间
+    FrameInfo FrameInfo;         // 图框信息
+    std::vector<FireInfo> FireInfos; // 防火信息列表
+    std::string ArFloorOn;       // 地上层数
+    std::string ArFloorUnder;    // 地下层数
+    std::string ArFloorRemark;   // 楼层备注
+    std::string Climatepart;     // 气候分区
+    std::string Province;        // 省份
+    std::string City;            // 城市
+    bool IsOpenJK;              // 是否开放JK
+    std::string FireLevel;      // 防火等级
+    std::string RoofingLevel;   // 屋面等级
+    std::string Type;           // 类型
+    std::string MGTpye;         // MGTpye
+};
+
+// 墙体保温结构
+struct Insulation {
+    // 待补充字段
+};
+
+// 元数据墙体结构
+struct MetaWall {
+    std::vector<Wall> RectWalls;      // 矩形墙体列表
+    std::vector<Wall> NonRectWalls;   // 非矩形墙体列表
+    std::vector<STSlab> STSlabs;      // 楼板列表
+    std::vector<Insulation> Insulations; // 保温层列表
+};
+
+// 区域边界模型结构
+struct AreaBoundaryModel {
+    std::vector<CurveInfo> JBoundary;      // 边界线列表
+    double Area;                           // 面积
+};
+
+// 楼层面积信息结构
+struct FloorAreaInfo {
+    std::string FloorNum;                  // 楼层号
+    double LevelHeight;                    // 层高
+    double FloorArea;                      // 楼层面积
+    std::vector<CurveInfo> JBoundarys;     // 边界线列表
+    std::vector<void*> OneFloorJKDoorAreas;// 单层门窗面积列表
+    std::vector<AreaBoundaryModel> AreaBoundaryModels; // 区域边界模型列表
+};
+
+// 建筑面积信息结构
+struct ARArea {
+    double TotalArea;                      // 总面积
+    std::vector<FloorAreaInfo> FloorArea;  // 楼层面积信息列表
+};
+
+// 集水槽结构
+struct WaterDustpanItem {
+    Point Location;                // 位置
+    CurveInfo Line;               // 线条
+};
+
+// 楼层集水槽结构
+struct FloorWaterDustpan {
+    std::vector<Point> RainPipelocations;  // 雨水管位置
+    std::string Num;                       // 楼层号
+    std::vector<WaterDustpanItem> WaterDustpans;  // 集水槽列表
+};
+
+// 坑结构
+struct Pit {
+    std::string Number;           // 编号
+    std::string Name;            // 名称
+    std::string PitCategory;     // 坑类别
+    double BaseLevelElevation;   // 基准标高
+    Point Location;                 // 点位置
+    Point Center;                // 中心点
+    double Length;               // 长度
+    double Width;                // 宽度
+    double Heigh;                // 高度
+};
+
+// 窗户样式结构
+struct WindowStyle {
+    int StyleId;                      // 样式ID
+    std::string StyleName;            // 样式名称
+    double SSMHeight;                 // SSM高度
+    double SSMWidth;                  // SSM宽度
+    double SSMBottomHeight;           // SSM底部高度
+    std::vector<Point> Vertices;    // 顶点数组
+    std::vector<StyleCell> Cells; // 单元格列表
+    std::vector<StyleView> Views; // 视图列表
+    std::string WindowsMaterial;  // 窗户材料
+    std::string GlassMaterial;    // 玻璃材料
+    std::map<std::string, bool> GlassConfig;    // 玻璃配置，如 "安全玻璃": true
+    std::map<std::string, std::string> OtherConfig;  // 其他配置，如 "otherconfig5": "0"
+};
+
+// 门窗结构（统一处理门和窗）
+struct DoorAndWindow {
+    std::string Guid;          // 全局唯一标识符
+    std::string FamilyName;    // 族名称
+    std::string Name;          // 名称
+    std::string Type;          // 类型（"门"或"窗"）
+    int DoorType;             // 门类型
+    std::string HostWall;      // 所属墙体
+    Point Location;            // 位置
+    double BottomHeight;       // 底部高度
+    double TopHeight;          // 顶部高度
+    Size dimensions;          // 尺寸 (renamed from Size)
+    Point FlipFaceNormal;      // 翻转面法线
+    Point FlipHandNormal;      // 翻转手法线
+    int IsVisible;            // 是否可见
+    int IsMirror;             // 是否镜像
+    std::string NumberSign;    // 编号标记
+    int VisibleElevationPlan; // 可见立面图
+    double LevelOffset;        // 标高偏移
+    CurveInfo BaseLine;        // 基准线
+    bool IsFire;              // 是否防火
+    WindowStyle Style;         // 窗户样式
+    std::vector<double> TwoSideDepths;  // 两侧深度
+    std::string GroupNo;       // 组号
+    std::vector<std::string> Items;  // 项目列表
+    bool IsSpecialShap;       // 是否特殊形状
+
+    // 门特有属性
+    std::string Number;        // 编号
+    std::string NumberForModeling; // 建模编号
+    bool IsHaveShutter;       // 是否有百叶
+    Size Size;  // 尺寸数组
+    double MortarThickness;   // 砂浆厚度
+    double AirArea;           // 通风面积
+    std::string OpenDirection; // 开启方向
+    std::string FamilyType;    // 族类型
+    std::string SectionSymbolName; // 剖面符号名称
+    bool IsHaveHole;          // 是否有洞
+    bool IsDimension;         // 是否标注
+    int WindowBorderType;     // 窗框类型
+    bool IsFireWindow;        // 是否防火窗
+    std::string FireClass;    // 防火等级
+    std::string DoorTypeForNum; // 门类型编号
+    std::string WindowType;    // 窗类型
+    std::string ShutterType;   // 百叶类型
+    bool IsCross;             // 是否交叉
+    double Elevation;         // 标高
+};
+
+
+
+// 建筑结构
+struct Construction {
+    std::vector<HouseType> houseTypes;     // 户型列表
+    std::vector<Room> rooms;               // 房间列表
+    std::vector<JCW> jcws;                 // 家具列表
+    std::vector<DoorAndWindow> doorAndWindows;  // 门窗列表
+    std::vector<Grid> Grid;                // 轴网列表
+    std::vector<Elevation> Elevation; // 标高列表
+    std::vector<WallHole> WallHole; // 墙洞列表
+    std::vector<ToiletAndKitchenConditionHole> ToiletAndKitchenConditionHole; // 卫生间和厨房的空调洞列表
+    std::vector<CurveInfo> DrainageDitch; // 排水沟列表
+    std::vector<CurveInfo> StepAndRampRailing; // 台阶和坡道栏杆列表
+    std::vector<CurveInfo> RegionBreak; // 区域打断列表
+    std::vector<ArcWall> ArcWall; // 弧形墙列表
+    std::vector<StairArea> StairArea; // 楼梯区域列表
+    std::vector<Pipe> Pipe; // 管道列表
+    std::vector<CurveInfo> SourceWallLines; // 源墙线列表
+    std::vector<Wall> walls; // 墙体列表
+};
+
+// Web参数结构
+struct WebParam {
+    std::vector<Construction> Constructions;
+    DWParam DoorWindowParam;
+    ProjArIndexs ProjArIndexs;
+    std::string PlotTime;
+    std::string PlotStage;
+    std::string NorthAngle;
+    std::string Climatepart;
+    std::string Province;
+    std::string City;
+    std::vector<std::string> RoomTypes;
+    std::string STOffsetDirction;
+    std::string STTpye;
+    std::string MGTpye;
+    std::string Guadcbwhd;
+};
+
+// 楼层结构
+struct Floor {
+    std::string Name; // 楼层名称
+    std::string Num; // 楼层号
+    std::string AllFloor; // 所有楼层
+    double LevelHeight; // 层高度
+    double LevelElevation; // 楼层标高
+    Construction construction; // 楼层的建筑结构
+    Point BasePoint; // 基准点
+    std::string RNum; // 房间编号
+    std::string DrawingFrameNo; // 图框编号
+};
+
 // 建筑设计数据结构
 struct ARDesign {
     std::vector<Floor> Floor;                  // 楼层列表
@@ -479,6 +599,19 @@ struct ARDesign {
     WebParam WebParam;                         // Web参数
     std::vector<SectionInfo> SectionInfos;     // 剖面信息列表
     FrameInfo FrameInfo;                       // 图框信息
+    std::vector<STSlab> STSlabs;              // 楼板列表
+    double ARHeight;                           // 建筑高度
+    std::vector<FloorType> FloorType;         // 楼层类型列表
+    int FloorNumber;                           // 楼层数量
+    std::vector<void*> FireCompartment;        // 防火分区列表
+    ARGeneralInfo ARGeneralInfo;               // 建筑通用信息
+    MetaWall MetaWall;                         // 元数据墙体
+    std::vector<void*> AccessHole;             // 检修口列表
+    std::vector<void*> Shaft;                  // 竖井列表
+    ARArea ARArea;                         // 建筑面积信息
+    std::vector<FloorWaterDustpan> WaterDustpan;  // 集水槽列表
+    std::vector<void*> Ditchs;                    // 沟槽列表
+    std::vector<Pit> Pit;                         // 坑列表
 };
 
 #endif // AR_DESIGN_STRUCTURES_H
