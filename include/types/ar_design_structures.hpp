@@ -130,7 +130,7 @@ struct Elevation {
     std::string TextType;         // 文本类型
     std::string Id;               // 标识符
     std::string DescribeText;     // 描述文本
-    bool IsUnknownElevation;      // 是否未知标高
+    bool IsUnknownElevation;      // 否未知标高
 };
 
 // 墙洞结构
@@ -424,7 +424,7 @@ struct MetaWall {
     std::vector<Insulation> Insulations; // 保温层列表
 };
 
-// 区域边界模型结构
+// 区域边模型结构
 struct AreaBoundaryModel {
     std::vector<CurveInfo> JBoundary;      // 边界线列表
     double Area;                           // 面积
@@ -597,28 +597,12 @@ struct Floor {
     std::string DrawingFrameNo; // 图框编号
 };
 
-// 建筑设计数据结构
-struct ARDesign {
-    std::vector<Floor> Floor;                  // 楼层列表
-    std::vector<Level> Level;                  // 标高列表
-    std::vector<Grid> Grid;                    // 顶层轴网列表
-    std::vector<StandardInfo> StandardInfo;    // 标准信息列表
-    WebParam WebParam;                         // Web参数
-    std::vector<SectionInfo> SectionInfos;     // 剖面信息列表
-    FrameInfo FrameInfo;                       // 图框信息
-    std::vector<STSlab> STSlabs;              // 楼板列表
-    double ARHeight;                           // 建筑高度
-    std::vector<FloorType> FloorType;         // 楼层类型列表
-    int FloorNumber;                           // 楼层数量
-    std::vector<void*> FireCompartment;        // 防火分区列表
-    ARGeneralInfo ARGeneralInfo;               // 建筑通用信息
-    MetaWall MetaWall;                         // 元数据墙体
-    std::vector<void*> AccessHole;             // 检修口列表
-    std::vector<void*> Shaft;                  // 竖井列表
-    ARArea ARArea;                         // 建筑面积信息
-    std::vector<FloorWaterDustpan> WaterDustpan;  // 集水槽列表
-    std::vector<void*> Ditchs;                    // 沟槽列表
-    std::vector<Pit> Pit;                         // 坑列表
+// 平面元素样式配置
+struct PlaneElementStyle {
+    std::string Type;
+    int DimensionDrawing;
+    std::string IndexNumbel;
+    std::string LegendStyle;
 };
 
 // 公司统一标准配置
@@ -649,41 +633,126 @@ struct CompanyUnifiedStandarsConfig {
         std::string StairSectionStyle;
         std::string WallSectionStyle;
     } MaterialFillingConfig;
-};
 
-// 天正元素类型配置
-struct TianZhengElementTypeConfig {
-    struct ElementTypeInfo {
-        std::string Position;
-        std::string TextStyle;
-        double TextHeight;
-        double Scale_Plane;
-        double Scale_ElevationAndSection;
-        double Scale_HouseType;
-        double Scale_Core;
-        double Scale_StairSection;
-        double Scale_WallSection;
-        std::string Note;
-    };
-    
-    ElementTypeInfo DoorAndWinNumber;
-    ElementTypeInfo Index;
-    ElementTypeInfo Index2;
-    ElementTypeInfo Arrow;
-    ElementTypeInfo HouseNumber;
-    ElementTypeInfo PlaneName;
-    ElementTypeInfo PlaneScaleText;
-    ElementTypeInfo WallSectionPlaneName;
-    ElementTypeInfo WallSectionPlaneScale;
-    ElementTypeInfo SectionLineName;
-    ElementTypeInfo Compass;
-    ElementTypeInfo ThreeDimitions;
-    ElementTypeInfo InternalDimitions;
+    struct {
+        std::string FlueHoleSymbol;
+    } FlueHoleConfig;
+
+    struct {
+        std::string InsulationStyle;
+    } InsulationConfig;
+
+    struct {
+        std::string SteelLadderStyle;
+    } SteelLadderConfig;
+
+    struct {
+        std::string SplashBlockStyle;
+    } SplashBlockConfig;
+
+    struct {
+        PlaneElementStyle RainPip;               // 雨水管
+        PlaneElementStyle CondensatePip;         // 冷凝水管
+        PlaneElementStyle SewagePip_balcony;     // 污水管（阳台）
+        PlaneElementStyle SewagePip_kitAndtoi;   // 污水管（厨房、卫生间）
+        PlaneElementStyle WastePip;              // 废水管
+        PlaneElementStyle FireStandPip;          // 消防立管
+        PlaneElementStyle FireHydrant;           // 消火栓
+        PlaneElementStyle Drain_1;               // 地漏（卫生间、空调板、阳台雨水）
+        PlaneElementStyle Drain_2;               // 地漏（洗衣机）
+        PlaneElementStyle ElectricalBoxHigh_V;   // 强电箱
+        PlaneElementStyle ElectricalBoxLow_V;    // 弱电箱
+        PlaneElementStyle VideoPhone;            // 视频对讲机
+        PlaneElementStyle RainStrainer_Roof;     // 屋面雨水斗
+        PlaneElementStyle RainStrainer_Side;     // 侧排雨水斗
+        PlaneElementStyle OverflowPipe;          // 溢流管
+        PlaneElementStyle AirConditionHole_Low;  // 低位空调预留洞
+        PlaneElementStyle AirConditionHole_High; // 高位空调预留洞
+        PlaneElementStyle AirConditionHole_Symbol; // 空调预留洞内外高差符号
+        PlaneElementStyle ToiletHole;            // 卫生间排气洞
+        PlaneElementStyle KitchenHole;           // 厨房排气洞
+    } PlaneElementsStyleConfig;
+
+    struct {
+        std::string FloorHeightSyle;
+        std::string HafFloorHeightSyle;
+    } AirConditionerBracketConfig;
+
+    struct {
+        std::string PlaneLevelStyle;
+        std::string EleLevelStyle;
+    } LevelStyleConfig;
 };
 
 // 项目统一标准配置
 struct ProjectUnifiedStandarsConfig {
-    TianZhengElementTypeConfig TianZhengElementTypeConfig;
+    struct {
+        std::string TwoHouse;
+        std::string OneHouse;
+    } DoubleAirConditionPanelConfig;
+
+    struct {
+        double Width;
+        std::string Style;
+    } WaterDispersalConfig;
+
+    struct {
+        bool IsAll;
+    } ConcreteWallConfig;
+
+    struct WaterProofConfig {
+        std::string Position;
+        double OnHeight;
+        int LineWidth;
+    };
+
+    struct {
+        WaterProofConfig UndergroundFirstFloor;
+        WaterProofConfig WaterRoom;
+    } WaterProofStyleConfig;
+
+    struct SlopeConfig {
+        std::string Position;
+        std::string SlopeValue;
+    };
+
+    struct {
+        SlopeConfig Toilet;
+        SlopeConfig Shower;
+        SlopeConfig Lanai;
+        SlopeConfig Balcony;
+        SlopeConfig Aircondition;
+        SlopeConfig OutsideWindowSill;
+        SlopeConfig Parapet;
+        SlopeConfig Roof;
+        SlopeConfig Canopy;
+        SlopeConfig GarageRoof;
+        SlopeConfig WaterWell;
+        SlopeConfig WaistLine;
+    } SlopeStyleConfig;
+
+    struct {
+        bool IsTrueNum;
+        std::string ReplaceSymbol;
+    } WallSectionGridConfig;
+
+    struct {
+        bool IsDrawing;
+        double Height;
+    } RoofFlueConfig;
+
+    struct {
+        double UnderGroundWaterRoom;
+        double UnderGroundEleRoom;
+        double EquipmentWell;
+        double OutRoof;
+        double HeatRoom;
+        double WaterPumpRoom;
+        double ElevatorRoom;
+    } DoorSillConfig;
+
+    bool RefugeIsFireWinConfig;
+
     struct {
         std::string Style;
         std::string Materials;
@@ -695,6 +764,31 @@ struct ProjectUnifiedStandarsConfig {
 struct ARUniformStanDards {
     CompanyUnifiedStandarsConfig CompanyUnifiedStandarsConfig;
     ProjectUnifiedStandarsConfig ProjectUnifiedStandarsConfig;
+};
+
+// 建筑设计数据结构
+struct ARDesign {
+    std::vector<Floor> Floor;                  // 楼层列表
+    std::vector<Level> Level;                  // 标高列表
+    std::vector<Grid> Grid;                    // 顶层轴网列表
+    std::vector<StandardInfo> StandardInfo;    // 标准信息列表
+    WebParam WebParam;                         // Web参数
+    std::vector<SectionInfo> SectionInfos;     // 剖面信息列表
+    FrameInfo FrameInfo;                       // 图框信息
+    std::vector<STSlab> STSlabs;              // 楼板列表
+    double ARHeight;                           // 建筑高度
+    std::vector<FloorType> FloorType;         // 楼层类型列表
+    int FloorNumber;                           // 楼层数量
+    std::vector<void*> FireCompartment;        // 防火分区列表
+    ARGeneralInfo ARGeneralInfo;               // 建筑通用信息
+    MetaWall MetaWall;                         // 元数据墙体
+    std::vector<void*> AccessHole;             // 检修口列表
+    std::vector<void*> Shaft;                  // 竖井列表
+    ARArea ARArea;                             // 建筑面积信息
+    std::vector<FloorWaterDustpan> WaterDustpan;  // 集水槽列表
+    std::vector<void*> Ditchs;                    // 沟槽列表
+    std::vector<Pit> Pit;                         // 坑列表
+    ARUniformStanDards ARUniformStanDards;        // 建筑统一标准
 };
 
 #endif // AR_DESIGN_STRUCTURES_H
