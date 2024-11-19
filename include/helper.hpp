@@ -14,6 +14,8 @@ struct CombinedData {
 };
 
 // Function declarations
+ARDesign parseARDesign(const std::string& arDesignJson);
+InputData parseInputData(const std::string& inputDataJson);
 CombinedData parseJsonData(const std::string& arDesignJson, const std::string& inputDataJson);
 HeatingDesign generatePipePlan(const CombinedData& combinedData);
 std::string planToJson(const HeatingDesign& plan);
