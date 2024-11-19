@@ -626,7 +626,7 @@ struct CompanyUnifiedStandarsConfig {
         std::string WinOpenLineStyle;
     } DoorAndWinStyleConfig;
     
-    struct {
+    struct MaterialFillingConfig {
         std::string Type;
         std::string PlaneStyle;
         std::string HouseTypeStyle;
@@ -634,23 +634,23 @@ struct CompanyUnifiedStandarsConfig {
         std::string WallSectionStyle;
     } MaterialFillingConfig;
 
-    struct {
+    struct FlueHoleConfig {
         std::string FlueHoleSymbol;
     } FlueHoleConfig;
 
-    struct {
+    struct InsulationConfig {
         std::string InsulationStyle;
     } InsulationConfig;
 
-    struct {
+    struct SteelLadderConfig {
         std::string SteelLadderStyle;
     } SteelLadderConfig;
 
-    struct {
+    struct SplashBlockConfig {
         std::string SplashBlockStyle;
     } SplashBlockConfig;
 
-    struct {
+    struct PlaneElementsStyleConfig {
         PlaneElementStyle RainPip;               // 雨水管
         PlaneElementStyle CondensatePip;         // 冷凝水管
         PlaneElementStyle SewagePip_balcony;     // 污水管（阳台）
@@ -673,12 +673,12 @@ struct CompanyUnifiedStandarsConfig {
         PlaneElementStyle KitchenHole;           // 厨房排气洞
     } PlaneElementsStyleConfig;
 
-    struct {
+    struct AirConditionerBracketConfig {
         std::string FloorHeightSyle;
         std::string HafFloorHeightSyle;
     } AirConditionerBracketConfig;
 
-    struct {
+    struct LevelStyleConfig {
         std::string PlaneLevelStyle;
         std::string EleLevelStyle;
     } LevelStyleConfig;
@@ -686,17 +686,17 @@ struct CompanyUnifiedStandarsConfig {
 
 // 项目统一标准配置
 struct ProjectUnifiedStandarsConfig {
-    struct {
+    struct DoubleAirConditionPanelConfig {
         std::string TwoHouse;
         std::string OneHouse;
     } DoubleAirConditionPanelConfig;
 
-    struct {
+    struct WaterDispersalConfig {
         double Width;
         std::string Style;
     } WaterDispersalConfig;
 
-    struct {
+    struct ConcreteWallConfig {
         bool IsAll;
     } ConcreteWallConfig;
 
@@ -706,7 +706,7 @@ struct ProjectUnifiedStandarsConfig {
         int LineWidth;
     };
 
-    struct {
+    struct WaterProofStyleConfig {
         WaterProofConfig UndergroundFirstFloor;
         WaterProofConfig WaterRoom;
     } WaterProofStyleConfig;
@@ -716,7 +716,7 @@ struct ProjectUnifiedStandarsConfig {
         std::string SlopeValue;
     };
 
-    struct {
+    struct SlopeStyleConfig {
         SlopeConfig Toilet;
         SlopeConfig Shower;
         SlopeConfig Lanai;
@@ -731,17 +731,17 @@ struct ProjectUnifiedStandarsConfig {
         SlopeConfig WaistLine;
     } SlopeStyleConfig;
 
-    struct {
+    struct WallSectionGridConfig {
         bool IsTrueNum;
         std::string ReplaceSymbol;
     } WallSectionGridConfig;
 
-    struct {
+    struct RoofFlueConfig {
         bool IsDrawing;
         double Height;
     } RoofFlueConfig;
 
-    struct {
+    struct DoorSillConfig {
         double UnderGroundWaterRoom;
         double UnderGroundEleRoom;
         double EquipmentWell;
@@ -753,7 +753,7 @@ struct ProjectUnifiedStandarsConfig {
 
     bool RefugeIsFireWinConfig;
 
-    struct {
+    struct ARInsulationConfig {
         std::string Style;
         std::string Materials;
         double Thickness;

@@ -159,196 +159,488 @@ ARDesign parseARDesign(const std::string& arDesignJson) {
     }
 
     // Parse Floors
-    const Json::Value& floorsJson = root["Floors"];
-    for (const auto& floorJson : floorsJson) {
-        Floor floor;
-        floor.Name = floorJson["Name"].asString();
-        floor.Num = floorJson["Num"].asString();
-        floor.AllFloor = floorJson["AllFloor"].asString();
-        floor.LevelHeight = floorJson["LevelHeight"].asDouble();
-        floor.LevelElevation = floorJson["LevelElevation"].asDouble();
-        floor.RNum = floorJson["RNum"].asString();
-        floor.DrawingFrameNo = floorJson["DrawingFrameNo"].asString();
+    if (root.isMember("Floor")) {
+        const Json::Value& floorsJson = root["Floor"];
+        for (const auto& floorJson : floorsJson) {
+            Floor floor;
+            floor.Name = floorJson["Name"].asString();
+            floor.Num = floorJson["Num"].asString();
+            floor.AllFloor = floorJson["AllFloor"].asString();
+            floor.LevelHeight = floorJson["LevelHeight"].asDouble();
+            floor.LevelElevation = floorJson["LevelElevation"].asDouble();
+            floor.RNum = floorJson["RNum"].asString();
+            floor.DrawingFrameNo = floorJson["DrawingFrameNo"].asString();
 
-        // Parse BasePoint if exists
-        if (floorJson.isMember("BasePoint")) {
-            floor.BasePoint = Point{
-                floorJson["BasePoint"]["x"].asDouble(),
-                floorJson["BasePoint"]["y"].asDouble(),
-                floorJson["BasePoint"]["z"].asDouble()
-            };
-        }
+            // Parse BasePoint
+            if (floorJson.isMember("BasePoint")) {
+                floor.BasePoint = Point{
+                    floorJson["BasePoint"]["x"].asDouble(),
+                    floorJson["BasePoint"]["y"].asDouble(),
+                    floorJson["BasePoint"]["z"].asDouble()
+                };
+            }
 
-        // Parse Construction
-        const Json::Value& constructionJson = floorJson["Construction"];
-        
-        // Parse HouseTypes
-        const Json::Value& houseTypesJson = constructionJson["HouseType"];
-        for (const auto& houseTypeJson : houseTypesJson) {
-            HouseType houseType;
-            houseType.houseName = houseTypeJson["houseName"].asString();
+            // Parse Construction
+            if (floorJson.isMember("Construction")) {
+                const Json::Value& constructionJson = floorJson["Construction"];
+                
+                // Parse HouseTypes
+                if (constructionJson.isMember("HouseType")) {
+                    for (const auto& houseTypeJson : constructionJson["HouseType"]) {
+                        HouseType houseType;
+                        houseType.houseName = houseTypeJson["houseName"].asString();
+                        
+                        // Parse RoomNames
+                        for (const auto& roomName : houseTypeJson["RoomNames"]) {
+                            houseType.RoomNames.push_back(roomName.asString());
+                        }
+                        
+                        // Parse Boundary
+                        for (const auto& pointJson : houseTypeJson["Boundary"]) {
+                            houseType.Boundary.push_back(Point{
+                                pointJson["x"].asDouble(),
+                                pointJson["y"].asDouble(),
+                                pointJson["z"].asDouble()
+                            });
+                        }
+                        floor.construction.houseTypes.push_back(houseType);
+                    }
+                }
+
+                // Parse Rooms
+                if (constructionJson.isMember("Room")) {
+                    for (const auto& roomJson : constructionJson["Room"]) {
+                        Room room;
+                        room.Guid = roomJson["Guid"].asString();
+                        room.MapGuid = roomJson["MapGuid"].asString();
+                        room.Category = roomJson["Category"].asString();
+                        room.Position = roomJson["Position"].asString();
+                        room.BlCreateRoom = roomJson["BlCreateRoom"].asInt();
+                        room.Name = roomJson["Name"].asString();
+                        room.NameType = roomJson["NameType"].asString();
+                        room.ShowArea = roomJson["ShowArea"].asDouble();
+                        room.LevelOffset = roomJson["LevelOffset"].asDouble();
+                        room.LevelOffsetType = roomJson["LevelOffsetType"].asInt();
+                        room.ArchThickness = roomJson["ArchThickness"].asDouble();
+                        room.STOffSet = roomJson["STOffSet"].asDouble();
+                        room.LightArea = roomJson["LightArea"].asDouble();
+                        room.AirArea = roomJson["AirArea"].asDouble();
+                        room.Area = roomJson["Area"].asDouble();
+                        room.RoomElementId = roomJson["RoomElementId"].asInt();
+                        room.SectionSymbolName = roomJson["SectionSymbolName"].asString();
+                        room.IsOpen = roomJson["IsOpen"].asBool();
+                        room.RoomNumber = roomJson["RoomNumber"].asString();
+                        room.Number = roomJson["Number"].asInt();
+
+                        // Parse Names array
+                        for (const auto& name : roomJson["Names"]) {
+                            room.Names.push_back(name.asString());
+                        }
+
+                        // Parse DoorIds array
+                        for (const auto& id : roomJson["DoorIds"]) {
+                            room.DoorIds.push_back(id.asString());
+                        }
+
+                        // Parse DoorNums array
+                        for (const auto& num : roomJson["DoorNums"]) {
+                            room.DoorNums.push_back(num.asString());
+                        }
+
+                        // Parse WindowIds array
+                        for (const auto& id : roomJson["WindowIds"]) {
+                            room.WindowIds.push_back(id.asString());
+                        }
+
+                        // Parse DoorAndWindowIds array
+                        for (const auto& id : roomJson["DoorAndWindowIds"]) {
+                            room.DoorAndWindowIds.push_back(id.asString());
+                        }
+
+                        // Parse JCWGuidNames array
+                        for (const auto& name : roomJson["JCWGuidNames"]) {
+                            room.JCWGuidNames.push_back(name.asString());
+                        }
+
+                        // Parse Boundary curves
+                        for (const auto& curveJson : roomJson["Boundary"]) {
+                            CurveInfo curve;
+                            parseCurveInfo(curveJson, curve);
+                            room.Boundary.push_back(curve);
+                        }
+
+                        // Parse AnnotationPoint
+                        if (roomJson.isMember("AnnotationPoint")) {
+                            room.AnnotationPoint = Point{
+                                roomJson["AnnotationPoint"]["x"].asDouble(),
+                                roomJson["AnnotationPoint"]["y"].asDouble(),
+                                roomJson["AnnotationPoint"]["z"].asDouble()
+                            };
+                        }
+
+                        // Parse FloorDrainPoints array
+                        for (const auto& pointJson : roomJson["FloorDrainPoints"]) {
+                            room.FloorDrainPoints.push_back(Point{
+                                pointJson["x"].asDouble(),
+                                pointJson["y"].asDouble(),
+                                pointJson["z"].asDouble()
+                            });
+                        }
+
+                        floor.construction.rooms.push_back(room);
+                    }
+                }
+
+                // Parse JCWs
+                if (constructionJson.isMember("JCW")) {
+                    for (const auto& jcwJson : constructionJson["JCW"]) {
+                        JCW jcw;
+                        jcw.GuidName = jcwJson["GuidName"].asString();
+                        jcw.Type = jcwJson["Type"].asInt();
+                        jcw.Name = jcwJson["Name"].asString();
+                        jcw.IsBlockLayer = jcwJson["IsBlockLayer"].asBool();
+
+                        // Parse CenterPoint
+                        if (jcwJson.isMember("CenterPoint")) {
+                            jcw.CenterPoint = Point{
+                                jcwJson["CenterPoint"]["x"].asDouble(),
+                                jcwJson["CenterPoint"]["y"].asDouble(),
+                                jcwJson["CenterPoint"]["z"].asDouble()
+                            };
+                        }
+
+                        // Parse ShowCurves
+                        for (const auto& curveJson : jcwJson["ShowCurves"]) {
+                            CurveInfo curve;
+                            parseCurveInfo(curveJson, curve);
+                            jcw.ShowCurves.push_back(curve);
+                        }
+
+                        // Parse MaxBoundaryCurves
+                        for (const auto& curveJson : jcwJson["MaxBoundaryCurves"]) {
+                            CurveInfo curve;
+                            parseCurveInfo(curveJson, curve);
+                            jcw.MaxBoundaryCurves.push_back(curve);
+                        }
+
+                        // Parse BoundaryLines
+                        for (const auto& curveJson : jcwJson["BoundaryLines"]) {
+                            CurveInfo curve;
+                            parseCurveInfo(curveJson, curve);
+                            jcw.BoundaryLines.push_back(curve);
+                        }
+
+                        // Parse Parameters
+                        const Json::Value& paramsJson = jcwJson["Parameters"];
+                        for (const auto& key : paramsJson.getMemberNames()) {
+                            jcw.Parameters[key] = paramsJson[key].asString();
+                        }
+
+                        floor.construction.jcws.push_back(jcw);
+                    }
+                }
+
+                // Parse DoorAndWindows
+                if (constructionJson.isMember("DoorAndWindow")) {
+                    for (const auto& dwJson : constructionJson["DoorAndWindow"]) {
+                        DoorAndWindow dw;
+                        dw.Guid = dwJson["Guid"].asString();
+                        dw.Type = dwJson["Type"].asInt();
+                        dw.Name = dwJson["Name"].asString();
+                        dw.NumberForModeling = dwJson["NumberForModeling"].asString();
+                        dw.Material = dwJson["Material"].asString();
+                        dw.FamilyType = dwJson["FamilyType"].asString();
+                        dw.WindowType = dwJson["WindowType"].asString();
+
+                        // Parse Parameters
+                        const Json::Value& paramsJson = dwJson["Parameters"];
+                        for (const auto& key : paramsJson.getMemberNames()) {
+                            dw.Parameters[key] = paramsJson[key].asString();
+                        }
+
+                        // Parse WindowFrame
+                        for (const auto& curveJson : dwJson["WindowFrame"]) {
+                            CurveInfo curve{};
+                            parseCurveInfo(curveJson, curve);
+                            dw.WindowFrame.push_back(curve);
+                        }
+
+                        // Parse WindowGlassModel
+                        for (const auto& curveJson : dwJson["WindowGlassModel"]) {
+                            CurveInfo curve{};
+                            parseCurveInfo(curveJson, curve);
+                            dw.WindowGlassModel.push_back(curve);
+                        }
+
+                        // Parse OpenInfo
+                        const Json::Value& openInfoJson = dwJson["OpenInfo"];
+                        for (const auto& key : openInfoJson.getMemberNames()) {
+                            dw.OpenInfo[key] = openInfoJson[key].asString();
+                        }
+
+                        // Parse WindowWidthLine
+                        if (dwJson.isMember("WindowWidthLine")) {
+                            parseCurveInfo(dwJson["WindowWidthLine"], dw.WindowWidthLine);
+                        }
+
+                        // Parse Items
+                        for (const auto& item : dwJson["Items"]) {
+                            dw.Items.push_back(item.asString());
+                        }
+
+                        floor.construction.doorAndWindows.push_back(dw);
+                    }
+                }
+            }
             
-            // Parse RoomNames and Boundary
-            for (const auto& roomName : houseTypeJson["RoomNames"]) {
-                houseType.RoomNames.push_back(roomName.asString());
-            }
-            for (const auto& pointJson : houseTypeJson["Boundary"]) {
-                houseType.Boundary.push_back(Point{
-                    pointJson["x"].asDouble(),
-                    pointJson["y"].asDouble(),
-                    pointJson["z"].asDouble()
-                });
-            }
-            floor.construction.houseTypes.push_back(houseType);
+            arDesign.Floor.push_back(floor);
         }
-
-        // Parse Rooms
-        const Json::Value& roomsJson = constructionJson["Room"];
-        for (const auto& roomJson : roomsJson) {
-            Room room;
-            room.Guid = roomJson["Guid"].asString();
-            room.MapGuid = roomJson["MapGuid"].asString();
-            room.Category = roomJson["Category"].asString();
-            room.Position = roomJson["Position"].asString();
-            room.BlCreateRoom = roomJson["BlCreateRoom"].asInt();
-            room.Name = roomJson["Name"].asString();
-            room.NameType = roomJson["NameType"].asString();
-
-            // Parse Names array
-            for (const auto& name : roomJson["Names"]) {
-                room.Names.push_back(name.asString());
-            }
-
-            // Parse Boundary
-            for (const auto& boundaryJson : roomJson["Boundary"]) {
-                CurveInfo curve;
-                parseCurveInfo(boundaryJson, curve);
-                room.Boundary.push_back(curve);
-            }
-
-            // Parse arrays
-            for (const auto& id : roomJson["DoorIds"]) room.DoorIds.push_back(id.asString());
-            for (const auto& num : roomJson["DoorNums"]) room.DoorNums.push_back(num.asString());
-            for (const auto& id : roomJson["WindowIds"]) room.WindowIds.push_back(id.asString());
-            for (const auto& id : roomJson["DoorAndWindowIds"]) room.DoorAndWindowIds.push_back(id.asString());
-            for (const auto& id : roomJson["DoorWayIds"]) room.DoorWayIds.push_back(id.asString());
-            for (const auto& name : roomJson["JCWGuidNames"]) room.JCWGuidNames.push_back(name.asString());
-            for (const auto& name : roomJson["JCWGuidNs"]) room.JCWGuidNs.push_back(name.asString());
-            for (const auto& name : roomJson["WallNames"]) room.WallNames.push_back(name.asString());
-
-            // Parse FloorDrainPoints
-            for (const auto& pointJson : roomJson["FloorDrainPoints"]) {
-                room.FloorDrainPoints.push_back(Point{
-                    pointJson["x"].asDouble(),
-                    pointJson["y"].asDouble(),
-                    pointJson["z"].asDouble()
-                });
-            }
-
-            // Parse numeric values
-            room.ShowArea = roomJson["ShowArea"].asDouble();
-            room.LevelOffset = roomJson["LevelOffset"].asDouble();
-            room.LevelOffsetType = roomJson["LevelOffsetType"].asInt();
-            room.ArchThickness = roomJson["ArchThickness"].asDouble();
-            room.STOffSet = roomJson["STOffSet"].asDouble();
-            room.LightArea = roomJson["LightArea"].asDouble();
-            room.AirArea = roomJson["AirArea"].asDouble();
-            room.Area = roomJson["Area"].asDouble();
-            room.RoomElementId = roomJson["RoomElementId"].asInt();
-            room.Number = roomJson["Number"].asInt();
-
-            // Parse AnnotationPoint
-            const Json::Value& annotationPointJson = roomJson["AnnotationPoint"];
-            room.AnnotationPoint = Point{
-                annotationPointJson["x"].asDouble(),
-                annotationPointJson["y"].asDouble(),
-                annotationPointJson["z"].asDouble()
-            };
-
-            room.SectionSymbolName = roomJson["SectionSymbolName"].asString();
-            room.IsOpen = roomJson["IsOpen"].asBool();
-            room.RoomNumber = roomJson.get("RoomNumber", "").asString();
-
-            floor.construction.rooms.push_back(room);
-        }
-
-        // Parse Walls
-        const Json::Value& wallsJson = constructionJson["Wall"];
-        for (const auto& wallJson : wallsJson) {
-            Wall wall;
-            wall.WallName = wallJson["WallName"].asString();
-            wall.Category = wallJson["Category"].asString();
-            wall.Type = wallJson["Type"].asString();
-            wall.MaterialType = wallJson["MaterialType"].asString();
-            wall.HasUpWall = wallJson["HasUpWall"].asBool();
-            wall.IsParapetWall = wallJson["IsParapetWall"].asBool();
-            wall.IsEdgeGutterWall = wallJson["IsEdgeGutterWall"].asBool();
-
-            // Parse Normal
-            const Json::Value& normalJson = wallJson["Normal"];
-            wall.Normal = Point{
-                normalJson["x"].asDouble(),
-                normalJson["y"].asDouble(),
-                normalJson["z"].asDouble()
-            };
-
-            // Parse CurveInfo fields
-            parseCurveInfo(wallJson["Curve"], wall.Curve);
-            parseCurveInfo(wallJson["FirstLine"], wall.FirstLine);
-            parseCurveInfo(wallJson["SecondLine"], wall.SecondLine);
-
-            wall.Height = wallJson["Height"].asDouble();
-            wall.Thickness = wallJson["Thickness"].asDouble();
-            wall.RoomBoundary = wallJson["RoomBoundary"].asInt();
-            wall.BottomHeight = wallJson["BottomHeight"].asDouble();
-            wall.ElevationType = wallJson["ElevationType"].asInt();
-            wall.Material = wallJson["Material"].asString();
-            wall.ElementId = wallJson["ElementId"].asInt();
-            wall.IsHafFloor = wallJson["IsHafFloor"].asBool();
-            wall.JKType = wallJson["JKType"].asString();
-            wall.FloorNum = wallJson["FloorNum"].asString();
-            wall.FloorName = wallJson["FloorName"].asString();
-
-            floor.construction.walls.push_back(wall);
-        }
-
-        arDesign.Floor.push_back(floor);
     }
 
-    // Parse Levels
-    const Json::Value& levelsJson = root["Level"];
-    for (const auto& levelJson : levelsJson) {
-        Level level;
-        level.Name = levelJson["Name"].asString();
-        level.Num = levelJson["Num"].asString();
-        level.Elevation = levelJson["Elevation"].asDouble();
-        level.AbsElevation = levelJson["AbsElevation"].asDouble();
-        level.LevelHeight = levelJson["LevelHeight"].asDouble();
-        level.LineWidth = levelJson["LineWidth"].asInt();
-        level.EP1Visible = levelJson["EP1Visible"].asInt();
-        level.EP2Visible = levelJson["EP2Visible"].asInt();
-        level.Type = levelJson["Type"].asString();
-        level.Sign = levelJson["Sign"].asString();
-        level.Pattern = levelJson["Pattern"].asString();
-        level.LevelOffSet = levelJson["LevelOffSet"].asDouble();
-        level.ElementId = levelJson["ElementId"].asInt();
+    // Parse ARUniformStanDards
+    if (root.isMember("ARUniformStanDards")) {
+        const Json::Value& standardsJson = root["ARUniformStanDards"];
         
-        // Parse OffSet array
-        for (const auto& offset : levelJson["OffSet"]) {
-            level.OffSet.push_back(offset.asDouble());
+        // Parse CompanyUnifiedStandarsConfig
+        if (standardsJson.isMember("CompanyUnifiedStandarsConfig")) {
+            const Json::Value& companyConfig = standardsJson["CompanyUnifiedStandarsConfig"];
+            auto& config = arDesign.ARUniformStanDards.CompanyUnifiedStandarsConfig;
+            
+            // Parse InternalDimensionConfig
+            if (companyConfig.isMember("InternalDimensionConfig")) {
+                config.InternalDimensionConfig.IsDimension_inHouse = 
+                    companyConfig["InternalDimensionConfig"]["IsDimension_inHouse"].asBool();
+            }
+
+            // Parse Rail configs
+            if (companyConfig.isMember("Rail_balconyConfig")) {
+                config.Rail_balconyConfig.Style = companyConfig["Rail_balconyConfig"]["Style"].asString();
+                config.Rail_balconyConfig.Location = companyConfig["Rail_balconyConfig"]["Location"].asString();
+            }
+            if (companyConfig.isMember("Rail_protectWinConfig")) {
+                config.Rail_protectWinConfig.Style = companyConfig["Rail_protectWinConfig"]["Style"].asString();
+                config.Rail_protectWinConfig.Location = companyConfig["Rail_protectWinConfig"]["Location"].asString();
+            }
+
+            // Parse DoorAndWinStyleConfig
+            if (companyConfig.isMember("DoorAndWinStyleConfig")) {
+                const auto& dwConfig = companyConfig["DoorAndWinStyleConfig"];
+                config.DoorAndWinStyleConfig.Style_Elevation = dwConfig["Style_Elevation"].asString();
+                config.DoorAndWinStyleConfig.WindowFrameWidth = dwConfig["WindowFrameWidth"].asString();
+                config.DoorAndWinStyleConfig.GlassSymbolStyle.IsHasGlassSymbol_FixedWin = 
+                    dwConfig["GlassSymbolStyle"]["IsHasGlassSymbol_FixedWin"].asBool();
+                config.DoorAndWinStyleConfig.GlassSymbolStyle.IsHasGlassSymbol_OpenWin = 
+                    dwConfig["GlassSymbolStyle"]["IsHasGlassSymbol_OpenWin"].asBool();
+                config.DoorAndWinStyleConfig.WinOpenLineStyle = dwConfig["WinOpenLineStyle"].asString();
+            }
+
+            // Parse PlaneElementsStyleConfig
+            if (companyConfig.isMember("PlaneElementsStyleConfig")) {
+                const auto& peConfig = companyConfig["PlaneElementsStyleConfig"];
+                auto parsePlaneElementStyle = [](const Json::Value& json) {
+                    PlaneElementStyle style;
+                    style.Type = json["Type"].asString();
+                    style.DimensionDrawing = json["DimensionDrawing"].asInt();
+                    style.IndexNumbel = json["IndexNumbel"].asString();
+                    style.LegendStyle = json["LegendStyle"].asString();
+                    return style;
+                };
+
+                // Parse all plane element styles
+                const std::vector<std::pair<std::string, PlaneElementStyle&>> elements = {
+                    {"RainPip", config.PlaneElementsStyleConfig.RainPip},
+                    {"CondensatePip", config.PlaneElementsStyleConfig.CondensatePip},
+                    {"SewagePip_balcony", config.PlaneElementsStyleConfig.SewagePip_balcony},
+                    {"SewagePip_kitAndtoi", config.PlaneElementsStyleConfig.SewagePip_kitAndtoi},
+                    {"WastePip", config.PlaneElementsStyleConfig.WastePip},
+                    {"FireStandPip", config.PlaneElementsStyleConfig.FireStandPip},
+                    {"FireHydrant", config.PlaneElementsStyleConfig.FireHydrant},
+                    {"Drain_1", config.PlaneElementsStyleConfig.Drain_1},
+                    {"Drain_2", config.PlaneElementsStyleConfig.Drain_2},
+                    {"ElectricalBoxHigh_V", config.PlaneElementsStyleConfig.ElectricalBoxHigh_V},
+                    {"ElectricalBoxLow_V", config.PlaneElementsStyleConfig.ElectricalBoxLow_V},
+                    {"VideoPhone", config.PlaneElementsStyleConfig.VideoPhone},
+                    {"RainStrainer_Roof", config.PlaneElementsStyleConfig.RainStrainer_Roof},
+                    {"RainStrainer_Side", config.PlaneElementsStyleConfig.RainStrainer_Side},
+                    {"OverflowPipe", config.PlaneElementsStyleConfig.OverflowPipe},
+                    {"AirConditionHole_Low", config.PlaneElementsStyleConfig.AirConditionHole_Low},
+                    {"AirConditionHole_High", config.PlaneElementsStyleConfig.AirConditionHole_High},
+                    {"AirConditionHole_Symbol", config.PlaneElementsStyleConfig.AirConditionHole_Symbol},
+                    {"ToiletHole", config.PlaneElementsStyleConfig.ToiletHole},
+                    {"KitchenHole", config.PlaneElementsStyleConfig.KitchenHole}
+                };
+
+                for (const auto& [key, element] : elements) {
+                    if (peConfig.isMember(key)) {
+                        element = parsePlaneElementStyle(peConfig[key]);
+                    }
+                }
+            }
+
+            // Parse other configs
+            if (companyConfig.isMember("FlueHoleConfig")) {
+                config.FlueHoleConfig.FlueHoleSymbol = 
+                    companyConfig["FlueHoleConfig"]["FlueHoleSymbol"].asString();
+            }
+
+            if (companyConfig.isMember("InsulationConfig")) {
+                config.InsulationConfig.InsulationStyle = 
+                    companyConfig["InsulationConfig"]["InsulationStyle"].asString();
+            }
+
+            if (companyConfig.isMember("SteelLadderConfig")) {
+                config.SteelLadderConfig.SteelLadderStyle = 
+                    companyConfig["SteelLadderConfig"]["SteelLadderStyle"].asString();
+            }
+
+            if (companyConfig.isMember("SplashBlockConfig")) {
+                config.SplashBlockConfig.SplashBlockStyle = 
+                    companyConfig["SplashBlockConfig"]["SplashBlockStyle"].asString();
+            }
+
+            if (companyConfig.isMember("AirConditionerBracketConfig")) {
+                config.AirConditionerBracketConfig.FloorHeightSyle = 
+                    companyConfig["AirConditionerBracketConfig"]["FloorHeightSyle"].asString();
+                config.AirConditionerBracketConfig.HafFloorHeightSyle = 
+                    companyConfig["AirConditionerBracketConfig"]["HafFloorHeightSyle"].asString();
+            }
+
+            if (companyConfig.isMember("LevelStyleConfig")) {
+                config.LevelStyleConfig.PlaneLevelStyle = 
+                    companyConfig["LevelStyleConfig"]["PlaneLevelStyle"].asString();
+                config.LevelStyleConfig.EleLevelStyle = 
+                    companyConfig["LevelStyleConfig"]["EleLevelStyle"].asString();
+            }
         }
-        
-        arDesign.Level.push_back(level);
+
+        // Parse ProjectUnifiedStandarsConfig
+        if (standardsJson.isMember("ProjectUnifiedStandarsConfig")) {
+            const Json::Value& projectConfig = standardsJson["ProjectUnifiedStandarsConfig"];
+            auto& config = arDesign.ARUniformStanDards.ProjectUnifiedStandarsConfig;
+
+            // Parse WallSectionGridConfig
+            if (projectConfig.isMember("WallSectionGridConfig")) {
+                const auto& wsgConfig = projectConfig["WallSectionGridConfig"];
+                config.WallSectionGridConfig.IsTrueNum = wsgConfig["IsTrueNum"].asBool();
+                config.WallSectionGridConfig.ReplaceSymbol = wsgConfig["ReplaceSymbol"].asString();
+            }
+
+            // Parse RoofFlueConfig
+            if (projectConfig.isMember("RoofFlueConfig")) {
+                const auto& rfConfig = projectConfig["RoofFlueConfig"];
+                config.RoofFlueConfig.IsDrawing = rfConfig["IsDrawing"].asBool();
+                config.RoofFlueConfig.Height = rfConfig["Height"].asDouble();
+            }
+
+            // Parse DoorSillConfig
+            if (projectConfig.isMember("DoorSillConfig")) {
+                const auto& dsConfig = projectConfig["DoorSillConfig"];
+                config.DoorSillConfig.UnderGroundWaterRoom = dsConfig["UnderGroundWaterRoom"].asDouble();
+                config.DoorSillConfig.UnderGroundEleRoom = dsConfig["UnderGroundEleRoom"].asDouble();
+                config.DoorSillConfig.EquipmentWell = dsConfig["EquipmentWell"].asDouble();
+                config.DoorSillConfig.OutRoof = dsConfig["OutRoof"].asDouble();
+                config.DoorSillConfig.HeatRoom = dsConfig["HeatRoom"].asDouble();
+                config.DoorSillConfig.WaterPumpRoom = dsConfig["WaterPumpRoom"].asDouble();
+                config.DoorSillConfig.ElevatorRoom = dsConfig["ElevatorRoom"].asDouble();
+            }
+
+            // Parse RefugeIsFireWinConfig
+            if (projectConfig.isMember("RefugeIsFireWinConfig")) {
+                config.RefugeIsFireWinConfig = projectConfig["RefugeIsFireWinConfig"].asBool();
+            }
+
+            // Parse ARInsulationConfig
+            if (projectConfig.isMember("ARInsulationConfig")) {
+                const auto& insConfig = projectConfig["ARInsulationConfig"];
+                config.ARInsulationConfig.Style = insConfig["Style"].asString();
+                config.ARInsulationConfig.Materials = insConfig["Materials"].asString();
+                config.ARInsulationConfig.Thickness = insConfig["Thickness"].asDouble();
+            }
+        }
+    }
+
+    // Parse other top-level members
+    arDesign.ARHeight = root.get("ARHeight", 0.0).asDouble();
+    arDesign.FloorNumber = root.get("FloorNumber", 0).asInt();
+
+    // Parse Level
+    if (root.isMember("Level")) {
+        for (const auto& levelJson : root["Level"]) {
+            Level level;
+            level.Name = levelJson["Name"].asString();
+            level.Elevation = levelJson["Elevation"].asDouble();
+            arDesign.Level.push_back(level);
+        }
+    }
+
+    // Parse Grid
+    if (root.isMember("Grid")) {
+        for (const auto& gridJson : root["Grid"]) {
+            Grid grid;
+            grid.GridTextNote = gridJson["GridTextNote"].asString();
+            grid.ElementId = gridJson["ElementId"].asInt();
+            grid.Coordinate = gridJson["Coordinate"].asString();
+            grid.Mode = gridJson["Mode"].asInt();
+
+            // Parse CurveArray
+            for (const auto& curveJson : gridJson["CurveArray"]) {
+                CurveInfo curve;
+                parseCurveInfo(curveJson, curve);
+                grid.CurveArray.push_back(curve);
+            }
+
+            arDesign.Grid.push_back(grid);
+        }
     }
 
     // Parse StandardInfo
-    const Json::Value& standardInfoJson = root["StandardInfo"];
-    for (const auto& infoJson : standardInfoJson) {
-        StandardInfo info;
-        info.AllFloorNums = infoJson["AllFloorNums"].asString();
-        info.Num = infoJson["Num"].asString();
-        arDesign.StandardInfo.push_back(info);
+    if (root.isMember("StandardInfo")) {
+        for (const auto& standardJson : root["StandardInfo"]) {
+            StandardInfo standard;
+            standard.AllFloorNums = standardJson["AllFloorNums"].asString();
+            standard.Num = standardJson["Num"].asString();
+            arDesign.StandardInfo.push_back(standard);
+        }
     }
+
+    // Parse WebParam
+    if (root.isMember("WebParam")) {
+        const auto& webParamJson = root["WebParam"];
+    }
+
+    // Parse SectionInfos
+    if (root.isMember("SectionInfos")) {
+        for (const auto& sectionJson : root["SectionInfos"]) {
+            SectionInfo section;
+
+            // Parse Points
+            if (sectionJson.isMember("Points")) {
+                for (const auto& pointJson : sectionJson["Points"]) {
+                }
+            }
+            
+            arDesign.SectionInfos.push_back(section);
+        }
+    }
+
+    // Parse STSlabs
+    if (root.isMember("STSlabs")) {
+        for (const auto& slabJson : root["STSlabs"]) {
+            STSlab slab;
+            slab.Guid = slabJson["Guid"].asString();
+            slab.Thickness = slabJson["Thickness"].asDouble();
+
+            // Parse Boundary
+            for (const auto& curveJson : slabJson["Boundary"]) {
+                CurveInfo curve;
+                parseCurveInfo(curveJson, curve);
+                slab.Boundary.push_back(curve);
+            }
+            
+            arDesign.STSlabs.push_back(slab);
+        }
+    }
+
 
     return arDesign;
 }
