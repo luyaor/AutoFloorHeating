@@ -279,14 +279,6 @@ struct StandardInfo {
     std::string Num; // 编号
 };
 
-// 建筑设计数据结构
-struct ARDesign {
-    std::vector<Floor> Floor; // 楼层列表
-    std::vector<Level> Level; // 标高列表
-    std::vector<Grid> Grid; // 顶层轴网列表
-    std::vector<StandardInfo> StandardInfo; // 标准信息列表
-};
-
 // 弧形墙结构
 struct ArcWall {
     std::string WallName;    // 墙体名称
@@ -362,6 +354,131 @@ struct Wall {
     std::string JKType;           // JK类型
     std::string FloorNum;         // 楼层号
     std::string FloorName;        // 楼层名称
+};
+
+// 节点显示类型结构
+struct NodeDisplay {
+    int NodeDsiplayType;
+    std::string NodeInfo;
+    int PlaneType;
+    std::string FigureClass;
+    std::string Name;
+    bool IsIndex;
+    std::string Atlas;
+    std::string Page;
+    std::string SerialNumber;
+    bool IsInstructions;
+};
+
+// 平面显示类型结构
+struct PlaneDisplay {
+    int PlaneDsiplayType;
+    std::string PlaneInfo;
+    int PlaneType;
+    std::string FigureClass;
+    std::string Name;
+    bool IsIndex;
+    std::string Atlas;
+    std::string Page;
+    std::string SerialNumber;
+    bool IsInstructions;
+};
+
+// 门窗索引结构
+struct DoorAndWindowIndex {
+    bool IsDoor;
+    int PlaneType;
+    std::string FigureClass;
+    std::string Name;
+    bool IsIndex;
+    std::string Atlas;
+    std::string Page;
+    std::string SerialNumber;
+    bool IsInstructions;
+};
+
+// 项目建筑索引结构
+struct ProjArIndexs {
+    std::vector<NodeDisplay> ProjArIndexStairs;    // 楼梯索引
+    std::vector<NodeDisplay> ProjArIndexWalls;     // 墙体索引
+    std::vector<PlaneDisplay> ProjArIndexPlanes;   // 平面索引
+    std::vector<DoorAndWindowIndex> ProjArIndexDoorAndWindows; // 门窗索引
+    std::vector<NodeDisplay> ProjArIndexWCs;       // 卫生间索引
+};
+
+// 门窗参数结构
+struct DWParam {
+    double GeneralDoorHeight;      // 普通门高度
+    double EntranceDoorHeight;     // 入口门高度
+    double KitchenDoorHeight;      // 厨房门高度
+    double BalconyDoorHeight;      // 阳台门高度
+    double TubeWellDoorHeight;     // 管井门高度
+    double UnderFoyerDoorHeight;   // 地下门厅高度
+    double TubeWellThresholdHeight; // 管井门槛高度
+    std::string FireDoorMaterial;   // 防火门材料
+    std::string FireWindowMaterial; // 防火窗材料
+    std::string FireShutterMaterial; // 防火卷帘材料
+    std::string WindowMaterial;     // 窗户材料
+    double WindowThickness;         // 窗户厚度
+};
+
+// Web参数结构
+struct WebParam {
+    std::vector<Construction> Constructions;
+    DWParam DoorWindowParam;
+    ProjArIndexs ProjArIndexs;
+    std::string PlotTime;
+    std::string PlotStage;
+    std::string NorthAngle;
+    std::string Climatepart;
+    std::string Province;
+    std::string City;
+    std::vector<std::string> RoomTypes;
+    std::string STOffsetDirction;
+    std::string STTpye;
+    std::string MGTpye;
+    std::string Guadcbwhd;
+};
+
+// 剖面信息结构
+struct SectionInfo {
+    std::string SectionSymbolName;      // 剖面符号名称
+    std::string SectionSymbolType;      // 剖面符号类型
+    CurveInfo SectionSymbolLine;        // 剖面符号线
+    std::vector<std::string> LevelRange;// 标高范围
+    std::vector<Room> SectionRooms;     // 剖面房间
+    double SectionLength;               // 剖面长度
+    double CircleLength;                // 圆周长度
+    Point SectionDirection;             // 剖面方向
+    Point Direction;                    // 方向
+    std::string SectionFamilySymbol;    // 剖面族符号
+    std::string Number;                 // 编号
+    std::string DrawingNumber;          // 图纸编号
+    CurveInfo SectionLine;              // 剖面线
+    std::string SectionView;            // 剖面视图
+    int SectionType;                    // 剖面类型
+    std::string WindowDrawingModel;     // 窗户绘图模型
+    std::string DoorDrawingModel;       // 门绘图模型
+    int VisibleElevationPlan;          // 可见立面图
+    int SectionSymbol;                 // 剖面符号
+};
+
+// 图框信息结构
+struct FrameInfo {
+    double Scale;                       // 比例
+    double Length;                      // 长度
+    double Width;                       // 宽度
+};
+
+// 建筑设计数据结构
+struct ARDesign {
+    std::vector<Floor> Floor;                  // 楼层列表
+    std::vector<Level> Level;                  // 标高列表
+    std::vector<Grid> Grid;                    // 顶层轴网列表
+    std::vector<StandardInfo> StandardInfo;    // 标准信息列表
+    WebParam WebParam;                         // Web参数
+    std::vector<SectionInfo> SectionInfos;     // 剖面信息列表
+    FrameInfo FrameInfo;                       // 图框信息
 };
 
 #endif // AR_DESIGN_STRUCTURES_H
