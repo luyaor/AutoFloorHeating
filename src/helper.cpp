@@ -49,7 +49,7 @@ void parseCurveInfo(const Json::Value& curveJson, CurveInfo& curve) {
     curve.CurveType = curveJson.get("CurveType", 0).asInt();
 }
 
-std::string planToJson(const HeatingDesign& plan) {
+auto planToJson(const HeatingDesign& plan) -> std::string {
     Json::Value root;
     // Convert HeatingDesign to JSON
     for (const auto& heatingCoil : plan.HeatingCoils) {
@@ -148,7 +148,7 @@ std::string planToJson(const HeatingDesign& plan) {
     return writer.write(root);
 }
 
-ARDesign parseARDesign(const std::string& arDesignJson) {
+auto parseARDesign(const std::string& arDesignJson) -> ARDesign {
     ARDesign design;
     Json::Value j;
     Json::Reader reader;

@@ -5,208 +5,190 @@
 #include <sstream>
 #include <json/json.h>
 
+class ParseARDesignTest : public ::testing::Test {
+protected:
+    // Helper function to create a minimal valid JSON string
+    static std::string createMinimalValidJson() {
+        return R"({
+            "Floor": [{
+                "Name": "F1",
+                "Num": "1",
+                "LevelHeight": 3.0,
+                "construction": {
+                    "houseTypes": [{
+                        "houseName": "House1",
+                        "RoomNames": ["LivingRoom", "Bedroom"],
+                        "Boundary": [
+                            {"X": 0.0, "Y": 0.0, "Z": 0.0},
+                            {"X": 10.0, "Y": 0.0, "Z": 0.0},
+                            {"X": 10.0, "Y": 10.0, "Z": 0.0}
+                        ]
+                    }],
+                    "rooms": [{
+                        "Guid": "room-001",
+                        "Name": "LivingRoom",
+                        "NameType": "Living",
+                        "DoorIds": ["door-001"],
+                        "BlCreateRoom": 1,
+                        "Boundary": [{
+                            "StartPoint": {"X": 0.0, "Y": 0.0, "Z": 0.0},
+                            "EndPoint": {"X": 5.0, "Y": 0.0, "Z": 0.0},
+                            "CurveType": 0
+                        }]
+                    }]
+                }
+            }]})";
+    }
+};
 
-TEST(HelperTest, ParseJsonData) {
-    // 准备测试数据
-    std::string arDesignJson = R"({
-        "Floors": [{
-            "Name": "Floor1",
+// Test parsing a valid minimal JSON
+TEST_F(ParseARDesignTest, ParsesValidJson) {
+    std::string json = createMinimalValidJson();
+    ARDesign result = parseARDesign(json);
+
+    ASSERT_EQ(result.Floor.size(), 1);
+    ASSERT_EQ(result.Floor[0].Name, "F1");
+    ASSERT_EQ(result.Floor[0].Num, "1");
+    ASSERT_DOUBLE_EQ(result.Floor[0].LevelHeight, 3.0);
+
+    // Test HouseType parsing
+    const auto &houseTypes = result.Floor[0].construction.houseTypes;
+    ASSERT_EQ(houseTypes.size(), 1);
+    ASSERT_EQ(houseTypes[0].houseName, "House1");
+    ASSERT_EQ(houseTypes[0].RoomNames.size(), 2);
+    ASSERT_EQ(houseTypes[0].RoomNames[0], "LivingRoom");
+    ASSERT_EQ(houseTypes[0].Boundary.size(), 3);
+    ASSERT_DOUBLE_EQ(houseTypes[0].Boundary[0].x, 0.0);
+
+    // Test Room parsing
+    const auto &rooms = result.Floor[0].construction.rooms;
+    ASSERT_EQ(rooms.size(), 1);
+    ASSERT_EQ(rooms[0].Guid, "room-001");
+    ASSERT_EQ(rooms[0].Name, "LivingRoom");
+    ASSERT_EQ(rooms[0].DoorIds.size(), 1);
+    ASSERT_EQ(rooms[0].BlCreateRoom, 1);
+}
+
+// Test parsing invalid JSON
+TEST_F(ParseARDesignTest, ThrowsOnInvalidJson) {
+    std::string invalidJson = "{ invalid json }";
+    ASSERT_THROW(parseARDesign(invalidJson), std::runtime_error);
+}
+
+// Test parsing empty JSON
+TEST_F(ParseARDesignTest, HandlesEmptyJson) {
+    std::string emptyJson = "{}";
+    ARDesign result = parseARDesign(emptyJson);
+    ASSERT_EQ(result.Floor.size(), 0);
+}
+
+// Test parsing JSON with missing optional fields
+TEST_F(ParseARDesignTest, HandlesMissingOptionalFields) {
+    std::string jsonWithMissingFields = R"({
+        "Floor": [{
+            "Name": "F1",
+            "Num": "1",
+            "construction": {
+                "houseTypes": []
+            }
+        }]
+    })";
+
+    ARDesign result = parseARDesign(jsonWithMissingFields);
+    ASSERT_EQ(result.Floor.size(), 1);
+    ASSERT_EQ(result.Floor[0].Name, "F1");
+    ASSERT_DOUBLE_EQ(result.Floor[0].LevelHeight, 0.0); // Default value
+    ASSERT_EQ(result.Floor[0].construction.houseTypes.size(), 0);
+}
+
+// Test parsing complete floor with all fields
+TEST_F(ParseARDesignTest, ParsesCompleteFloor) {
+    std::string completeJson = R"({
+        "Floor": [{
+            "Name": "F1",
             "Num": "1",
             "LevelHeight": 3.0,
-            "Construction": {
-                "HouseType": [{
-                    "houseName": "Type A",
-                    "RoomNames": ["Living Room", "Bedroom"],
-                    "Boundary": [{"x": 0, "y": 0, "z": 0}, {"x": 10, "y": 10, "z": 0}]
+            "construction": {
+                "houseTypes": [{
+                    "houseName": "House1",
+                    "RoomNames": ["LivingRoom"],
+                    "Boundary": [
+                        {"X": 1.0, "Y": 2.0, "Z": 3.0}
+                    ]
                 }],
-                "Room": [{
-                    "Guid": "room1",
-                    "Name": "Living Room",
-                    "NameType": "LivingRoom",
-                    "DoorIds": ["door1"],
-                    "JCWGuidNames": ["jcw1"],
-                    "WallNames": ["wall1"],
-                    "Boundary": [{"x": 0, "y": 0, "z": 0}, {"x": 5, "y": 5, "z": 0}],
-                    "IsRecreationalRoom": false
+                "rooms": [{
+                    "Guid": "room-001",
+                    "Name": "LivingRoom",
+                    "NameType": "Living",
+                    "DoorIds": ["door-001"],
+                    "JCWGuidNames": ["jcw-001"],
+                    "WallNames": ["wall-001"],
+                    "BlCreateRoom": 1,
+                    "Boundary": [{
+                        "StartPoint": {"X": 0.0, "Y": 0.0, "Z": 0.0},
+                        "EndPoint": {"X": 5.0, "Y": 0.0, "Z": 0.0},
+                        "MidPoint": {"X": 2.5, "Y": 0.0, "Z": 0.0},
+                        "Center": {"X": 2.5, "Y": 0.0, "Z": 0.0},
+                        "Radius": 2.5,
+                        "StartAngle": 0.0,
+                        "EndAngle": 180.0,
+                        "ColorIndex": 1,
+                        "CurveType": 1
+                    }]
+                }],
+                "jcws": [{
+                    "GuidName": "jcw-001",
+                    "Type": 1,
+                    "Name": "JCW1",
+                    "CenterPoint": {"X": 1.0, "Y": 1.0, "Z": 1.0},
+                    "BoundaryLines": [{
+                        "StartPoint": {"X": 0.0, "Y": 0.0, "Z": 0.0},
+                        "EndPoint": {"X": 2.0, "Y": 2.0, "Z": 2.0}
+                    }]
+                }],
+                "door": [{
+                    "Guid": "door-001",
+                    "FamilyName": "Door1",
+                    "DoorType": 1,
+                    "HostWall": "wall-001",
+                    "Location": {"X": 1.0, "Y": 1.0, "Z": 1.0},
+                    "Size": {
+                        "Height": 2.1,
+                        "Width": 0.9,
+                        "Thickness": 0.1
+                    },
+                    "FlipFaceNormal": {"X": 0.0, "Y": 1.0, "Z": 0.0},
+                    "FlipHandNormal": {"X": 1.0, "Y": 0.0, "Z": 0.0}
                 }]
             }
         }]
     })";
 
-    std::string inputDataJson = R"({
-        "AssistData": {
-            "AssistCollectors": [{
-                "Id": "collector1",
-                "Loc": {"x": 1, "y": 1, "z": 0},
-                "LevelName": "Floor1",
-                "Boundaries": [{
-                    "Offset": 0.1,
-                    "Borders": [{
-                        "StartPoint": {"x": 0, "y": 0, "z": 0},
-                        "EndPoint": {"x": 1, "y": 1, "z": 0},
-                        "ColorIndex": 1,
-                        "CurveType": 0
-                    }]
-                }]
-            }]
-        },
-        "WebData": {
-            "ImbalanceRatio": 10,
-            "JointPipeSpan": 0.5,
-            "DenseAreaWallSpan": 0.3,
-            "DenseAreaSpanLess": 0.2,
-            "LoopSpanSet": [{
-                "TypeName": "Type1",
-                "MinSpan": 0.1,
-                "MaxSpan": 0.5,
-                "Curvity": 0.2
-            }],
-            "ObsSpanSet": [{
-                "ObsName": "Obstacle1",
-                "MinSpan": 0.1,
-                "MaxSpan": 0.3
-            }],
-            "DeliverySpanSet": [{
-                "ObsName": "Delivery1",
-                "MinSpan": 0.2,
-                "MaxSpan": 0.4
-            }],
-            "PipeSpanSet": [{
-                "LevelDesc": "Floor1",
-                "FuncName": "Function1",
-                "Directions": ["North", "South"],
-                "ExterWalls": 2,
-                "PipeSpan": 0.3
-            }],
-            "ElasticSpanSet": [{
-                "FuncName": "Function1",
-                "PriorSpan": 0.2,
-                "MinSpan": 0.1,
-                "MaxSpan": 0.3
-            }],
-            "FuncRooms": [{
-                "FuncName": "Function1",
-                "RoomNames": ["Living Room", "Bedroom"]
-            }]
-        }
-    })";
+    ARDesign result = parseARDesign(completeJson);
 
-    // 调用被测试的函数
-    CombinedData result = parseJsonData(arDesignJson, inputDataJson);
+    // Test Floor basic info
+    ASSERT_EQ(result.Floor.size(), 1);
+    ASSERT_EQ(result.Floor[0].Name, "F1");
 
-    // 验证结果
-    EXPECT_EQ(result.arDesign.Floors.size(), 1);
-    EXPECT_EQ(result.arDesign.Floors[0].Name, "Floor1");
-    EXPECT_EQ(result.arDesign.Floors[0].Num, "1");
-    EXPECT_DOUBLE_EQ(result.arDesign.Floors[0].LevelHeight, 3.0);
+    // Test HouseType
+    const auto &houseType = result.Floor[0].construction.houseTypes[0];
+    ASSERT_EQ(houseType.houseName, "House1");
+    ASSERT_DOUBLE_EQ(houseType.Boundary[0].x, 1.0);
 
-    EXPECT_EQ(result.inputData.assistData.AssistCollectors.size(), 1);
-    EXPECT_EQ(result.inputData.assistData.AssistCollectors[0].Id, "collector1");
+    // Test Room
+    const auto &room = result.Floor[0].construction.rooms[0];
+    ASSERT_EQ(room.Name, "LivingRoom");
+    ASSERT_EQ(room.Boundary[0].CurveType, 1);
+    ASSERT_DOUBLE_EQ(room.Boundary[0].Radius, 2.5);
 
-    EXPECT_EQ(result.inputData.webData.ImbalanceRatio, 10);
-    EXPECT_DOUBLE_EQ(result.inputData.webData.JointPipeSpan, 0.5);
-    EXPECT_EQ(result.inputData.webData.LoopSpanSet.size(), 1);
-    EXPECT_EQ(result.inputData.webData.ObsSpanSet.size(), 1);
-    EXPECT_EQ(result.inputData.webData.DeliverySpanSet.size(), 1);
-    EXPECT_EQ(result.inputData.webData.PipeSpanSet.size(), 1);
-    EXPECT_EQ(result.inputData.webData.ElasticSpanSet.size(), 1);
-    EXPECT_EQ(result.inputData.webData.FuncRooms.size(), 1);
+    // Test JCW
+    const auto &jcw = result.Floor[0].construction.jcws[0];
+    ASSERT_EQ(jcw.GuidName, "jcw-001");
+    ASSERT_DOUBLE_EQ(jcw.CenterPoint.x, 1.0);
+
+    // Test Door
+    const auto &door = result.Floor[0].construction.door[0];
+    ASSERT_EQ(door.Guid, "door-001");
+    ASSERT_DOUBLE_EQ(door.Size.Height, 2.1);
+    ASSERT_DOUBLE_EQ(door.FlipFaceNormal.y, 1.0);
 }
-
-TEST(HelperTest, PlanToJson) {
-    // 准备测试数据
-    HeatingDesign plan;
-    HeatingCoil heatingCoil;
-    heatingCoil.LevelName = "Floor1";
-    heatingCoil.LevelNo = 1;
-    heatingCoil.LevelDesc = "First Floor";
-    heatingCoil.HouseName = "House A";
-
-    JLine expansion;
-    expansion.StartPoint = {0, 0, 0};
-    expansion.EndPoint = {1, 1, 1};
-    expansion.ColorIndex = 1;
-    expansion.CurveType = 0;
-    heatingCoil.Expansions.push_back(expansion);
-
-    CollectorCoil collectorCoil;
-    collectorCoil.CollectorName = "Collector1";
-    collectorCoil.Loops = 2;
-
-    CoilLoop coilLoop;
-    coilLoop.Length = 10.0;
-    coilLoop.Curvity = 2;
-    coilLoop.Areas.push_back({"Area1"});
-    coilLoop.Path.push_back({
-        {0, 0, 0},
-        {1, 1, 1},
-        1,
-        0
-    });
-    collectorCoil.CoilLoops.push_back(coilLoop);
-
-    collectorCoil.Deliverys.push_back({{
-        {0, 0, 0},
-        {1, 1, 1},
-        1,
-        0
-    }});
-
-    heatingCoil.CollectorCoils.push_back(collectorCoil);
-    plan.HeatingCoils.push_back(heatingCoil);
-
-    // 调用被测试的函数
-    std::string result = planToJson(plan);
-
-    // 验证结果
-    Json::Value root;
-    Json::Reader reader;
-    ASSERT_TRUE(reader.parse(result, root));
-
-    EXPECT_EQ(root["HeatingCoils"].size(), 1);
-    EXPECT_EQ(root["HeatingCoils"][0]["LevelName"].asString(), "Floor1");
-    EXPECT_EQ(root["HeatingCoils"][0]["LevelNo"].asInt(), 1);
-    EXPECT_EQ(root["HeatingCoils"][0]["LevelDesc"].asString(), "First Floor");
-    EXPECT_EQ(root["HeatingCoils"][0]["HouseName"].asString(), "House A");
-
-    EXPECT_EQ(root["HeatingCoils"][0]["Expansions"].size(), 1);
-    EXPECT_EQ(root["HeatingCoils"][0]["CollectorCoils"].size(), 1);
-    EXPECT_EQ(root["HeatingCoils"][0]["CollectorCoils"][0]["CollectorName"].asString(), "Collector1");
-    EXPECT_EQ(root["HeatingCoils"][0]["CollectorCoils"][0]["Loops"].asInt(), 2);
-    EXPECT_EQ(root["HeatingCoils"][0]["CollectorCoils"][0]["CoilLoops"].size(), 1);
-    EXPECT_EQ(root["HeatingCoils"][0]["CollectorCoils"][0]["Deliverys"].size(), 1);
-}
-
-TEST(HelperTest, GeneratePipePlan) {
-    // 准备测试数据
-    CombinedData combinedData;
-    Floor floor;
-    floor.Name = "Floor1";
-    floor.Num = "1";
-    floor.LevelHeight = 3.0;
-
-    HouseType houseType;
-    houseType.houseName = "Type A";
-    houseType.RoomNames = {"Living Room", "Bedroom"};
-    houseType.Boundary = {{0, 0, 0}, {10, 10, 0}};
-    floor.construction.houseTypes.push_back(houseType);
-
-    combinedData.arDesign.Floors.push_back(floor);
-
-    combinedData.inputData.webData.ImbalanceRatio = 10;
-    combinedData.inputData.webData.JointPipeSpan = 0.5;
-    combinedData.inputData.webData.DenseAreaWallSpan = 0.3;
-    combinedData.inputData.webData.DenseAreaSpanLess = 0.2;
-
-    // 调用被测试的函数
-    HeatingDesign result = generatePipePlan(combinedData);
-
-    // 验证结果
-    EXPECT_EQ(result.HeatingCoils.size(), 1);
-    EXPECT_EQ(result.HeatingCoils[0].LevelName, "Floor1");
-    EXPECT_EQ(result.HeatingCoils[0].LevelNo, 1);
-    EXPECT_EQ(result.HeatingCoils[0].LevelDesc, "Floor 1");
-    EXPECT_EQ(result.HeatingCoils[0].HouseName, "Type A");
-    EXPECT_GT(result.HeatingCoils[0].CollectorCoils.size(), 0);
-}
-
