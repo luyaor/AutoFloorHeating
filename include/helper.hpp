@@ -6,6 +6,7 @@
 #include "types/ar_design_structures.hpp"
 #include "types/input_data_structures.hpp"
 #include "types/heating_design_structures.hpp"
+#include <ostream>
 
 namespace iad {
 
@@ -19,6 +20,8 @@ struct CombinedData {
 // Function declarations
 CombinedData parseJsonData(const std::string& arDesignJson, const std::string& inputDataJson);
 HeatingDesign generatePipePlan(const CombinedData& combinedData);
+void printARDesign(const ARDesign& design, std::ostream& out = std::cout);
+void drawARDesign(const ARDesign& design, const std::string& outputPath);
 
 }
 
