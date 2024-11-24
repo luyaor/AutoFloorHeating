@@ -148,6 +148,131 @@ auto planToJson(const HeatingDesign& plan) -> std::string {
     return writer.write(root);
 }
 
+// Add this before parseARDesign function
+void parseRoom(const Json::Value& roomJson, Room& room) {
+    room.Name = roomJson.get("Name", "").asString();
+    room.Guid = roomJson.get("Guid", "").asString();
+    room.NameType = roomJson.get("NameType", "").asString();
+    room.BlCreateRoom = roomJson.get("BlCreateRoom", 0).asInt();
+
+    // Parse DoorIds
+    if (roomJson.isMember("DoorIds") && roomJson["DoorIds"].isArray()) {
+        for (const auto& doorId : roomJson["DoorIds"]) {
+            room.DoorIds.push_back(doorId.asString());
+        }
+    }
+
+    // Parse JCWGuidNames
+    if (roomJson.isMember("JCWGuidNames") && roomJson["JCWGuidNames"].isArray()) {
+        for (const auto& jcwGuidName : roomJson["JCWGuidNames"]) {
+            room.JCWGuidNames.push_back(jcwGuidName.asString());
+        }
+    }
+
+    // Parse WallNames
+    if (roomJson.isMember("WallNames") && roomJson["WallNames"].isArray()) {
+        for (const auto& wallName : roomJson["WallNames"]) {
+            room.WallNames.push_back(wallName.asString());
+        }
+    }
+
+    // Parse Borders if they exist
+    if (roomJson.isMember("Boundary") && roomJson["Boundary"].isArray()) {
+        for (const auto& borderJson : roomJson["Boundary"]) {
+            CurveInfo border;
+            border.StartPoint = Point{
+                borderJson["StartPoint"]["x"].asDouble(),
+                borderJson["StartPoint"]["y"].asDouble(),
+                borderJson["StartPoint"]["z"].asDouble()
+            };
+            border.EndPoint = Point{
+                borderJson["EndPoint"]["x"].asDouble(),
+                borderJson["EndPoint"]["y"].asDouble(),
+                borderJson["EndPoint"]["z"].asDouble()
+            };
+            border.ColorIndex = borderJson.get("ColorIndex", 0).asInt();
+            border.CurveType = borderJson.get("CurveType", 0).asInt();
+            room.Boundary.push_back(border);
+        }
+    }
+}
+
+void parseJCW(const Json::Value& jcwJson, JCW& jcw) {
+    // Parse basic properties
+    jcw.GuidName = jcwJson.get("GuidName", "").asString();
+    jcw.Type = jcwJson.get("Type", 0).asInt();
+    jcw.Name = jcwJson.get("Name", "").asString();
+
+    // Parse CenterPoint
+    if (jcwJson.isMember("CenterPoint")) {
+        const auto& centerPoint = jcwJson["CenterPoint"];
+        jcw.CenterPoint = Point{
+            centerPoint["x"].asDouble(),
+            centerPoint["y"].asDouble(),
+            centerPoint["z"].asDouble()
+        };
+    }
+
+    // Parse BoundaryLines array
+    if (jcwJson.isMember("BoundaryLines") && jcwJson["BoundaryLines"].isArray()) {
+        for (const auto& lineJson : jcwJson["BoundaryLines"]) {
+            CurveInfo curve;
+            parseCurveInfo(lineJson, curve);
+            jcw.BoundaryLines.push_back(curve);
+        }
+    }
+}
+
+
+void parseDoor(const Json::Value& doorJson, Door& door) {
+    // Parse basic properties
+    door.Guid = doorJson.get("Guid", "").asString();
+    door.FamilyName = doorJson.get("FamilyName", "").asString();
+    door.DoorType = doorJson.get("DoorType", "").asString();
+    door.HostWall = doorJson.get("HostWall", "").asString();
+
+    // Parse Location
+    if (doorJson.isMember("Location")) {
+        const auto& location = doorJson["Location"];
+        door.Location = Point{
+            location["x"].asDouble(),
+            location["y"].asDouble(),
+            location["z"].asDouble()
+        };
+    }
+
+    // Parse Size
+    if (doorJson.isMember("Size")) {
+        const auto& size = doorJson["Size"];
+        door.Size = Size{
+            size.get("Height", 0.0).asDouble(),
+            size.get("Width", 0.0).asDouble(),
+            size.get("Thickness", 0.0).asDouble()
+        };
+    }
+
+    // Parse FlipFaceNormal
+    if (doorJson.isMember("FlipFaceNormal")) {
+        const auto& flipFace = doorJson["FlipFaceNormal"];
+        door.FlipFaceNormal = Point{
+            flipFace["x"].asDouble(),
+            flipFace["y"].asDouble(),
+            flipFace["z"].asDouble()
+        };
+    }
+
+    // Parse FlipHandNormal
+    if (doorJson.isMember("FlipHandNormal")) {
+        const auto& flipHand = doorJson["FlipHandNormal"];
+        door.FlipHandNormal = Point{
+            flipHand["x"].asDouble(),
+            flipHand["y"].asDouble(),
+            flipHand["z"].asDouble()
+        };
+    }
+}
+
+
 auto parseARDesign(const std::string& arDesignJson) -> ARDesign {
     ARDesign design;
     Json::Value j;
@@ -238,55 +363,6 @@ auto parseARDesign(const std::string& arDesignJson) -> ARDesign {
         throw;
     }
     return design;
-}
-
-// Add this before parseARDesign function
-void parseRoom(const Json::Value& roomJson, Room& room) {
-    room.Name = roomJson.get("Name", "").asString();
-    room.Guid = roomJson.get("Guid", "").asString();
-    room.NameType = roomJson.get("NameType", "").asString();
-    room.BlCreateRoom = roomJson.get("BlCreateRoom", 0).asInt();
-    
-    // Parse DoorIds
-    if (roomJson.isMember("DoorIds") && roomJson["DoorIds"].isArray()) {
-        for (const auto& doorId : roomJson["DoorIds"]) {
-            room.DoorIds.push_back(doorId.asString());
-        }
-    }
-
-    // Parse JCWGuidNames
-    if (roomJson.isMember("JCWGuidNames") && roomJson["JCWGuidNames"].isArray()) {
-        for (const auto& jcwGuidName : roomJson["JCWGuidNames"]) {
-            room.JCWGuidNames.push_back(jcwGuidName.asString());
-        }
-    }
-
-    // Parse WallNames
-    if (roomJson.isMember("WallNames") && roomJson["WallNames"].isArray()) {
-        for (const auto& wallName : roomJson["WallNames"]) {
-            room.WallNames.push_back(wallName.asString());
-        }
-    }
-    
-    // Parse Borders if they exist
-    if (roomJson.isMember("Boundary") && roomJson["Boundary"].isArray()) {
-        for (const auto& borderJson : roomJson["Boundary"]) {
-            CurveInfo border;
-            border.StartPoint = Point{
-                borderJson["StartPoint"]["x"].asDouble(),
-                borderJson["StartPoint"]["y"].asDouble(),
-                borderJson["StartPoint"]["z"].asDouble()
-            };
-            border.EndPoint = Point{
-                borderJson["EndPoint"]["x"].asDouble(),
-                borderJson["EndPoint"]["y"].asDouble(),
-                borderJson["EndPoint"]["z"].asDouble()
-            };
-            border.ColorIndex = borderJson.get("ColorIndex", 0).asInt();
-            border.CurveType = borderJson.get("CurveType", 0).asInt();
-            room.Boundary.push_back(border);
-        }
-    }
 }
 
 // Helper function to parse inputData.json
@@ -439,4 +515,3 @@ HeatingDesign generatePipePlan(const CombinedData& combinedData){
 
     return heatingDesign;
 }
-
