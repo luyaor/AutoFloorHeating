@@ -6,6 +6,7 @@
 #include <json/json.h>
 #include <fstream>
 #include "../include/parsers/ar_design_parser.hpp"
+#include <opencv2/opencv.hpp>
 
 class ParseARDesignTest : public ::testing::Test {
 protected:
@@ -148,4 +149,80 @@ TEST_F(ParseARDesignTest, ParsesActualARDesignFile) {
     ASSERT_FALSE(room.Boundary.empty());
     ASSERT_EQ(room.BlCreateRoom, 1);
 
+    // Create a temporary file path for the output image
+    std::string outputPath = "test_ar_design.png";
+
+    // Call the drawing function
+    iad::drawARDesign(result, outputPath);
+
+}
+
+TEST_F(ParseARDesignTest, DrawARDesignTest) {
+    // Create a minimal ARDesign with some test data
+    ARDesign testDesign;
+    Floor floor;
+    floor.Name = "F1";
+    floor.Num = "1";
+    floor.LevelHeight = 3000.0;
+
+    // Add a room with rectangular boundary
+    Room room;
+    room.Name = "TestRoom";
+    room.Guid = "room-001";
+    room.BlCreateRoom = 1;
+
+    // Create a rectangular room boundary
+    CurveInfo curve1, curve2, curve3, curve4;
+    
+    // Bottom line
+    curve1.StartPoint = {0.0, 0.0, 0.0};
+    curve1.EndPoint = {5000.0, 0.0, 0.0};
+    curve1.CurveType = 0;
+
+    // Right line
+    curve2.StartPoint = {5000.0, 0.0, 0.0};
+    curve2.EndPoint = {5000.0, 4000.0, 0.0};
+    curve2.CurveType = 0;
+
+    // Top line
+    curve3.StartPoint = {5000.0, 4000.0, 0.0};
+    curve3.EndPoint = {0.0, 4000.0, 0.0};
+    curve3.CurveType = 0;
+
+    // Left line
+    curve4.StartPoint = {0.0, 4000.0, 0.0};
+    curve4.EndPoint = {0.0, 0.0, 0.0};
+    curve4.CurveType = 0;
+
+    room.Boundary = {curve1, curve2, curve3, curve4};
+    floor.construction.rooms.push_back(room);
+
+    // Add a door
+    Door door;
+    door.Location = {2500.0, 0.0, 0.0};
+    floor.construction.door.push_back(door);
+
+    // Add a JCW (furniture)
+    JCW jcw;
+    CurveInfo line;
+    line.StartPoint = {1000.0, 1000.0, 0.0};
+    line.EndPoint = {2000.0, 1000.0, 0.0};
+    jcw.BoundaryLines.push_back(line);
+    floor.construction.jcws.push_back(jcw);
+
+    testDesign.Floor.push_back(floor);
+
+    // Create a temporary file path for the output image
+    std::string outputPath = "test_ar_design.png";
+
+    // Call the drawing function
+    iad::drawARDesign(testDesign, outputPath);
+
+    // Verify that the file was created
+    std::ifstream file(outputPath);
+    ASSERT_TRUE(file.good()) << "Image file was not created";
+    file.close();
+
+    // Clean up the test file
+    std::remove(outputPath.c_str());
 }
