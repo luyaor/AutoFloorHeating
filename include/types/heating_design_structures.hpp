@@ -1,14 +1,11 @@
 #ifndef HEATING_DESIGN_STRUCTURES_H
 #define HEATING_DESIGN_STRUCTURES_H
 
+#include "data_structures.hpp"
+
 // Structures for HeatingDesign.json
 // 坐标线段结构
 struct JLine {
-    struct Point {
-        double x;
-        double y;
-        double z;
-    };
     Point StartPoint;
     Point EndPoint;
     int ColorIndex;
