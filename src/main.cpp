@@ -30,6 +30,7 @@ int main(int argc, char* argv[]) {
 
     // 解析输入数据
     iad::CombinedData combinedData = iad::parseJsonData(arDesignJson, inputDataJson);
+    iad::printARDesign(combinedData.arDesign, std::cout);
     
     // 生成管线规划
     HeatingDesign pipePlan = generatePipePlan(combinedData);
