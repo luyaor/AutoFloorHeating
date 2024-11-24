@@ -61,7 +61,7 @@ struct HouseType {
 struct Door {
     std::string Guid; // 全局唯一标识符
     std::string FamilyName;    // 族名称
-    int DoorType;             // 门类型
+    std::string DoorType;             // 门类型
     std::string HostWall;      // 所属墙体
     Point Location;            // 位置
     Size Size;          // 尺寸

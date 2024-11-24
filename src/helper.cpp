@@ -157,161 +157,136 @@ auto parseARDesign(const std::string& arDesignJson) -> ARDesign {
         throw std::runtime_error("Failed to parse AR Design JSON");
     }
     
-    // Parse Floor array
-    if (j.isMember("Floor") && j["Floor"].isArray()) {
-        for (const auto& floorJson : j["Floor"]) {
-            Floor floor;
-            
-            // Parse floor basic info
-            floor.Name = floorJson.get("Name", "").asString();
-            floor.Num = floorJson.get("Num", "").asString();
-            floor.LevelHeight = floorJson.get("LevelHeight", 0.0).asDouble();
-            
-            // Parse Construction
-            if (floorJson.isMember("construction")) {
-                const auto& constJson = floorJson["construction"];
+    try {
+        // Parse Floor array
+        if (j.isMember("Floor") && j["Floor"].isArray()) {
+            for (const auto& floorJson : j["Floor"]) {
+                Floor floor;
                 
-                // Parse HouseTypes
-                if (constJson.isMember("houseTypes")) {
-                    for (const auto& htJson : constJson["houseTypes"]) {
-                        HouseType ht;
-                        ht.houseName = htJson.get("houseName", "").asString();
-                        
-                        // Parse RoomNames array
-                        if (htJson.isMember("RoomNames") && htJson["RoomNames"].isArray()) {
-                            for (const auto& roomName : htJson["RoomNames"]) {
-                                ht.RoomNames.push_back(roomName.asString());
-                            }
-                        }
-                        
-                        // Parse Boundary points
-                        if (htJson.isMember("Boundary")) {
-                            for (const auto& ptJson : htJson["Boundary"]) {
-                                Point pt{};
-                                pt.x = ptJson.get("X", 0.0).asDouble();
-                                pt.y = ptJson.get("Y", 0.0).asDouble();
-                                pt.z = ptJson.get("Z", 0.0).asDouble();
-                                ht.Boundary.push_back(pt);
-                            }
-                        }
-                        floor.construction.houseTypes.push_back(ht);
-                    }
-                }
+                // Add debug output
+                // std::cout << "Parsing floor: " << floorJson.toStyledString() << std::endl;
                 
-                // Parse Rooms
-                if (constJson.isMember("rooms")) {
-                    for (const auto& roomJson : constJson["rooms"]) {
-                        Room room;
-                        room.Guid = roomJson.get("Guid", "").asString();
-                        room.Name = roomJson.get("Name", "").asString();
-                        room.NameType = roomJson.get("NameType", "").asString();
-                        
-                        // Parse arrays
-                        if (roomJson.isMember("DoorIds") && roomJson["DoorIds"].isArray()) {
-                            for (const auto& id : roomJson["DoorIds"]) {
-                                room.DoorIds.push_back(id.asString());
-                            }
-                        }
-                        if (roomJson.isMember("JCWGuidNames") && roomJson["JCWGuidNames"].isArray()) {
-                            for (const auto& name : roomJson["JCWGuidNames"]) {
-                                room.JCWGuidNames.push_back(name.asString());
-                            }
-                        }
-                        if (roomJson.isMember("WallNames") && roomJson["WallNames"].isArray()) {
-                            for (const auto& name : roomJson["WallNames"]) {
-                                room.WallNames.push_back(name.asString());
-                            }
-                        }
-                        
-                        room.BlCreateRoom = roomJson.get("BlCreateRoom", 0).asInt();
-                        
-                        // Parse Boundary curves
-                        if (roomJson.isMember("Boundary")) {
-                            for (const auto& curveJson : roomJson["Boundary"]) {
-                                CurveInfo curve;
-                                parseCurveInfo(curveJson, curve);
-                                room.Boundary.push_back(curve);
-                            }
-                        }
-                        floor.construction.rooms.push_back(room);
-                    }
-                }
+                // Parse floor basic info
+                floor.Name = floorJson.get("Name", "").asString();
+                floor.Num = floorJson.get("Num", "").asString();
+                floor.LevelHeight = floorJson.get("LevelHeight", 0.0).asDouble();
                 
-                // Parse JCWs
-                if (constJson.isMember("jcws")) {
-                    for (const auto& jcwJson : constJson["jcws"]) {
-                        JCW jcw;
-                        jcw.GuidName = jcwJson.get("GuidName", "").asString();
-                        jcw.Type = jcwJson.get("Type", 0).asInt();
-                        jcw.Name = jcwJson.get("Name", "").asString();
-                        
-                        // Parse CenterPoint
-                        if (jcwJson.isMember("CenterPoint")) {
-                            const auto& centerJson = jcwJson["CenterPoint"];
-                            jcw.CenterPoint.x = centerJson.get("X", 0.0).asDouble();
-                            jcw.CenterPoint.y = centerJson.get("Y", 0.0).asDouble();
-                            jcw.CenterPoint.z = centerJson.get("Z", 0.0).asDouble();
-                        }
-                        
-                        // Parse BoundaryLines
-                        if (jcwJson.isMember("BoundaryLines")) {
-                            for (const auto& curveJson : jcwJson["BoundaryLines"]) {
-                                CurveInfo curve;
-                                parseCurveInfo(curveJson, curve);
-                                jcw.BoundaryLines.push_back(curve);
-                            }
-                        }
-                        floor.construction.jcws.push_back(jcw);
+                // Parse Construction
+                if (floorJson.isMember("Construction")) {
+                    std::cout << "Found Construction field" << std::endl;
+                    const auto& constJson = floorJson["Construction"];
+                    
+                    // Parse HouseTypes
+                    if (constJson.isMember("HouseType")) {
+                        std::cout << "Found HouseTypes, count: " << constJson["HouseType"].size() << std::endl;
+                    } else {
+                        std::cout << "No HouseTypes field found" << std::endl;
                     }
-                }
-                
-                // Parse Doors
-                if (constJson.isMember("door")) {
-                    for (const auto& doorJson : constJson["door"]) {
-                        Door door;
-                        door.Guid = doorJson.get("Guid", "").asString();
-                        door.FamilyName = doorJson.get("FamilyName", "").asString();
-                        door.DoorType = doorJson.get("DoorType", 0).asInt();
-                        door.HostWall = doorJson.get("HostWall", "").asString();
-                        
-                        // Parse Location
-                        if (doorJson.isMember("Location")) {
-                            const auto& locJson = doorJson["Location"];
-                            door.Location.x = locJson.get("X", 0.0).asDouble();
-                            door.Location.y = locJson.get("Y", 0.0).asDouble();
-                            door.Location.z = locJson.get("Z", 0.0).asDouble();
+                    
+                    // Parse Rooms
+                    if (constJson.isMember("Room")) {
+                        std::cout << "Found Rooms, count: " << constJson["Room"].size() << std::endl;
+                        for (const auto& roomJson : constJson["Room"]) {
+                            Room room;
+                            parseRoom(roomJson, room);
+                            floor.construction.rooms.push_back(room);
                         }
-                        
-                        // Parse Size
-                        if (doorJson.isMember("Size")) {
-                            const auto& sizeJson = doorJson["Size"];
-                            door.Size.Height = sizeJson.get("Height", 0.0).asDouble();
-                            door.Size.Width = sizeJson.get("Width", 0.0).asDouble();
-                            door.Size.Thickness = sizeJson.get("Thickness", 0.0).asDouble();
-                        }
-                        
-                        // Parse Direction Normals
-                        if (doorJson.isMember("FlipFaceNormal")) {
-                            const auto& normalJson = doorJson["FlipFaceNormal"];
-                            door.FlipFaceNormal.x = normalJson.get("X", 0.0).asDouble();
-                            door.FlipFaceNormal.y = normalJson.get("Y", 0.0).asDouble();
-                            door.FlipFaceNormal.z = normalJson.get("Z", 0.0).asDouble();
-                        }
-                        if (doorJson.isMember("FlipHandNormal")) {
-                            const auto& normalJson = doorJson["FlipHandNormal"];
-                            door.FlipHandNormal.x = normalJson.get("X", 0.0).asDouble();
-                            door.FlipHandNormal.y = normalJson.get("Y", 0.0).asDouble();
-                            door.FlipHandNormal.z = normalJson.get("Z", 0.0).asDouble();
-                        }
-                        
-                        floor.construction.door.push_back(door);
+                    } else {
+                        std::cout << "No Rooms field found" << std::endl;
                     }
+                    
+                    // Parse JCWs
+                    if (constJson.isMember("JCW")) {
+                        const auto& jcws = constJson["JCW"];
+                        std::cout << "Found JCWs field, count: " << jcws.size() << std::endl;
+                        for (const auto& jcwJson : jcws) {
+                            JCW jcw;
+                            parseJCW(jcwJson, jcw);
+                            floor.construction.jcws.push_back(jcw);
+                        }
+                    } else {
+                        std::cout << "No JCWs field found" << std::endl;
+                    }
+
+                    // Parse Doors
+                    if (constJson.isMember("Door")) {
+                        const auto& doors = constJson["Door"];
+                        std::cout << "Found Doors field, count: " << doors.size() << std::endl;
+                        for (const auto& doorJson : doors) {
+                            Door door;
+                            parseDoor(doorJson, door);
+                            floor.construction.door.push_back(door);
+                        }
+                    } else {
+                        std::cout << "No Doors field found" << std::endl;
+                    }
+
+                    // After parsing all Construction data
+                    std::cout << "Construction parsing complete:" << std::endl;
+                    std::cout << "  HouseTypes count: " << floor.construction.houseTypes.size() << std::endl;
+                    std::cout << "  Rooms count: " << floor.construction.rooms.size() << std::endl;
+                    std::cout << "  JCWs count: " << floor.construction.jcws.size() << std::endl;
+                    std::cout << "  Doors count: " << floor.construction.door.size() << std::endl;
+                } else {
+                    std::cout << "No Construction field found" << std::endl;
                 }
+                design.Floor.push_back(floor);
             }
-            design.Floor.push_back(floor);
         }
+    } catch (const Json::Exception& e) {
+        std::cerr << "JSON parsing error in parseARDesign: " << e.what() << std::endl;
+        throw;
     }
     return design;
+}
+
+// Add this before parseARDesign function
+void parseRoom(const Json::Value& roomJson, Room& room) {
+    room.Name = roomJson.get("Name", "").asString();
+    room.Guid = roomJson.get("Guid", "").asString();
+    room.NameType = roomJson.get("NameType", "").asString();
+    room.BlCreateRoom = roomJson.get("BlCreateRoom", 0).asInt();
+    
+    // Parse DoorIds
+    if (roomJson.isMember("DoorIds") && roomJson["DoorIds"].isArray()) {
+        for (const auto& doorId : roomJson["DoorIds"]) {
+            room.DoorIds.push_back(doorId.asString());
+        }
+    }
+
+    // Parse JCWGuidNames
+    if (roomJson.isMember("JCWGuidNames") && roomJson["JCWGuidNames"].isArray()) {
+        for (const auto& jcwGuidName : roomJson["JCWGuidNames"]) {
+            room.JCWGuidNames.push_back(jcwGuidName.asString());
+        }
+    }
+
+    // Parse WallNames
+    if (roomJson.isMember("WallNames") && roomJson["WallNames"].isArray()) {
+        for (const auto& wallName : roomJson["WallNames"]) {
+            room.WallNames.push_back(wallName.asString());
+        }
+    }
+    
+    // Parse Borders if they exist
+    if (roomJson.isMember("Boundary") && roomJson["Boundary"].isArray()) {
+        for (const auto& borderJson : roomJson["Boundary"]) {
+            CurveInfo border;
+            border.StartPoint = Point{
+                borderJson["StartPoint"]["x"].asDouble(),
+                borderJson["StartPoint"]["y"].asDouble(),
+                borderJson["StartPoint"]["z"].asDouble()
+            };
+            border.EndPoint = Point{
+                borderJson["EndPoint"]["x"].asDouble(),
+                borderJson["EndPoint"]["y"].asDouble(),
+                borderJson["EndPoint"]["z"].asDouble()
+            };
+            border.ColorIndex = borderJson.get("ColorIndex", 0).asInt();
+            border.CurveType = borderJson.get("CurveType", 0).asInt();
+            room.Boundary.push_back(border);
+        }
+    }
 }
 
 // Helper function to parse inputData.json

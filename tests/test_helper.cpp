@@ -4,6 +4,7 @@
 #include "../include/types/heating_design_structures.hpp"
 #include <sstream>
 #include <json/json.h>
+#include <fstream>
 
 class ParseARDesignTest : public ::testing::Test {
 protected:
@@ -191,4 +192,49 @@ TEST_F(ParseARDesignTest, ParsesCompleteFloor) {
     ASSERT_EQ(door.Guid, "door-001");
     ASSERT_DOUBLE_EQ(door.Size.Height, 2.1);
     ASSERT_DOUBLE_EQ(door.FlipFaceNormal.y, 1.0);
+}
+
+// Test parsing actual ARDesign-min.json file
+TEST_F(ParseARDesignTest, ParsesActualARDesignFile) {
+    // 获取当前工作目录（帮助调试）
+    char cwd[PATH_MAX];
+    getcwd(cwd, sizeof(cwd));
+    // Read file content
+    // std::ifstream file("../example/ARDesign-min.json");
+    std::string filePath = "../example/ARDesign-min.json";
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        std::cerr << "Current working directory: " << cwd << std::endl;
+        std::cerr << "Attempted to open file at: " << filePath << std::endl;
+        FAIL() << "Failed to open ARDesign-min.json";
+    }
+    ASSERT_TRUE(file.is_open()) << "Failed to open ARDesign-min.json";
+    
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string json = buffer.str();
+    
+    // Parse JSON
+    ARDesign result = parseARDesign(json);
+
+    // Test basic structure
+    ASSERT_EQ(result.Floor.size(), 1);
+    ASSERT_EQ(result.Floor[0].Name, "-1");
+    ASSERT_EQ(result.Floor[0].Num, "-1");
+    ASSERT_DOUBLE_EQ(result.Floor[0].LevelHeight, 3750.0);
+
+    // Test Construction components
+    const auto& construction = result.Floor[0].construction;
+
+    // print all construction components
+    std::cout << "construction: " << construction.rooms.size() << std::endl;
+    std::cout << "jcws: " << construction.jcws.size() << std::endl;
+    std::cout << "door: " << construction.door.size() << std::endl;
+    
+    // Test Room
+    ASSERT_FALSE(construction.rooms.empty());
+    const auto& room = construction.rooms[0];
+    ASSERT_FALSE(room.Boundary.empty());
+    ASSERT_EQ(room.BlCreateRoom, 1);
+
 }

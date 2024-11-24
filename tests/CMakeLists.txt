@@ -52,5 +52,7 @@ target_link_libraries(tests
     ${PROJECT_NAME}_lib
 )
 
+add_definitions(-DPROJECT_ROOT="${CMAKE_SOURCE_DIR}")
+
 # 添加测试
 gtest_discover_tests(tests)
