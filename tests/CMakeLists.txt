@@ -1,4 +1,9 @@
-file(GLOB TEST_SOURCES ${PROJECT_SOURCE_DIR}/tests/*.cpp)
+file(GLOB TEST_SOURCES 
+    ${PROJECT_SOURCE_DIR}/tests/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/parsers/ar_design_parser.cpp
+    ${PROJECT_SOURCE_DIR}/src/parsers/input_data_parser.cpp
+    ${PROJECT_SOURCE_DIR}/src/parsers/heating_design_parser.cpp
+)
 add_executable(tests ${TEST_SOURCES})
 
 # Find GTest package

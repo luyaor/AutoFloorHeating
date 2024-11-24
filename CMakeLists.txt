@@ -54,6 +54,12 @@ add_executable(${PROJECT_NAME} ${SOURCES}
         src/helper.cpp
         include/pipe_layout_generator.hpp
         src/pipe_layout_generator.cpp
+        include/parsers/ar_design_parser.hpp
+        src/parsers/ar_design_parser.cpp
+        include/parsers/input_data_parser.hpp
+        src/parsers/input_data_parser.cpp
+        include/parsers/heating_design_parser.hpp
+        src/parsers/heating_design_parser.cpp
         include/types/ar_design_structures.hpp
         include/types/input_data_structures.hpp
         include/types/heating_design_structures.hpp)

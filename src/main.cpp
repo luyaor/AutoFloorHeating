@@ -2,6 +2,7 @@
 #include <string>
 #include <fstream>
 #include "helper.hpp"
+#include "parsers/heating_design_parser.hpp"
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
@@ -28,13 +29,13 @@ int main(int argc, char* argv[]) {
                                std::istreambuf_iterator<char>());
 
     // 解析输入数据
-    CombinedData combinedData = parseJsonData(arDesignJson, inputDataJson);
+    iad::CombinedData combinedData = iad::parseJsonData(arDesignJson, inputDataJson);
     
     // 生成管线规划
     HeatingDesign pipePlan = generatePipePlan(combinedData);
     
     // 将结果转换为JSON并输出
-    std::string outputJson = planToJson(pipePlan);
+    std::string outputJson = iad::parsers::HeatingDesignParser::toJson(pipePlan);
     std::cout << outputJson << std::endl;
     
     return 0;
