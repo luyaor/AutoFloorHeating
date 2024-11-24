@@ -272,6 +272,30 @@ void parseDoor(const Json::Value& doorJson, Door& door) {
     }
 }
 
+void parseHouseType(const Json::Value& houseTypeJson, HouseType& houseType) {
+    // Parse basic properties
+    houseType.houseName = houseTypeJson.get("houseName", "").asString();
+
+    // Parse RoomNames array
+    if (houseTypeJson.isMember("RoomNames") && houseTypeJson["RoomNames"].isArray()) {
+        for (const auto& roomName : houseTypeJson["RoomNames"]) {
+            houseType.RoomNames.push_back(roomName.asString());
+        }
+    }
+
+    // Parse Boundary array
+    if (houseTypeJson.isMember("Boundary") && houseTypeJson["Boundary"].isArray()) {
+        for (const auto& pointJson : houseTypeJson["Boundary"]) {
+            Point point{
+                pointJson["x"].asDouble(),
+                pointJson["y"].asDouble(),
+                pointJson["z"].asDouble()
+            };
+            houseType.Boundary.push_back(point);
+        }
+    }
+}
+
 
 auto parseARDesign(const std::string& arDesignJson) -> ARDesign {
     ARDesign design;
@@ -304,6 +328,11 @@ auto parseARDesign(const std::string& arDesignJson) -> ARDesign {
                     // Parse HouseTypes
                     if (constJson.isMember("HouseType")) {
                         std::cout << "Found HouseTypes, count: " << constJson["HouseType"].size() << std::endl;
+                        for (const auto& houseTypeJson : constJson["HouseType"]) {
+                            HouseType houseType;
+                            parseHouseType(houseTypeJson, houseType);
+                            floor.construction.houseTypes.push_back(houseType);
+                        }
                     } else {
                         std::cout << "No HouseTypes field found" << std::endl;
                     }
