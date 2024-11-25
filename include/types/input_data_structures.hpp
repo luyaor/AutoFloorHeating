@@ -1,6 +1,8 @@
 #ifndef INPUT_DATA_STRUCTURES_H
 #define INPUT_DATA_STRUCTURES_H
 
+#include <string>
+#include <vector>
 #include "data_structures.hpp"
 
 // Structures for inputData.json
