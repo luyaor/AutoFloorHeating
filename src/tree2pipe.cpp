@@ -155,7 +155,6 @@ vector<Vector2d> tree_to_points(shared_ptr<Node> root, Vector2d up_dir) {
 }
 
 // [M1]
-
 shared_ptr<Node> RectM1::to_tree(const CfgM1& anc_recommend) {
     const auto cfg = CfgM1 { this->cfg.dir.has_value() ? this->cfg.dir : anc_recommend.dir.value(),
                              this->cfg.w.has_value() ? this->cfg.w : anc_recommend.w.value() };
@@ -240,6 +239,118 @@ shared_ptr<Node> NodeM1::to_tree(const CfgM1& anc_recommend) {
     }
     return make_shared<Node>(pos, w, son_trees);
 }
+
+std::shared_ptr<Node> PolygonM1::to_tree(const CfgM1& anc_recommend) {
+    const auto cfg = CfgM1{
+        this->cfg.dir.has_value() ? this->cfg.dir : anc_recommend.dir,
+        this->cfg.w.has_value() ? this->cfg.w : anc_recommend.w
+    };
+    const auto w = cfg.w.value();// 宽度参数
+
+    double offset_distance = w * 2.0; // 偏移距离
+    const double min_area_threshold = 0.1; // 最小面积阈值
+    const double min_distance_threshold = w; // 最小顶点间距离
+
+    // 初始化多边形的顶点序列
+    std::vector<std::vector<Vector2d>> polygons;
+    polygons.push_back(vertices);
+
+    int max_iterations = 100; // 防止死循环的最大迭代次数
+    int iteration = 0;
+
+    // 开始生成回旋的多边形结构
+    while (iteration < max_iterations) {
+        iteration++;
+        const auto& current_vertices = polygons.back();
+        size_t n = current_vertices.size();
+        std::vector<Vector3d> offset_lines(n);
+
+        // 计算每条边的偏移直线
+        bool valid = true;
+        for (size_t i = 0; i < n; ++i) {
+            Vector2d v1 = current_vertices[i];
+            Vector2d v2 = current_vertices[(i + 1) % n];
+            Vector2d edge_dir = (v2 - v1).normalized();
+
+            Vector2d normal = dir_left(edge_dir); // 内法线方向
+
+            // 计算偏移直线上的新点
+            Vector2d offset_point = v1 + offset_distance * normal;
+
+            // 用偏移点和原方向生成偏移直线
+            Vector3d line = line_at_dir(offset_point, edge_dir);
+
+            offset_lines[i] = line;
+        }
+
+        // 计算相邻偏移直线的交点
+        std::vector<Vector2d> offset_vertices;
+        for (size_t i = 0; i < n; ++i) {
+            std::cout << "i: " << i << std::endl;
+            Vector3d line1 = offset_lines[(i + n - 1) % n];
+            Vector3d line2 = offset_lines[i % n];
+            try {
+                Vector2d intersection = line_cross(line1, line2);
+                offset_vertices.push_back(intersection);
+            } catch (const std::runtime_error& e) {
+                // 平行线，无法计算交点，结束回旋
+                valid = false;
+                break;
+            }
+        }
+
+        if (!valid || offset_vertices.size() < 2) {
+            break; // 无法继续偏移
+        }
+
+        // 计算面积，终止条件
+        double area = 0.0;
+        for (size_t i = 0; i < offset_vertices.size(); ++i) {
+            const auto& v1 = offset_vertices[i];
+            const auto& v2 = offset_vertices[(i + 1) % offset_vertices.size()];
+            area += v1.x() * v2.y() - v1.y() * v2.x();
+        }
+        area = std::abs(area) / 2.0;
+
+        if (area < min_area_threshold) {
+            break; // 面积过小
+        }
+
+        polygons.push_back(offset_vertices); // 添加新的回旋多边形
+    }
+
+    // 构建节点树
+    std::vector<std::vector<std::shared_ptr<Node>>> node_layers;
+    for (const auto& polygon : polygons) {
+        std::vector<std::shared_ptr<Node>> nodes;
+        for (const auto& v : polygon) {
+            nodes.push_back(std::make_shared<Node>(v, w));
+        }
+        std::cout << std::endl;
+        node_layers.push_back(nodes);
+    }
+
+    // 构建线形连接
+    auto cur_node = node_layers[0][0]; // 当前节点
+
+    for (size_t layer = 0; layer < node_layers.size(); ++layer) {
+        auto& current_layer = node_layers[layer];
+        for (size_t i = 1; i < current_layer.size(); ++i) {
+            cur_node->sons.push_back(current_layer[i]); // 连接当前节点
+            cur_node = current_layer[i]; // 更新当前节点
+        }
+
+        // 层间连接：当前层最后一个点连接到下一层第一个点
+        if (layer + 1 < node_layers.size()) {
+            cur_node->sons.push_back(node_layers[layer + 1][0]);
+            cur_node = node_layers[layer + 1][0]; // 更新到下一层第一个点
+        }
+    }
+
+    // return root_node;
+    return node_layers[0][0];
+}
+
 
 void plot_points_linked(const std::vector<Vector2d>& pts) {
     using namespace matplot;
