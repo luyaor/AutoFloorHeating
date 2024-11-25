@@ -12,7 +12,6 @@
 
 namespace iad {
 
-
 // Main parsing function that combines both
 CombinedData parseJsonData(const std::string& arDesignJson, const std::string& inputDataJson) {
     CombinedData combinedData;
@@ -58,20 +57,20 @@ HeatingDesign generatePipePlan(const CombinedData& combinedData){
 
 void iad::printARDesign(const ARDesign& design, std::ostream& out) {
     out << "ARDesign Summary:\n";
-    for (const auto& floor : design.Floor) {
-        out << "Floor: " << floor.Name << " (Num: " << floor.Num << ")\n";
-        out << "  Height: " << floor.LevelHeight << "\n";
-        out << "  HouseTypes: " << floor.construction.houseTypes.size() << "\n";
-        out << "  Rooms: " << floor.construction.rooms.size() << "\n";
-        out << "  JCWs: " << floor.construction.jcws.size() << "\n";
-        out << "  Doors: " << floor.construction.door.size() << "\n";
+    for (const auto&[Name, Num, LevelHeight, construction] : design.Floor) {
+        out << "Floor: " << Name << " (Num: " << Num << ")\n";
+        out << "  Height: " << LevelHeight << "\n";
+        out << "  HouseTypes: " << construction.houseTypes.size() << "\n";
+        out << "  Rooms: " << construction.rooms.size() << "\n";
+        out << "  JCWs: " << construction.jcws.size() << "\n";
+        out << "  Doors: " << construction.door.size() << "\n";
     }
 }
 
 // 添加新的辅助函数用于绘制中文文本
-void putTextZH(cv::Mat& dst, const std::string& str, cv::Point org, 
-               cv::Scalar color, int fontSize,
-               int thickness = 1, std::string fontPath = "") {
+void putTextZH(cv::Mat& dst, const std::string& str, const cv::Point org,
+               const cv::Scalar& color, const int fontSize,
+               const int thickness = 1, const std::string& fontPath = "") {
     // 尝试多个字体路径
     std::vector<std::string> fontPaths;
     
@@ -102,7 +101,7 @@ void putTextZH(cv::Mat& dst, const std::string& str, cv::Point org,
     }
 
     // 创建FreeType字体
-    cv::Ptr<cv::freetype::FreeType2> ft2 = cv::freetype::createFreeType2();
+    const cv::Ptr<cv::freetype::FreeType2> ft2 = cv::freetype::createFreeType2();
     bool fontLoaded = false;
 
     // 尝试加载每个字体，直到成功
@@ -115,18 +114,17 @@ void putTextZH(cv::Mat& dst, const std::string& str, cv::Point org,
             std::cout << "Successfully loaded font: " << path << std::endl;
             #endif
             break;
-        } catch (const cv::Exception& e) {
+        } catch ([[maybe_unused]] const cv::Exception& e) {
             // 只在调试模式下输出详细错误信息
             #ifdef DEBUG
             std::cerr << "Failed to load font " << path << ": " << e.what() << std::endl;
             #endif
-            continue;
         }
     }
 
     if (!fontLoaded) {
         std::cerr << "Warning: Failed to load any Chinese font, falling back to default font" << std::endl;
-        cv::putText(dst, str, org, cv::FONT_HERSHEY_SIMPLEX, fontSize/30.0, 
+        putText(dst, str, org, cv::FONT_HERSHEY_SIMPLEX, fontSize/30.0,
                     color, thickness, cv::LINE_AA);
         return;
     }
@@ -154,7 +152,7 @@ void drawARDesign(const ARDesign& design, const std::string& outputPath) {
     }
     
     // 获取文件扩展名
-    size_t last_dot = filename.find_last_of(".");
+    size_t last_dot = filename.find_last_of('.');
     std::string name_without_ext = (last_dot != std::string::npos) ? 
         filename.substr(0, last_dot) : filename;
     std::string extension = (last_dot != std::string::npos) ? 
@@ -193,10 +191,10 @@ void drawARDesign(const ARDesign& design, const std::string& outputPath) {
         
         // 坐标转换函数
         auto transformPoint = [&](const Point& p) -> cv::Point {
-            return cv::Point(
+            return {
                 static_cast<int>((p.x - minX) * scale) + 100,
                 static_cast<int>((p.y - minY) * scale) + 100
-            );
+            };
         };
 
         // 绘制房间
@@ -210,7 +208,7 @@ void drawARDesign(const ARDesign& design, const std::string& outputPath) {
                 
                 if (curve.CurveType == 0) { // 直线
                     cv::line(image, start, end, WALL_COLOR, 2);
-                    walls.push_back({start, end});
+                    walls.emplace_back(start, end);
                 } else { // 弧线
                     cv::Point center = transformPoint(curve.Center);
                     double radius = cv::norm(center - start);
