@@ -1,6 +1,8 @@
 #ifndef HEATING_DESIGN_STRUCTURES_H
 #define HEATING_DESIGN_STRUCTURES_H
 
+#include <vector>
+#include <string>
 #include "data_structures.hpp"
 
 // Structures for HeatingDesign.json

@@ -1,7 +1,8 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include "core/parsing/json_parser.hpp"
+#include "core/parsing/output_parser.hpp"
+#include "core/parsing/input_parser.hpp"
 #include "visualization/visualization.hpp"
 #include "core/parsing/parser/heating_design_parser.hpp"
 
@@ -30,11 +31,11 @@ int main(int argc, char* argv[]) {
                                std::istreambuf_iterator<char>());
 
     // 解析输入数据
-    iad::CombinedData combinedData = iad::parseJsonData(arDesignJson, inputDataJson);
+    iad::CombinedData combinedData = iad::input_parser::parseJsonData(arDesignJson, inputDataJson);
     iad::printARDesign(combinedData.arDesign, std::cout);
     
     // 生成管线规划
-    HeatingDesign pipePlan = generatePipePlan(combinedData);
+    HeatingDesign pipePlan = iad::output_parser::generatePipePlan(combinedData);
     
     // 将结果转换为JSON并输出
     std::string outputJson = iad::parsers::HeatingDesignParser::toJson(pipePlan);

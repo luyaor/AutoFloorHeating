@@ -1,6 +1,6 @@
 // tests/test_helper.cpp
 #include <gtest/gtest.h>
-#include "../include/core/parsing/json_parser.hpp"
+#include "../include/core/parsing/input_parser.hpp"
 #include "../include/visualization/visualization.hpp"
 #include "../include/types/heating_design_structures.hpp"
 #include <sstream>
