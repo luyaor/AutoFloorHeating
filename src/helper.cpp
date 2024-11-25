@@ -261,7 +261,7 @@ void drawARDesign(const ARDesign& design, const std::string& outputPath) {
                 double length = cv::norm(dir);
                 if (length > 0) {
                     // 标注线的偏移距离
-                    const int offset = 20;
+                    constexpr int offset = 20;
                     cv::Point normal(-dir.y / length, dir.x / length);
                     
                     // 绘制尺寸线和文字
