@@ -10,7 +10,6 @@
 
 namespace iad {
 
-
 // Combined structure for both JSON files
 struct CombinedData {
     ARDesign arDesign;

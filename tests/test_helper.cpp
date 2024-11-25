@@ -158,59 +158,50 @@ TEST_F(ParseARDesignTest, ParsesActualARDesignFile) {
 }
 
 TEST_F(ParseARDesignTest, DrawARDesignTest) {
-    // Create a minimal ARDesign with some test data
+    // Create test ARDesign with multiple floors
     ARDesign testDesign;
-    Floor floor;
-    floor.Name = "F1";
-    floor.Num = "1";
-    floor.LevelHeight = 3000.0;
-
-    // Add a room with rectangular boundary
-    Room room;
-    room.Name = "TestRoom";
-    room.Guid = "room-001";
-    room.BlCreateRoom = 1;
-
-    // Create a rectangular room boundary
-    CurveInfo curve1, curve2, curve3, curve4;
     
-    // Bottom line
-    curve1.StartPoint = {0.0, 0.0, 0.0};
-    curve1.EndPoint = {5000.0, 0.0, 0.0};
-    curve1.CurveType = 0;
+    // Create two test floors
+    for (const auto& floorNum : {"1", "2"}) {
+        Floor floor;
+        floor.Name = floorNum;
+        floor.Num = floorNum;
+        floor.LevelHeight = 3000.0;
 
-    // Right line
-    curve2.StartPoint = {5000.0, 0.0, 0.0};
-    curve2.EndPoint = {5000.0, 4000.0, 0.0};
-    curve2.CurveType = 0;
+        // Add a room with rectangular boundary
+        Room room;
+        room.Name = "TestRoom";
+        room.Guid = "room-001";
+        room.BlCreateRoom = 1;
 
-    // Top line
-    curve3.StartPoint = {5000.0, 4000.0, 0.0};
-    curve3.EndPoint = {0.0, 4000.0, 0.0};
-    curve3.CurveType = 0;
+        // Create a rectangular room boundary
+        CurveInfo curve1, curve2, curve3, curve4;
+        
+        // Bottom line
+        curve1.StartPoint = {0.0, 0.0, 0.0};
+        curve1.EndPoint = {5000.0, 0.0, 0.0};
+        curve1.CurveType = 0;
 
-    // Left line
-    curve4.StartPoint = {0.0, 4000.0, 0.0};
-    curve4.EndPoint = {0.0, 0.0, 0.0};
-    curve4.CurveType = 0;
+        // Right line
+        curve2.StartPoint = {5000.0, 0.0, 0.0};
+        curve2.EndPoint = {5000.0, 4000.0, 0.0};
+        curve2.CurveType = 0;
 
-    room.Boundary = {curve1, curve2, curve3, curve4};
-    floor.construction.rooms.push_back(room);
+        // Top line
+        curve3.StartPoint = {5000.0, 4000.0, 0.0};
+        curve3.EndPoint = {0.0, 4000.0, 0.0};
+        curve3.CurveType = 0;
 
-    // Add a door
-    Door door;
-    door.Location = {2500.0, 0.0, 0.0};
-    floor.construction.door.push_back(door);
+        // Left line
+        curve4.StartPoint = {0.0, 4000.0, 0.0};
+        curve4.EndPoint = {0.0, 0.0, 0.0};
+        curve4.CurveType = 0;
 
-    // Add a JCW (furniture)
-    JCW jcw;
-    CurveInfo line;
-    line.StartPoint = {1000.0, 1000.0, 0.0};
-    line.EndPoint = {2000.0, 1000.0, 0.0};
-    jcw.BoundaryLines.push_back(line);
-    floor.construction.jcws.push_back(jcw);
+        room.Boundary = {curve1, curve2, curve3, curve4};
+        floor.construction.rooms.push_back(room);
 
-    testDesign.Floor.push_back(floor);
+        testDesign.Floor.push_back(floor);
+    }
 
     // Create a temporary file path for the output image
     std::string outputPath = "test_ar_design.png";
@@ -218,11 +209,14 @@ TEST_F(ParseARDesignTest, DrawARDesignTest) {
     // Call the drawing function
     iad::drawARDesign(testDesign, outputPath);
 
-    // Verify that the file was created
-    std::ifstream file(outputPath);
-    ASSERT_TRUE(file.good()) << "Image file was not created";
-    file.close();
-
-    // Clean up the test file
-    std::remove(outputPath.c_str());
+    // Verify that the files were created for each floor
+    for (const auto& floorNum : {"1", "2"}) {
+        std::string expectedPath = "test_ar_design_floor_" + std::string(floorNum) + ".png";
+        std::ifstream file(expectedPath);
+        ASSERT_TRUE(file.good()) << "Image file was not created for floor " << floorNum;
+        file.close();
+        
+        // Clean up the test file
+        std::remove(expectedPath.c_str());
+    }
 }
