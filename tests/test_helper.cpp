@@ -151,7 +151,7 @@ TEST_F(ParseARDesignTest, ParsesActualARDesignFile) {
     ASSERT_EQ(room.BlCreateRoom, 1);
 
     // Create a temporary file path for the output image
-    std::string outputPath = "test_ar_design.png";
+    std::string outputPath = "outputs/test_ar_design.png";
 
     // Call the drawing function
     iad::drawARDesign(result, outputPath);
@@ -212,7 +212,7 @@ TEST_F(ParseARDesignTest, DrawARDesignTest) {
 
     // Verify that the files were created for each floor
     for (const auto& floorNum : {"1", "2"}) {
-        std::string expectedPath = "test_ar_design_floor_" + std::string(floorNum) + ".png";
+        std::string expectedPath = "outputs/test_ar_design_floor_" + std::string(floorNum) + ".png";
         std::ifstream file(expectedPath);
         ASSERT_TRUE(file.good()) << "Image file was not created for floor " << floorNum;
         file.close();

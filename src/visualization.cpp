@@ -2,6 +2,8 @@
 #include <opencv2/freetype.hpp>
 #include <iomanip>
 #include <sstream>
+#include <filesystem>
+#include <iostream>
 
 namespace iad {
 
@@ -89,24 +91,34 @@ void putTextZH(cv::Mat& dst, const std::string& str, const cv::Point org,
 }
 
 void drawARDesign(const ARDesign& design, const std::string& outputPath) {
-    // 获取输出路径的目录和文件名
-    std::string directory;
-    std::string filename;
-    size_t last_slash = outputPath.find_last_of("/\\");
-    if (last_slash != std::string::npos) {
-        directory = outputPath.substr(0, last_slash + 1);
-        filename = outputPath.substr(last_slash + 1);
-    } else {
-        directory = "";
-        filename = outputPath;
-    }
+    std::cout << "Input outputPath: " << outputPath << std::endl;
+
+    // 使用 filesystem 处理路径
+    std::filesystem::path path(outputPath);
+    std::string directory = path.parent_path().string();
+    std::string name_without_ext = path.stem().string();
+    std::string extension = path.extension().string();
     
-    // 获取文件扩展名
-    size_t last_dot = filename.find_last_of('.');
-    std::string name_without_ext = (last_dot != std::string::npos) ? 
-        filename.substr(0, last_dot) : filename;
-    std::string extension = (last_dot != std::string::npos) ? 
-        filename.substr(last_dot) : ".png";
+    std::cout << "Parsed path components:" << std::endl
+              << "- Directory: '" << directory << "'" << std::endl
+              << "- File name (no ext): '" << name_without_ext << "'" << std::endl
+              << "- Extension: '" << extension << "'" << std::endl;
+
+    // 如果目录不为空，确保它存在
+    if (!directory.empty()) {
+        try {
+            std::cout << "Attempting to create directory: " << directory << std::endl;
+            bool created = std::filesystem::create_directories(directory);
+            std::cout << "Directory creation " 
+                      << (created ? "successful" : "not needed (already exists)") 
+                      << std::endl;
+        } catch (const std::filesystem::filesystem_error& e) {
+            std::cerr << "Failed to create directory: " << e.what() << std::endl;
+            throw;
+        }
+    } else {
+        std::cout << "No directory to create (empty path)" << std::endl;
+    }
 
     // 为每个楼层绘制图像
     for (const auto& floor : design.Floor) {
@@ -263,11 +275,24 @@ void drawARDesign(const ARDesign& design, const std::string& outputPath) {
         putTextZH(image, floorInfo, cv::Point(50, 50), TEXT_COLOR, 32, 2);
 
         // 生成当前楼层的输出文件名
-        std::string floor_filename = directory + name_without_ext + 
-            "_floor_" + floor.Num + extension;
+        std::filesystem::path floor_path = 
+            path.parent_path() / 
+            (name_without_ext + "_floor_" + floor.Num + extension);
+        
+        std::cout << "Saving floor image to: " << floor_path.string() << std::endl;
         
         // 保存图像
-        cv::imwrite(floor_filename, image);
+        try {
+            bool success = cv::imwrite(floor_path.string(), image);
+            if (!success) {
+                std::cerr << "Failed to save image: " << floor_path.string() << std::endl;
+            } else {
+                std::cout << "Successfully saved image: " << floor_path.string() << std::endl;
+            }
+        } catch (const cv::Exception& e) {
+            std::cerr << "OpenCV error while saving image: " << e.what() << std::endl;
+            throw;
+        }
     }
 }
 
