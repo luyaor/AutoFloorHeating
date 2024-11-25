@@ -114,6 +114,7 @@ TEST_F(ParseARDesignTest, ParsesActualARDesignFile) {
     // Read file content
     // std::string filePath = "../../example/ARDesign-min.json";
     std::string filePath = "../example/ARDesign2.json";
+    // std::string filePath = "../example/ARDesign01.json";
     std::ifstream file(filePath);
     if (!file.is_open()) {
         std::cerr << "Current working directory: " << cwd << std::endl;
@@ -149,6 +150,46 @@ TEST_F(ParseARDesignTest, ParsesActualARDesignFile) {
     const auto& room = construction.rooms[0];
     ASSERT_FALSE(room.Boundary.empty());
     ASSERT_EQ(room.BlCreateRoom, 1);
+
+    // Create a temporary file path for the output image
+    std::string outputPath = "outputs/test_ar_design.png";
+
+    // Call the drawing function
+    iad::drawARDesign(result, outputPath);
+
+}
+
+TEST_F(ParseARDesignTest, ParsesActualARDesignFile01) {
+    // 获取当前工作目录（帮助调试）
+    char cwd[PATH_MAX];
+    getcwd(cwd, sizeof(cwd));
+    // Read file content
+    // std::string filePath = "../../example/ARDesign-min.json";
+    // std::string filePath = "../example/ARDesign2.json";
+    std::string filePath = "../example/ARDesign02.json";
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        std::cerr << "Current working directory: " << cwd << std::endl;
+        std::cerr << "Attempted to open file at: " << filePath << std::endl;
+        FAIL() << "Failed to open ARDesign-min.json";
+    }
+    ASSERT_TRUE(file.is_open()) << "Failed to open ARDesign-min.json";
+    
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string json = buffer.str();
+    
+    // Parse JSON
+    ARDesign result = iad::parsers::ARDesignParser::parse(json);
+
+    // Test Construction components
+    const auto& construction = result.Floor[0].construction;
+
+    // print all construction components
+    std::cout << "construction: " << construction.rooms.size() << std::endl;
+    std::cout << "jcws: " << construction.jcws.size() << std::endl;
+    std::cout << "door: " << construction.door.size() << std::endl;
+    
 
     // Create a temporary file path for the output image
     std::string outputPath = "outputs/test_ar_design.png";
