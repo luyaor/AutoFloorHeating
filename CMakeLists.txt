@@ -41,6 +41,8 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 find_package(Matplot++ REQUIRED)
 include_directories(${Matplot++_INCLUDE_DIRS})
 
+# Find OpenCV freetype
+find_package(OpenCV REQUIRED freetype)
 
 # Include directories
 include_directories(${PROJECT_SOURCE_DIR}/include)
