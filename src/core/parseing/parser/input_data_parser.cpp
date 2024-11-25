@@ -19,24 +19,24 @@ void InputDataParser::parseAssistCollector(const Json::Value& json, AssistCollec
         boundary.Offset = boundaryJson["Offset"].asDouble();
         
         for (const auto& borderJson : boundaryJson["Borders"]) {
-            Border border;
+            CurveInfo curve;
             const auto& startJson = borderJson["StartPoint"];
             const auto& endJson = borderJson["EndPoint"];
             
-            border.StartPoint = Point{
+            curve.StartPoint = Point{
                 startJson["x"].asDouble(),
                 startJson["y"].asDouble(),
                 startJson["z"].asDouble()
             };
-            border.EndPoint = Point{
+            curve.EndPoint = Point{
                 endJson["x"].asDouble(),
                 endJson["y"].asDouble(),
                 endJson["z"].asDouble()
             };
-            border.ColorIndex = borderJson["ColorIndex"].asInt();
-            border.CurveType = borderJson["CurveType"].asInt();
+            curve.ColorIndex = borderJson["ColorIndex"].asInt();
+            curve.CurveType = borderJson["CurveType"].asInt();
             
-            boundary.Borders.push_back(border);
+            boundary.Borders.push_back(curve);
         }
         collector.Boundaries.push_back(boundary);
     }

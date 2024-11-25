@@ -11,12 +11,12 @@ Json::Value HeatingDesignParser::pointToJson(const Point& point) {
     return json;
 }
 
-Json::Value HeatingDesignParser::jLineToJson(const JLine& line) {
+Json::Value HeatingDesignParser::curveInfoToJson(const CurveInfo& curve) {
     Json::Value json;
-    json["StartPoint"] = pointToJson(line.StartPoint);
-    json["EndPoint"] = pointToJson(line.EndPoint);
-    json["ColorIndex"] = line.ColorIndex;
-    json["CurveType"] = line.CurveType;
+    json["StartPoint"] = pointToJson(curve.StartPoint);
+    json["EndPoint"] = pointToJson(curve.EndPoint);
+    json["ColorIndex"] = curve.ColorIndex;
+    json["CurveType"] = curve.CurveType;
     return json;
 }
 
@@ -38,8 +38,8 @@ Json::Value HeatingDesignParser::coilLoopToJson(const CoilLoop& loop) {
     json["Areas"] = areasJson;
 
     Json::Value pathJson(Json::arrayValue);
-    for (const auto& line : loop.Path) {
-        pathJson.append(jLineToJson(line));
+    for (const auto& curve : loop.Path) {
+        pathJson.append(curveInfoToJson(curve));
     }
     json["Path"] = pathJson;
 
@@ -60,8 +60,8 @@ Json::Value HeatingDesignParser::collectorCoilToJson(const CollectorCoil& collec
     Json::Value deliverysJson(Json::arrayValue);
     for (const auto& delivery : collector.Deliverys) {
         Json::Value deliveryJson(Json::arrayValue);
-        for (const auto& line : delivery) {
-            deliveryJson.append(jLineToJson(line));
+        for (const auto& curve : delivery) {
+            deliveryJson.append(curveInfoToJson(curve));
         }
         deliverysJson.append(deliveryJson);
     }
@@ -78,8 +78,8 @@ Json::Value HeatingDesignParser::heatingCoilToJson(const HeatingCoil& coil) {
     json["HouseName"] = coil.HouseName;
 
     Json::Value expansionsJson(Json::arrayValue);
-    for (const auto& line : coil.Expansions) {
-        expansionsJson.append(jLineToJson(line));
+    for (const auto& curve : coil.Expansions) {
+        expansionsJson.append(curveInfoToJson(curve));
     }
     json["Expansions"] = expansionsJson;
 

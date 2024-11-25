@@ -6,13 +6,6 @@
 #include "data_structures.hpp"
 
 // Structures for inputData.json
-// 边界结构
-struct Border {
-    Point StartPoint;
-    Point EndPoint;
-    int ColorIndex;
-    int CurveType;
-};
 
 // 辅助采集器结构
 struct AssistCollector {
@@ -20,7 +13,7 @@ struct AssistCollector {
     Point Loc;
     std::string LevelName;
     struct Boundary {
-        std::vector<Border> Borders;
+        std::vector<CurveInfo> Borders;
         double Offset;
     };
     std::vector<Boundary> Boundaries;
