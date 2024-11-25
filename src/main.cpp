@@ -1,7 +1,8 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include "helper.hpp"
+#include "json_parser.hpp"
+#include "visualization.hpp"
 #include "parsers/heating_design_parser.hpp"
 
 int main(int argc, char* argv[]) {

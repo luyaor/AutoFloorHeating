@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-
+find_package(OpenCV REQUIRED)
 
 # Find OpenCV
 set(OpenCV_DIR /opt/homebrew/Cellar/opencv/4.10.0_12/lib/cmake/opencv4)
@@ -52,8 +52,10 @@ file(GLOB SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 # Executable
 add_executable(${PROJECT_NAME} ${SOURCES}
-        include/helper.hpp
-        src/helper.cpp
+        include/json_parser.hpp
+        src/json_parser.cpp
+        include/visualization.hpp
+        src/visualization.cpp
         include/pipe_layout_generator.hpp
         src/pipe_layout_generator.cpp
         include/parsers/ar_design_parser.hpp

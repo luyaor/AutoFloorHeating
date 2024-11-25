@@ -1,7 +1,7 @@
 #ifndef PIPE_LAYOUT_GENERATOR_H
 #define PIPE_LAYOUT_GENERATOR_H
 
-#include "helper.hpp"
+#include "json_parser.hpp"
 
 CollectorCoil generatePipeLayout(const HouseType& houseType, const WebData& webData);
 
