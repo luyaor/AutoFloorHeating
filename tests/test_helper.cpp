@@ -1,12 +1,12 @@
 // tests/test_helper.cpp
 #include <gtest/gtest.h>
-#include "../include/json_parser.hpp"
-#include "../include/visualization.hpp"
+#include "../include/core/parsing/json_parser.hpp"
+#include "../include/visualization/visualization.hpp"
 #include "../include/types/heating_design_structures.hpp"
 #include <sstream>
 #include <json/json.h>
 #include <fstream>
-#include "../include/parsers/ar_design_parser.hpp"
+#include "../include/core/parsing/parser/ar_design_parser.hpp"
 #include <opencv2/opencv.hpp>
 
 class ParseARDesignTest : public ::testing::Test {
