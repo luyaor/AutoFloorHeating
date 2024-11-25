@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include "json_parser.hpp"
-#include "visualization.hpp"
-#include "parsers/heating_design_parser.hpp"
+#include "core/parsing/json_parser.hpp"
+#include "visualization/visualization.hpp"
+#include "core/parsing/parser/heating_design_parser.hpp"
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
