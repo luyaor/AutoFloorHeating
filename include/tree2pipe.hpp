@@ -5,6 +5,9 @@
 #include <memory>
 #include <optional>
 
+#include<vector>
+#include<algorithm>
+
 #include <Eigen/Core>
 
 namespace tree2pipe {
@@ -105,6 +108,26 @@ vector<Vector2d> lines_to_points(const vector<Vector3d>& lines, bool verbose = f
 void plot_points_linked(const std::vector<Vector2d>& pts);
 
 vector<Vector2d> tree_to_points(shared_ptr<Node> root, Vector2d up_dir = Vector2d::Zero());
+
+class PolygonM1 : public M1 {
+private:
+    std::vector<Vector2d> vertices; // Polygon vertices
+    CfgM1 cfg;
+    std::vector<std::pair<int, std::shared_ptr<M1>>> sons; // Edge id and M1 object
+
+public:
+    PolygonM1(
+        const std::vector<Vector2d>& vertices,
+        const CfgM1& cfg = {},
+        const std::vector<std::pair<int, std::shared_ptr<M1>>>& sons = {}
+    ) : vertices(vertices), cfg(cfg), sons(sons) {}
+
+    Vector2d get_pos() const override {
+        return vertices[0];
+    }
+
+    std::shared_ptr<Node> to_tree(const CfgM1& anc_recommend) override;
+};
 
 } // namespace tree2pipe
 
