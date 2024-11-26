@@ -2,8 +2,9 @@
 #include "../include/tree2pipe.hpp"
 #include <gtest/gtest.h>
 
+using namespace tree2pipe;
+
 TEST(Tree2PipeTest, Test1) {
-    using namespace tree2pipe;
     double w = 0.15;
     double dx = -0.999;
     Vector2d ovr_dir(dx, sqrt(1 - dx * dx));
@@ -44,4 +45,19 @@ TEST(Tree2PipeTest, Test1) {
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
     }
+}
+
+
+TEST(Tree2PipeTest, Test2) {
+    // 定义一个五边形
+    std::vector<Vector2d> pentagon_vertices = {
+        {0, 0}, {1, 0}, {1.5, 1}, {0.5, 1.5}, {-0.5, 1}
+    };
+    auto polygon_m1 = std::make_shared<PolygonM1>(pentagon_vertices);
+    // 转换为树
+    auto root_node = polygon_m1->to_tree(CfgM1{std::nullopt, 0.1});
+    // 获取用于可视化的点
+    auto points = tree_to_points(root_node);
+    // 绘制
+    plot_points_linked(points);
 }
