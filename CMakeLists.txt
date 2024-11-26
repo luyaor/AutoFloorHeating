@@ -48,28 +48,20 @@ find_package(OpenCV REQUIRED freetype)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # Source files
-file(GLOB SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
+file(GLOB_RECURSE SOURCES 
+    "${PROJECT_SOURCE_DIR}/src/*.cpp"
+)
+
+# Create a library target first
+add_library(${PROJECT_NAME}_lib STATIC ${SOURCES})
+
+# Then set include directories
+target_include_directories(${PROJECT_NAME}_lib PUBLIC
+    ${PROJECT_SOURCE_DIR}/include
+)
 
 # Executable
-add_executable(${PROJECT_NAME} ${SOURCES}
-        include/json_parser.hpp
-        src/json_parser.cpp
-        include/visualization.hpp
-        src/visualization.cpp
-        include/pipe_layout_generator.hpp
-        src/pipe_layout_generator.cpp
-        include/parsers/ar_design_parser.hpp
-        src/parsers/ar_design_parser.cpp
-        include/parsers/input_data_parser.hpp
-        src/parsers/input_data_parser.cpp
-        include/parsers/heating_design_parser.hpp
-        src/parsers/heating_design_parser.cpp
-        include/types/ar_design_structures.hpp
-        include/types/input_data_structures.hpp
-        include/types/heating_design_structures.hpp)
-
-# Create a library target for the main project code
-add_library(${PROJECT_NAME}_lib STATIC ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES})
 
 # Link OpenCV and JsonCpp to the library
 target_link_libraries(${PROJECT_NAME}_lib ${OpenCV_LIBS} ${JSONCPP_LIBRARY} Matplot++::matplot)
@@ -92,3 +84,5 @@ install(DIRECTORY include/ DESTINATION include)
 # Print JsonCpp information for debugging
 message(STATUS "JSONCPP_LIBRARY: ${JSONCPP_LIBRARY}")
 message(STATUS "JSONCPP_INCLUDE_DIRS: ${JSONCPP_INCLUDE_DIRS}")
+
+add_definitions(-DPROJECT_ROOT="${CMAKE_SOURCE_DIR}")

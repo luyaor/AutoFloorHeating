@@ -1,6 +1,6 @@
 // tests/test_pipe_layout_generator.cpp
 #include <gtest/gtest.h>
-#include "../include/pipe_layout_generator.hpp"
+#include "../include/core/pipeline/pipe_layout_generator.hpp"
 
 
 TEST(PipeLayoutGeneratorTest, Test1) {
