@@ -1,16 +1,11 @@
 #ifndef HEATING_DESIGN_STRUCTURES_H
 #define HEATING_DESIGN_STRUCTURES_H
 
+#include <vector>
+#include <string>
 #include "data_structures.hpp"
 
 // Structures for HeatingDesign.json
-// 坐标线段结构
-struct JLine {
-    Point StartPoint;
-    Point EndPoint;
-    int ColorIndex;
-    int CurveType;
-};
 
 // 回路区域结构
 struct CoilArea {
@@ -21,7 +16,7 @@ struct CoilArea {
 struct CoilLoop {
     float Length;  // 回路总长度
     std::vector<CoilArea> Areas;  // 回路区域
-    std::vector<JLine> Path;  // 回路路由
+    std::vector<CurveInfo> Path;  // 回路路由
     int Curvity;  // 管道曲率半径
 };
 
@@ -30,7 +25,7 @@ struct CollectorCoil {
     std::string CollectorName;  // 集分水器编号
     int Loops;  // 回路数量
     std::vector<CoilLoop> CoilLoops;  // 户型盘管集合
-    std::vector<std::vector<JLine>> Deliverys;  // 入户管道集合
+    std::vector<std::vector<CurveInfo>> Deliverys;  // 入户管道集合
 };
 
 // 地暖盘管结构
@@ -39,7 +34,7 @@ struct HeatingCoil {
     int LevelNo;  // 楼号
     std::string LevelDesc;  // 楼层描述
     std::string HouseName;  // 户型编号
-    std::vector<JLine> Expansions;  // 伸缩缝集合
+    std::vector<CurveInfo> Expansions;  // 伸缩缝集合
     std::vector<CollectorCoil> CollectorCoils;  // 分集水器回路集合
 };
 

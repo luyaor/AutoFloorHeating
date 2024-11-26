@@ -1,12 +1,12 @@
 // tests/test_helper.cpp
 #include <gtest/gtest.h>
-#include "../include/json_parser.hpp"
-#include "../include/visualization.hpp"
+#include "../include/core/parsing/input_parser.hpp"
+#include "../include/visualization/visualization.hpp"
 #include "../include/types/heating_design_structures.hpp"
 #include <sstream>
 #include <json/json.h>
 #include <fstream>
-#include "../include/parsers/ar_design_parser.hpp"
+#include "../include/core/parsing/parser/ar_design_parser.hpp"
 #include <opencv2/opencv.hpp>
 
 class ParseARDesignTest : public ::testing::Test {
@@ -114,6 +114,7 @@ TEST_F(ParseARDesignTest, ParsesActualARDesignFile) {
     // Read file content
     // std::string filePath = "../../example/ARDesign-min.json";
     std::string filePath = "../example/ARDesign2.json";
+    // std::string filePath = "../example/ARDesign01.json";
     std::ifstream file(filePath);
     if (!file.is_open()) {
         std::cerr << "Current working directory: " << cwd << std::endl;
@@ -151,7 +152,47 @@ TEST_F(ParseARDesignTest, ParsesActualARDesignFile) {
     ASSERT_EQ(room.BlCreateRoom, 1);
 
     // Create a temporary file path for the output image
-    std::string outputPath = "test_ar_design.png";
+    std::string outputPath = "outputs/test_ar_design.png";
+
+    // Call the drawing function
+    iad::drawARDesign(result, outputPath);
+
+}
+
+TEST_F(ParseARDesignTest, ParsesActualARDesignFile01) {
+    // 获取当前工作目录（帮助调试）
+    char cwd[PATH_MAX];
+    getcwd(cwd, sizeof(cwd));
+    // Read file content
+    // std::string filePath = "../../example/ARDesign-min.json";
+    // std::string filePath = "../example/ARDesign2.json";
+    std::string filePath = "../example/ARDesign02.json";
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        std::cerr << "Current working directory: " << cwd << std::endl;
+        std::cerr << "Attempted to open file at: " << filePath << std::endl;
+        FAIL() << "Failed to open ARDesign-min.json";
+    }
+    ASSERT_TRUE(file.is_open()) << "Failed to open ARDesign-min.json";
+    
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string json = buffer.str();
+    
+    // Parse JSON
+    ARDesign result = iad::parsers::ARDesignParser::parse(json);
+
+    // Test Construction components
+    const auto& construction = result.Floor[0].construction;
+
+    // print all construction components
+    std::cout << "construction: " << construction.rooms.size() << std::endl;
+    std::cout << "jcws: " << construction.jcws.size() << std::endl;
+    std::cout << "door: " << construction.door.size() << std::endl;
+    
+
+    // Create a temporary file path for the output image
+    std::string outputPath = "outputs/test_ar_design.png";
 
     // Call the drawing function
     iad::drawARDesign(result, outputPath);
@@ -212,7 +253,7 @@ TEST_F(ParseARDesignTest, DrawARDesignTest) {
 
     // Verify that the files were created for each floor
     for (const auto& floorNum : {"1", "2"}) {
-        std::string expectedPath = "test_ar_design_floor_" + std::string(floorNum) + ".png";
+        std::string expectedPath = "outputs/test_ar_design_floor_" + std::string(floorNum) + ".png";
         std::ifstream file(expectedPath);
         ASSERT_TRUE(file.good()) << "Image file was not created for floor " << floorNum;
         file.close();
