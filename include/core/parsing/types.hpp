@@ -7,11 +7,10 @@
 
 
 namespace iad {
-
-struct CombinedData {
-    ARDesign arDesign;
-    InputData inputData;
-};
+    struct CombinedData {
+        ARDesign arDesign;
+        InputData inputData;
+    };
 
 }   
 
