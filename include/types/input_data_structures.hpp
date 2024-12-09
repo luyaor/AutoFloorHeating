@@ -5,26 +5,34 @@
 #include <vector>
 #include "data_structures.hpp"
 
-// Structures for inputData.json
 
-// 辅助采集器结构
+// AssistCollector structure
 struct AssistCollector {
-    std::string Id;
-    Point Loc;
-    std::string LevelName;
-    struct Boundary {
-        std::vector<CurveInfo> Borders;
-        double Offset;
-    };
-    std::vector<Boundary> Boundaries;
+    Point Location;
+    std::vector<CurveInfo> Borders;
 };
 
-// 辅助数据结构
+// Construction structure
+struct Construction {
+    std::vector<AssistCollector> AssistCollector;
+};
+
+// Floor structure
+struct Floor {
+    std::string Name;
+    std::string Num;
+    Point BasePoint;
+    double LevelHeight;
+    double LevelElevation;
+    Construction Construction;
+};
+
+// AssistData structure
 struct AssistData {
-    std::vector<AssistCollector> AssistCollectors;
+    std::vector<Floor> Floor;
 };
 
-// 回路跨度结构
+// Loop span structure
 struct LoopSpan {
     std::string TypeName;
     double MinSpan;
@@ -32,14 +40,14 @@ struct LoopSpan {
     double Curvity;
 };
 
-// 障碍物跨度结构
+// Obstacle span structure
 struct ObstacleSpan {
     std::string ObsName;
     double MinSpan;
     double MaxSpan;
 };
 
-// 管道跨度结构
+// Pipe span structure
 struct PipeSpanSet {
     std::string LevelDesc;
     std::string FuncName;
@@ -48,7 +56,7 @@ struct PipeSpanSet {
     double PipeSpan;
 };
 
-// 弹性跨度结构
+// Elastic span structure
 struct ElasticSpan {
     std::string FuncName;
     double PriorSpan;
@@ -56,13 +64,13 @@ struct ElasticSpan {
     double MaxSpan;
 };
 
-// 功能房间结构
+// Function room structure
 struct FuncRoom {
     std::string FuncName;
     std::vector<std::string> RoomNames;
 };
 
-// Web 数据结构
+// Web data structure
 struct WebData {
     int ImbalanceRatio;
     double JointPipeSpan;
@@ -76,11 +84,10 @@ struct WebData {
     std::vector<FuncRoom> FuncRooms;
 };
 
-// 总的数据结构
+// Input data structure
 struct InputData {
-    AssistData assistData;
-    WebData webData;
+    AssistData AssistData;
+    WebData WebData;
 };
-
 
 #endif // INPUT_DATA_STRUCTURES_H
