@@ -23,7 +23,7 @@ namespace iad {
                 heatingCoil.HouseName = houseType.houseName;
 
             // Call the pipe layout generation function
-            CollectorCoil collectorCoil = generatePipeLayout(houseType, combinedData.inputData.webData);
+            CollectorCoil collectorCoil = generatePipeLayout(houseType, combinedData.inputData.WebData);
 
             // Add the generated CollectorCoil to HeatingCoil
                     heatingCoil.CollectorCoils.push_back(collectorCoil);
