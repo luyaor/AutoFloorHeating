@@ -113,7 +113,8 @@ TEST_F(ParseARDesignTest, ParsesActualARDesignFile) {
     getcwd(cwd, sizeof(cwd));
     // Read file content
     // std::string filePath = "../../example/ARDesign-min.json";
-    std::string filePath = "../example/ARDesign2.json";
+    // std::string filePath = "../example/ARDesign2.json";
+    std::string filePath = "../../example/ARDesign2.json";
     // std::string filePath = "../example/ARDesign01.json";
     std::ifstream file(filePath);
     if (!file.is_open()) {
@@ -166,7 +167,8 @@ TEST_F(ParseARDesignTest, ParsesActualARDesignFile01) {
     // Read file content
     // std::string filePath = "../../example/ARDesign-min.json";
     // std::string filePath = "../example/ARDesign2.json";
-    std::string filePath = "../example/ARDesign02.json";
+    // std::string filePath = "../example/ARDesign02.json";
+    std::string filePath = "../../example/ARDesign02.json";
     std::ifstream file(filePath);
     if (!file.is_open()) {
         std::cerr << "Current working directory: " << cwd << std::endl;
