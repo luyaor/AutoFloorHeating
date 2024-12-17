@@ -4,32 +4,32 @@
 #include <string>
 #include <vector>
 #include "data_structures.hpp"
+#include "ar_design_structures.hpp"
 
-
-// AssistCollector structure
+// Collector structure
 struct AssistCollector {
     Point Location;
     std::vector<CurveInfo> Borders;
 };
 
 // Construction structure
-struct Construction {
+struct AssistConstruction {
     std::vector<AssistCollector> AssistCollector;
 };
 
 // Floor structure
-struct Floor {
+struct AssistFloor {
     std::string Name;
     std::string Num;
     Point BasePoint;
     double LevelHeight;
     double LevelElevation;
-    Construction Construction;
+    AssistConstruction Construction;
 };
 
 // AssistData structure
 struct AssistData {
-    std::vector<Floor> Floor;
+    std::vector<AssistFloor> Floor;
 };
 
 // Loop span structure

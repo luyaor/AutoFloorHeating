@@ -4,21 +4,17 @@ namespace iad {
 namespace parsers {
 
 void InputDataParser::parseAssistCollector(const Json::Value& json, AssistCollector& collector) {
-    collector.Id = json["Id"].asString();
-    collector.LevelName = json["LevelName"].asString();
-    
-    const auto& locJson = json["Loc"];
-    collector.Loc = Point{
+    // Parse Location
+    const auto& locJson = json["Location"];
+    collector.Location = Point{
         locJson["x"].asDouble(),
         locJson["y"].asDouble(),
         locJson["z"].asDouble()
     };
-
-    for (const auto& boundaryJson : json["Boundaries"]) {
-        AssistCollector::Boundary boundary;
-        boundary.Offset = boundaryJson["Offset"].asDouble();
-        
-        for (const auto& borderJson : boundaryJson["Borders"]) {
+    
+    // Parse Borders
+    if (json.isMember("Borders") && json["Borders"].isArray()) {
+        for (const auto& borderJson : json["Borders"]) {
             CurveInfo curve;
             const auto& startJson = borderJson["StartPoint"];
             const auto& endJson = borderJson["EndPoint"];
@@ -33,20 +29,56 @@ void InputDataParser::parseAssistCollector(const Json::Value& json, AssistCollec
                 endJson["y"].asDouble(),
                 endJson["z"].asDouble()
             };
+            
+            if (borderJson.isMember("MidPoint")) {
+                const auto& midJson = borderJson["MidPoint"];
+                curve.MidPoint = Point{
+                    midJson["x"].asDouble(),
+                    midJson["y"].asDouble(),
+                    midJson["z"].asDouble()
+                };
+            }
+            
             curve.ColorIndex = borderJson["ColorIndex"].asInt();
             curve.CurveType = borderJson["CurveType"].asInt();
             
-            boundary.Borders.push_back(curve);
+            collector.Borders.push_back(curve);
         }
-        collector.Boundaries.push_back(boundary);
     }
 }
 
 void InputDataParser::parseAssistData(const Json::Value& json, AssistData& data) {
-    for (const auto& collectorJson : json["AssistCollectors"]) {
-        AssistCollector collector;
-        parseAssistCollector(collectorJson, collector);
-        data.AssistCollectors.push_back(collector);
+    if (json.isMember("Floor") && json["Floor"].isArray()) {
+        for (const auto& floorJson : json["Floor"]) {
+            AssistFloor floor;
+            floor.Name = floorJson["Name"].asString();
+            floor.Num = floorJson["Num"].asString();
+            
+            const auto& basePointJson = floorJson["BasePoint"];
+            floor.BasePoint = Point{
+                basePointJson["x"].asDouble(),
+                basePointJson["y"].asDouble(),
+                basePointJson["z"].asDouble()
+            };
+            
+            floor.LevelHeight = floorJson["LevelHeight"].asDouble();
+            floor.LevelElevation = floorJson["LevelElevation"].asDouble();
+            
+            // Parse Construction
+            if (floorJson.isMember("Construction")) {
+                const auto& constructionJson = floorJson["Construction"];
+                if (constructionJson.isMember("AssistCollector") && 
+                    constructionJson["AssistCollector"].isArray()) {
+                    for (const auto& collectorJson : constructionJson["AssistCollector"]) {
+                        AssistCollector collector;
+                        parseAssistCollector(collectorJson, collector);
+                        floor.Construction.AssistCollector.push_back(collector);
+                    }
+                }
+            }
+            
+            data.Floor.push_back(floor);
+        }
     }
 }
 
@@ -79,8 +111,10 @@ void InputDataParser::parsePipeSpanSet(const Json::Value& json, std::vector<Pipe
         span.ExterWalls = spanJson["ExterWalls"].asInt();
         span.PipeSpan = spanJson["PipeSpan"].asDouble();
         
-        for (const auto& direction : spanJson["Directions"]) {
-            span.Directions.push_back(direction.asString());
+        if (spanJson.isMember("Directions") && spanJson["Directions"].isArray()) {
+            for (const auto& direction : spanJson["Directions"]) {
+                span.Directions.push_back(direction.asString());
+            }
         }
         spans.push_back(span);
     }
@@ -101,8 +135,10 @@ void InputDataParser::parseFuncRooms(const Json::Value& json, std::vector<FuncRo
     for (const auto& roomJson : json) {
         FuncRoom room;
         room.FuncName = roomJson["FuncName"].asString();
-        for (const auto& name : roomJson["RoomNames"]) {
-            room.RoomNames.push_back(name.asString());
+        if (roomJson.isMember("RoomNames") && roomJson["RoomNames"].isArray()) {
+            for (const auto& name : roomJson["RoomNames"]) {
+                room.RoomNames.push_back(name.asString());
+            }
         }
         rooms.push_back(room);
     }
@@ -114,12 +150,12 @@ void InputDataParser::parseWebData(const Json::Value& json, WebData& data) {
     data.DenseAreaWallSpan = json["DenseAreaWallSpan"].asDouble();
     data.DenseAreaSpanLess = json["DenseAreaSpanLess"].asDouble();
 
-    parseLoopSpanSet(json["LoopSpanSet"], data.LoopSpanSet);
-    parseObstacleSpans(json["ObsSpanSet"], data.ObsSpanSet);
-    parseObstacleSpans(json["DeliverySpanSet"], data.DeliverySpanSet);
-    parsePipeSpanSet(json["PipeSpanSet"], data.PipeSpanSet);
-    parseElasticSpanSet(json["ElasticSpanSet"], data.ElasticSpanSet);
-    parseFuncRooms(json["FuncRooms"], data.FuncRooms);
+    if (json.isMember("LoopSpanSet")) parseLoopSpanSet(json["LoopSpanSet"], data.LoopSpanSet);
+    if (json.isMember("ObsSpanSet")) parseObstacleSpans(json["ObsSpanSet"], data.ObsSpanSet);
+    if (json.isMember("DeliverySpanSet")) parseObstacleSpans(json["DeliverySpanSet"], data.DeliverySpanSet);
+    if (json.isMember("PipeSpanSet")) parsePipeSpanSet(json["PipeSpanSet"], data.PipeSpanSet);
+    if (json.isMember("ElasticSpanSet")) parseElasticSpanSet(json["ElasticSpanSet"], data.ElasticSpanSet);
+    if (json.isMember("FuncRooms")) parseFuncRooms(json["FuncRooms"], data.FuncRooms);
 }
 
 InputData InputDataParser::parse(const std::string& jsonStr) {
@@ -131,11 +167,11 @@ InputData InputDataParser::parse(const std::string& jsonStr) {
         throw std::runtime_error("Failed to parse Input Data JSON");
     }
     
-    parseAssistData(root["AssistData"], data.assistData);
-    parseWebData(root["WebData"], data.webData);
+    if (root.isMember("AssistData")) parseAssistData(root["AssistData"], data.AssistData);
+    if (root.isMember("WebData")) parseWebData(root["WebData"], data.WebData);
     
     return data;
 }
 
 } // namespace parsers
-} // namespace iad 
+} // namespace iad
