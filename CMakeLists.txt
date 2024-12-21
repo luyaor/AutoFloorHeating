@@ -86,3 +86,5 @@ message(STATUS "JSONCPP_LIBRARY: ${JSONCPP_LIBRARY}")
 message(STATUS "JSONCPP_INCLUDE_DIRS: ${JSONCPP_INCLUDE_DIRS}")
 
 add_definitions(-DPROJECT_ROOT="${CMAKE_SOURCE_DIR}")
+
+target_link_libraries(${PROJECT_NAME} Eigen3::Eigen Matplot++::matplot)
