@@ -123,12 +123,7 @@ void drawARDesign(const ARDesign& design, const std::string& outputPath) {
 
     // 在drawARDesign函数开头添加字母生成器
     auto generateLabel = [](int index) -> std::string {
-        std::string label;
-        while (index >= 0) {
-            label = static_cast<char>('A' + (index % 26)) + label;
-            index = index / 26 - 1;
-        }
-        return label;
+        return std::to_string(index + 1);  // 从1开始编号
     };
 
     // 在drawARDesign函数开头添加辅助函数，用于检查坐标是否重叠
