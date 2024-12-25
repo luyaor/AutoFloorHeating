@@ -148,9 +148,34 @@ void drawARDesign(const ARDesign& design, const std::string& outputPath) {
         }
         return -1;
     };
+        // 定义标签框结构
+        struct LabelBox {
+            cv::Point topLeft;
+            cv::Point bottomRight;
+            bool intersectsWith(const LabelBox& other) const {
+                return !(bottomRight.x < other.topLeft.x ||
+                        other.bottomRight.x < topLeft.x ||
+                        bottomRight.y < other.topLeft.y ||
+                        other.bottomRight.y < topLeft.y);
+            }
+        };
+
+    // Declare variables before the loop
+    std::vector<LabelBox> existingLabels;
+    std::map<std::pair<double, double>, cv::Scalar> pointColors;
+    std::vector<std::pair<Point, cv::Scalar>> assignedPoints;
+    std::set<std::pair<double, double>> processedPoints;
 
     // 为每个楼层绘制图像
     for (const auto& floor : design.Floor) {
+
+        // 重置每层楼的坐标映射和标签位置
+        coordMapping.clear();
+        existingLabels.clear();
+        pointColors.clear();
+        assignedPoints.clear();
+        processedPoints.clear();
+
         cv::Mat image(4000, 4000, CV_8UC3, cv::Scalar(255, 255, 255));
         
         // 定义颜色
@@ -203,31 +228,19 @@ void drawARDesign(const ARDesign& design, const std::string& outputPath) {
                     
                     // 检查起点是否已存在
                     int startIndex = findExistingPoint(curve.StartPoint);
-                    std::string startLabel;
                     if (startIndex == -1) {
                         // 点不存在，添加新点
-                        startLabel = generateLabel(coordMapping.size());
+                        std::string startLabel = generateLabel(coordMapping.size());
                         coordMapping.push_back({startLabel, curve.StartPoint, start});
-                    } else {
-                        // 点已存在，使用已有标签
-                        startLabel = coordMapping[startIndex].label;
                     }
                     
                     // 检查终点是否已存在
                     int endIndex = findExistingPoint(curve.EndPoint);
-                    std::string endLabel;
                     if (endIndex == -1) {
                         // 点不存在，添加新点
-                        endLabel = generateLabel(coordMapping.size());
+                        std::string endLabel = generateLabel(coordMapping.size());
                         coordMapping.push_back({endLabel, curve.EndPoint, end});
-                    } else {
-                        // 点已存在，使用已有标签
-                        endLabel = coordMapping[endIndex].label;
                     }
-                    
-                    // 绘制标签
-                    putTextZH(image, startLabel, start + cv::Point(-20, -20), TEXT_COLOR, 32, 2);
-                    putTextZH(image, endLabel, end + cv::Point(-20, -20), TEXT_COLOR, 32, 2);
                 } else { // 弧线
                     cv::Point center = transformPoint(curve.Center);
                     double radius = cv::norm(center - start);
@@ -324,49 +337,114 @@ void drawARDesign(const ARDesign& design, const std::string& outputPath) {
                      textPos, TEXT_COLOR, 24, 1);
         }
 
-        // 在绘制完所有内容后，添加坐标系
-        const int AXIS_LENGTH = 200;  // 坐标轴长度
-        const int ARROW_LENGTH = 20;  // 箭头长度
-        const cv::Point ORIGIN(200, image.rows - 200);  // 原点位置
-        
-        // 绘制X轴
-        cv::line(image, ORIGIN, 
-                 cv::Point(ORIGIN.x + AXIS_LENGTH, ORIGIN.y), 
-                 TEXT_COLOR, 2);
-        // X轴箭头
-        cv::line(image, 
-                 cv::Point(ORIGIN.x + AXIS_LENGTH, ORIGIN.y),
-                 cv::Point(ORIGIN.x + AXIS_LENGTH - ARROW_LENGTH, ORIGIN.y - ARROW_LENGTH/2),
-                 TEXT_COLOR, 2);
-        cv::line(image, 
-                 cv::Point(ORIGIN.x + AXIS_LENGTH, ORIGIN.y),
-                 cv::Point(ORIGIN.x + AXIS_LENGTH - ARROW_LENGTH, ORIGIN.y + ARROW_LENGTH/2),
-                 TEXT_COLOR, 2);
-        putTextZH(image, "X", 
-                  cv::Point(ORIGIN.x + AXIS_LENGTH + 10, ORIGIN.y + 20), 
-                  TEXT_COLOR, 24, 2);
-        
-        // 绘制Y轴
-        cv::line(image, ORIGIN, 
-                 cv::Point(ORIGIN.x, ORIGIN.y - AXIS_LENGTH), 
-                 TEXT_COLOR, 2);
-        // Y轴箭头
-        cv::line(image, 
-                 cv::Point(ORIGIN.x, ORIGIN.y - AXIS_LENGTH),
-                 cv::Point(ORIGIN.x - ARROW_LENGTH/2, ORIGIN.y - AXIS_LENGTH + ARROW_LENGTH),
-                 TEXT_COLOR, 2);
-        cv::line(image, 
-                 cv::Point(ORIGIN.x, ORIGIN.y - AXIS_LENGTH),
-                 cv::Point(ORIGIN.x + ARROW_LENGTH/2, ORIGIN.y - AXIS_LENGTH + ARROW_LENGTH),
-                 TEXT_COLOR, 2);
-        putTextZH(image, "Y", 
-                  cv::Point(ORIGIN.x - 20, ORIGIN.y - AXIS_LENGTH - 10), 
-                  TEXT_COLOR, 24, 2);
-        
-        // 标注原点
-        putTextZH(image, "O(0,0)", 
-                  cv::Point(ORIGIN.x - 60, ORIGIN.y + 30), 
-                  TEXT_COLOR, 24, 2);
+        // 尝试找到不重叠的标签位置
+        auto findNonOverlappingPosition = [&](const cv::Point& basePoint) -> cv::Point {
+            // 定义可能的偏移方向（顺时针：右上、右下、下、左下、左、左上、上）
+            const std::vector<cv::Point> offsets = {
+                {-20, -20}, {20, -20}, {20, 20}, {-20, 20},  // 默认四个角
+                {0, -40}, {40, 0}, {0, 40}, {-40, 0},        // 上右下左
+                {-40, -40}, {40, -40}, {40, 40}, {-40, 40}   // 更远的四个角
+            };
+            
+            const int labelWidth = 30;   // 估计的标签宽度
+            const int labelHeight = 30;  // 估计的标签高度
+
+            // 尝���每个偏移位置
+            for (const auto& offset : offsets) {
+                cv::Point candidatePos = basePoint + offset;
+                LabelBox candidateBox = {
+                    candidatePos,
+                    {candidatePos.x + labelWidth, candidatePos.y + labelHeight}
+                };
+
+                // 检查是否与现有标签重叠
+                bool hasOverlap = false;
+                for (const auto& existing : existingLabels) {
+                    if (candidateBox.intersectsWith(existing)) {
+                        hasOverlap = true;
+                        break;
+                    }
+                }
+
+                if (!hasOverlap) {
+                    existingLabels.push_back(candidateBox);
+                    return candidatePos;
+                }
+            }
+
+            // 如果所有位置都重叠，返回原始位置
+            return basePoint + cv::Point(-20, -20);
+        };
+
+        // 定义4种不同的颜色
+        const std::vector<cv::Scalar> LABEL_COLORS = {
+            cv::Scalar(255, 0, 0),    // 蓝色
+            cv::Scalar(0, 128, 0),    // 深绿色
+            cv::Scalar(128, 0, 128),  // 紫色
+            cv::Scalar(139, 69, 19)   // 棕色
+        };
+
+        // 判断两个点是否相邻
+        auto isNearby = [](const Point& p1, const Point& p2, double threshold = 300.0) -> bool {
+            double dx = p1.x - p2.x;
+            double dy = p1.y - p2.y;
+            return (dx * dx + dy * dy) <= threshold * threshold;
+        };
+
+        // 为每个唯一的坐标点分配颜色
+        std::map<std::pair<double, double>, cv::Scalar> pointColors;
+        std::vector<std::pair<Point, cv::Scalar>> assignedPoints;
+
+        for (const auto& coord : coordMapping) {
+            auto point = std::make_pair(coord.originalPoint.x, coord.originalPoint.y);
+            if (pointColors.find(point) != pointColors.end()) {
+                continue;  // 跳过已分配颜色的点
+            }
+
+            // 获取已使用的相邻点的颜色
+            std::set<cv::Scalar, std::function<bool(const cv::Scalar&, const cv::Scalar&)>> 
+            usedNearbyColors([](const cv::Scalar& a, const cv::Scalar& b) {
+                return a[0] < b[0] || (a[0] == b[0] && a[1] < b[1]) || 
+                       (a[0] == b[0] && a[1] == b[1] && a[2] < b[2]);
+            });
+
+            for (const auto& [assignedPoint, color] : assignedPoints) {
+                if (isNearby(coord.originalPoint, assignedPoint)) {
+                    usedNearbyColors.insert(color);
+                }
+            }
+
+            // 从可用颜色中选择一个未被相邻点使用的颜色
+            cv::Scalar selectedColor;
+            for (const auto& color : LABEL_COLORS) {
+                if (usedNearbyColors.find(color) == usedNearbyColors.end()) {
+                    selectedColor = color;
+                    break;
+                }
+            }
+
+            // 如果所有颜色都被使用，选择第一个颜色
+            if (selectedColor == cv::Scalar()) {
+                selectedColor = LABEL_COLORS[0];
+            }
+
+            pointColors[point] = selectedColor;
+            assignedPoints.push_back({coord.originalPoint, selectedColor});
+        }
+
+        // 绘制标签时使用对应的颜色（保持不变）
+        std::set<std::pair<double, double>> processedPoints;
+        for (const auto& coord : coordMapping) {
+            auto point = std::make_pair(coord.originalPoint.x, coord.originalPoint.y);
+            
+            if (processedPoints.insert(point).second) {
+                cv::Scalar pointColor = pointColors[point];
+                cv::Point labelPos = findNonOverlappingPosition(coord.transformedPoint);
+                
+                cv::circle(image, coord.transformedPoint, 4, pointColor, -1);
+                putTextZH(image, coord.label, labelPos, pointColor, 20, 1);
+            }
+        }
 
         // 生成当前楼层的输出文件名
         std::filesystem::path floor_path = 
