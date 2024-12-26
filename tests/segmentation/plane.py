@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import copy
 import numpy as np
 from numpy.linalg import norm
-from typing import List, Tuple, Callable, Optional, Dict
+from typing import List, Tuple, Callable, Optional, Dict, Hashable
 from dataclasses import dataclass
 from loguru import logger
 
@@ -18,8 +18,28 @@ Polygon = List[Point]
 Seg = Tuple[Point, Point]
 
 
+@np.vectorize
 def eq(a: float, b: float) -> bool:
     return abs(a - b) < EPS
+
+
+def same_point(p: Point, q: Point) -> bool:
+    return eq(p[0], q[0]) and eq(p[1], q[1])
+
+
+def directed_area(p: Point, q: Point, r: Point) -> float:
+    return ((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])) / 2.0
+
+
+def test_directed_area():
+    p = arr(0, 0)
+    q = arr(1, 0)
+    r = arr(0, 1)
+    assert eq(directed_area(p, q, r), 0.5)
+    p = arr(0, 0)
+    q = arr(1, 1)
+    r = arr(1, 0)
+    assert eq(directed_area(p, q, r), -0.5)
 
 
 def arr(*args):
@@ -143,7 +163,7 @@ def inner_nxt_pt_line(outer: List[Line], width) -> Tuple[Point, Line]:
 
 # [problem] 现在无脑删除 outer[-1] 和 res[-1]，这样可能会导致删除了一个正确的点。
 def inner_nxt_pt_dir(
-    outer: List[Tuple[Point, Line]], width
+    outer: List[Tuple[Point, Line]], width, ccw: bool
 ) -> Tuple[Optional[Point], Optional[Vec]]:
     # print(outer[-1], outer[0])
     # logger.info("#", outer[-1], outer[0])
@@ -156,7 +176,7 @@ def inner_nxt_pt_dir(
         return None, None
     theta = vec_angle_signed(outer[-1][1], outer[0][1])
     go = cross - outer[-1][0]
-    expected_norm = norm(go) - width / np.sin(theta)
+    expected_norm = norm(go) + (-1 if ccw else 1) * width / np.sin(theta)
     if expected_norm <= 0:
         # print("expected norm <= 0")
         return None, None
@@ -164,6 +184,7 @@ def inner_nxt_pt_dir(
     return nxt_pt, outer[0][1]
 
 
+# [deprecated]
 def inner_recursive_with_depth(
     outer: List[Line], width, depth
 ) -> List[Tuple[Point, Line]]:
@@ -213,28 +234,42 @@ def seg_dis(s1: Seg, s2: Seg) -> float:
 
 def inner_recursive_v2(
     outer: List[Tuple[Point, Vec]], width
-) -> List[Tuple[Point, Vec]]:
+) -> Tuple[List[Tuple[Point, Vec]], List[Hashable]]:
     outer = copy.deepcopy(outer)
-    res = []
+    res = copy.deepcopy(outer)
+
+    # [ccw]
+    ccw = not is_clockwise([pt for pt, _ in outer])
+    indices = list(zip(["outer"] * len(outer), range(len(outer))))
+    # ("outer", 0), ("outer", 1)...
+    # ("inner", 6, 0), ("inner", 6, 1)...
+
     debug = 0
-    while len(outer) >= 3 and debug < 1e9:
+    while len(outer) >= 3 and debug < 250:
         debug += 1
-        pt, dir = inner_nxt_pt_dir(outer, width)
+        pt, dir = inner_nxt_pt_dir(outer, width, ccw)
         if pt is None:
             outer.pop()
             res.pop()
+            indices.pop()
             continue
-        if len(res) > 0 and (res[-1][1]) @ (pt - res[-1][0]) < width / 2:
+        if len(res) > 0 and (res[-1][1]) @ (pt - res[-1][0]) < width / 2.0:
             # print("too close")
             outer.pop()
             res.pop()
+            indices.pop()
             continue
         outer = outer[1:] + [(pt, dir)]
+        idx = (
+            ("inner", indices[-1][1], 0)
+            if indices[-1][0] == "outer"
+            else ("inner", indices[-1][1], indices[-1][2] + 1)
+        )
+        indices.append(idx)
         res.append((pt, dir))
-    return res
+    return res, indices
 
 
-# [untested]
 def is_clockwise(points: List[Point]) -> bool:
     """
     判断一系列二维点是顺时针还是逆时针排列。
@@ -255,10 +290,12 @@ def poly_edge_pipe_width_v1(
 ) -> List[float]:
     """
     返回输入顺序第 i 条边上所有管道的宽度
+    poly 为逆时针
     """
-    # first edge is poly[0] -> poly[1]
+    # edge[0] is poly[0] -> poly[1]
     # 每边限制：不超邻边，与非邻边不相交
     n = len(poly)
+    assert n >= 3
     ans = [sug_w] * n
 
     def ith_edge(i) -> Seg:
@@ -267,12 +304,36 @@ def poly_edge_pipe_width_v1(
     def seg_norm(seg: Seg):
         return norm(seg[1] - seg[0])
 
+    def seg_dir(seg: Seg):
+        return normalized(seg[1] - seg[0])
+
     for i in range(n):
+        # edge i, poly[i] -> poly[i + 1]
         if edge_pipe_num[i] == 0:
             ans[i] = 0
             continue
-        ans[i] = min(ans[i], seg_norm(ith_edge(i - 1)) / edge_pipe_num[i])
-        ans[i] = min(ans[i], seg_norm(ith_edge(i + 1)) / edge_pipe_num[i])
+        # i 为凸点
+        debug = False
+        # 临时方案配合 fallback. 见 [pin] 241227.1.
+        if (
+            directed_area(poly[(i - 1 + n) % n], poly[i], poly[(i + 1) % n]) > 0
+            or debug
+        ):
+            ans[i] = min(
+                ans[i],
+                seg_norm(ith_edge(i - 1))
+                / (edge_pipe_num[i] + edge_pipe_num[(i - 1 + n) % n]),
+            )
+        # i + 1 为凸点
+        if directed_area(poly[i], poly[(i + 1) % n], poly[(i + 2) % n]) > 0 or debug:
+            ans[i] = min(
+                ans[i],
+                seg_norm(ith_edge(i + 1))
+                / (edge_pipe_num[i] + edge_pipe_num[(i + 1) % n]),
+            )
+
+        # expand 后退需求
+        ans[i] = min(ans[i], seg_norm(ith_edge(i)) / edge_pipe_num[i])
 
         for j in range(n):
 
@@ -281,11 +342,13 @@ def poly_edge_pipe_width_v1(
 
             if i == j or i == nxt(j) or j == nxt(i):
                 continue
-            ans[i] = min(
-                ans[i],
-                seg_dis(ith_edge(i), ith_edge(j))
-                / (edge_pipe_num[i] + edge_pipe_num[j]),
-            )
+            # 两边必须相对才约束
+            if seg_dir(ith_edge(i)) @ seg_dir(ith_edge(j)) < 0 or debug:
+                ans[i] = min(
+                    ans[i],
+                    seg_dis(ith_edge(i), ith_edge(j))
+                    / (edge_pipe_num[i] + edge_pipe_num[j]),
+                )
     return ans
 
 
@@ -305,6 +368,7 @@ def pt_edge_pipes_expand_pts_v1(
     给出 dir 朝外，pipe 逆时针（从右往左）
     Axis 轴正方向为向左
     边也是逆时针
+    返回 pipe id -> 坐标
     """
     n = len(edge_pipes)
     assert n == len(edge_dir)
@@ -324,16 +388,19 @@ def pt_edge_pipes_expand_pts_v1(
         )
         pre = (i - 1 + n) % n
         nxt = (i + 1) % n
+
+        # 有时同样管道，宽度会突变
         fallback = max(edge_pipes[i][-1].lw, edge_pipes[i][0].rw)
+
         pre_contrib = (
-            abs(edge_pipes[pre][-1].x + edge_pipes[pre][-1].lw)
-            if eq(vec_angle(edge_dir[pre], edge_dir[i]), np.pi / 2)
+            +(edge_pipes[pre][-1].x + edge_pipes[pre][-1].lw)
+            if 0 <= vec_angle_signed(edge_dir[pre], edge_dir[i]) <= np.pi * 0.75
             and len(edge_pipes[pre]) > 0
             else fallback
         )
         nxt_contrib = (
-            abs(edge_pipes[nxt][0].x - edge_pipes[nxt][0].rw)
-            if eq(vec_angle(edge_dir[i], edge_dir[nxt]), np.pi / 2)
+            -(edge_pipes[nxt][0].x - edge_pipes[nxt][0].rw)
+            if 0 <= vec_angle_signed(edge_dir[i], edge_dir[nxt]) <= np.pi * 0.75
             and len(edge_pipes[nxt]) > 0
             else fallback
         )
@@ -385,24 +452,84 @@ def test3():
     plt.show()
 
 
+def test4():
+    def get_p(id, x, w):
+        return PipeOnAxis(id, x, w / 2.0, w / 2.0)
+
+    res = pt_edge_pipes_expand_pts_v1(
+        arr(72, 38),
+        [
+            [get_p(0, 2.5, 5)],
+            [get_p(1, -1.0, 2.0)],
+        ],
+        [arr(-1, 0), arr(0, 1)],
+    )
+    sets: Dict[int, List[int]] = {0: [0, 1]}
+    # scatter all pt
+    plt.scatter([p[0] for p in res.values()], [p[1] for p in res.values()])
+    plt.scatter([72], [38], color="red")
+    for li in sets.values():
+        for i in range(len(li) - 1):
+            plt.plot(
+                [res[li[i]][0], res[li[(i + 1)]][0]],
+                [res[li[i]][1], res[li[(i + 1)]][1]],
+            )
+    plt.show()
+
+
+# 外部需要知道哪些外围点被删除了（一定是最后连续若干条），需要投影到新的外围最后一边
+def inner_recursive_v2_api(
+    poly: Polygon, width: float
+) -> Tuple[List[Point], List[Hashable]]:
+    # 不删除重复点
+    outer = [
+        (
+            poly[i],
+            normalized(poly[(i + 1) % len(poly)] - poly[i]),
+        )
+        for i in range(len(poly))
+    ]
+    res, indices = inner_recursive_v2(outer, width)
+    return [pt for pt, _ in res], indices
+
+
+def test101():
+    pts_xy = [
+        np.array([97.0, 37.0]),
+        np.array([97.0, 37.0]),
+        np.array([96.5, 36.0]),
+        np.array([96.5, 20.0]),
+        np.array([98.5, 17.5]),
+        np.array([158.0, 17.5]),
+        np.array([160.5, 20.0]),
+        np.array([160.5, 89.0]),
+        np.array([158.0, 91.5]),
+        np.array([103.0, 91.5]),
+        np.array([98.5, 89.0]),
+        np.array([98.5, 40.0]),
+    ]
+    res, indices = inner_recursive_v2_api(pts_xy, 3)
+    print(indices)
+    _plot_points_linked(res)
+
+
 def test1():
     # poly: Polygon = list(reversed([arr(0, 0), arr(1, 2), arr(2, 1), arr(1, 0)]))
     poly: Polygon = [
         arr(0, 0),
+        arr(0.5, 0),
         arr(0.98, 0),
         arr(1, 0.02),
         arr(1, 1),
         arr(0.43, 1),
         arr(0.4, 1.03),
+        arr(0.4, 1.1),
         arr(0.4, 1.2),
         arr(0, 1.2),
     ]
-    outer = [
-        (poly[i], normalized(poly[(i + 1) % len(poly)] - poly[i]))
-        for i in range(len(poly))
-    ]
-    res = inner_recursive_v2(outer, 0.1)
-    _plot_points_linked(poly + [pt for pt, _ in res])
+    # poly.reverse()
+    res = inner_recursive_v2_api(poly, 0.1)
+    _plot_points_linked(res)
 
 
 def test2():
@@ -416,4 +543,4 @@ def test2():
 
 
 if __name__ == "__main__":
-    test1()
+    test4()
