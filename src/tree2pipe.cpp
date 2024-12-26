@@ -3,24 +3,34 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <unistd.h>
+#include <filesystem>
+#include <thread>
+#include <fstream>
+#include <functional>
+#include <algorithm>
+#include <limits>
+#include <chrono>
 
 #include <Eigen/Core>
-#include <matplot/matplot.h>
+#include <Eigen/Dense>
+#include <opencv2/opencv.hpp>
 
 namespace tree2pipe {
 
-using std::array;
-using std::cout;
-using std::enable_shared_from_this;
-using std::endl;
-using std::make_shared;
-using std::optional;
-using std::pair;
 using std::shared_ptr;
 using std::vector;
+using std::array;
+using std::optional;
+using std::function;
+using std::pair;
+using std::cout;
+using std::endl;
+using std::make_shared;
+using std::enable_shared_from_this;
 
-using Eigen::Vector2d;
-using Eigen::Vector3d;
+using Vector2d = Eigen::Vector2d;
+using Vector3d = Eigen::Vector3d;
 
 const double EPS = 1e-8;
 
@@ -192,7 +202,7 @@ shared_ptr<Node> RectM1::to_tree(const CfgM1& anc_recommend) {
         current->sons.push_back(make_shared<Node>(q[i].first, w));
         current = current->sons[0];
     }
-    // 此时均只有一个孩子，已成为 Node 类型
+    // 此均只有一个孩子，已成为 Node 类型
     array<shared_ptr<Node>, 5> key_nodes = { rt, // p1
                                              rt->sons[0],
                                              rt->sons[0]->sons[0],
@@ -353,33 +363,163 @@ std::shared_ptr<Node> PolygonM1::to_tree(const CfgM1& anc_recommend) {
 
 
 void plot_points_linked(const std::vector<Vector2d>& pts) {
-    using namespace matplot;
-    std::vector<double> x, y;
-    for (const auto& pt: pts) {
-        x.push_back(pt.x());
-        y.push_back(pt.y());
+    // 创建图像，大小为1000x1000，白色背景
+    cv::Mat image(1000, 1000, CV_8UC3, cv::Scalar(255, 255, 255));
+
+    // 找到边界
+    double x_max = -std::numeric_limits<double>::infinity();
+    double x_min = std::numeric_limits<double>::infinity();
+    double y_max = -std::numeric_limits<double>::infinity();
+    double y_min = std::numeric_limits<double>::infinity();
+
+    for (const auto& pt : pts) {
+        x_max = std::max(x_max, pt.x());
+        x_min = std::min(x_min, pt.x());
+        y_max = std::max(y_max, pt.y());
+        y_min = std::min(y_min, pt.y());
     }
 
-    double x_max = *std::max_element(x.begin(), x.end());
-    double x_min = *std::min_element(x.begin(), x.end());
-    double y_max = *std::max_element(y.begin(), y.end());
-    double y_min = *std::min_element(y.begin(), y.end());
+    // 计算缩放和偏移
+    double scale = std::min(800.0 / (x_max - x_min), 800.0 / (y_max - y_min));
+    double offset_x = 100;
+    double offset_y = 100;
 
-    double x_mid = (x_max + x_min) / 2.0;
-    double y_mid = (y_max + y_min) / 2.0;
-    double width = std::max(x_max - x_min, y_max - y_min) * 1.2;
+    // 坐标转换函数
+    auto transform_point = [&](const Vector2d& p) -> cv::Point {
+        return cv::Point(
+            static_cast<int>((p.x() - x_min) * scale) + offset_x,
+            static_cast<int>((p.y() - y_min) * scale) + offset_y
+        );
+    };
 
-    auto fig = figure(true);
-    fig->size(600, 600);
-    plot(x, y)->line_width(2).color("b");
-    xlabel("x");
-    ylabel("y");
-    title("Points Plot");
-    xlim({ x_mid - width / 2, x_mid + width / 2 });
-    ylim({ y_mid - width / 2, y_mid + width / 2 });
-    grid(true);
-    show();
+    // 绘制连接线
+    cv::Scalar draw_color(255, 0, 0);  // 蓝色
+    for (size_t i = 0; i < pts.size(); ++i) {
+        cv::Point p1 = transform_point(pts[i]);
+        cv::Point p2 = transform_point(pts[(i + 1) % pts.size()]);
+        cv::line(image, p1, p2, draw_color, 2);
+    }
+
+    // 显示图像
+    cv::imshow("Points Plot", image);
+    cv::waitKey(0);
 }
+void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool save_plot, const std::string& color) {
+    std::cout << "plot_points_linked_shared called with save_plot=" << save_plot << ", color=" << color << std::endl;
+    
+    // 创建图像，大小为1000x1000，白色背景
+    cv::Mat image(1000, 1000, CV_8UC3, cv::Scalar(255, 255, 255));
+
+    // 找到边界
+    double x_max = -std::numeric_limits<double>::infinity();
+    double x_min = std::numeric_limits<double>::infinity();
+    double y_max = -std::numeric_limits<double>::infinity();
+    double y_min = std::numeric_limits<double>::infinity();
+
+    for (const auto& pt : pts) {
+        x_max = std::max(x_max, pt.x());
+        x_min = std::min(x_min, pt.x());
+        y_max = std::max(y_max, pt.y());
+        y_min = std::min(y_min, pt.y());
+    }
+
+    std::cout << "Points bounds: x=[" << x_min << ", " << x_max << "], y=[" << y_min << ", " << y_max << "]" << std::endl;
+
+    // 计算缩放和偏移
+    double scale = std::min(800.0 / (x_max - x_min), 800.0 / (y_max - y_min));
+    double offset_x = 100;
+    double offset_y = 100;
+
+    // 坐标转换函数
+    auto transform_point = [&](const Vector2d& p) -> cv::Point {
+        return cv::Point(
+            static_cast<int>((p.x() - x_min) * scale) + offset_x,
+            static_cast<int>((p.y() - y_min) * scale) + offset_y
+        );
+    };
+
+    // 设置绘制颜色
+    cv::Scalar draw_color;
+    if (color == "r") {
+        draw_color = cv::Scalar(0, 0, 255);  // 红色
+    } else if (color == "g") {
+        draw_color = cv::Scalar(0, 255, 0);  // 绿色
+    } else {
+        draw_color = cv::Scalar(255, 0, 0);  // 蓝色
+    }
+
+    // 绘制连接线
+    for (size_t i = 0; i < pts.size(); ++i) {
+        cv::Point p1 = transform_point(pts[i]);
+        cv::Point p2 = transform_point(pts[(i + 1) % pts.size()]);
+        cv::line(image, p1, p2, draw_color, 2);
+    }
+
+    if (save_plot) {
+        static int plot_count = 0;  // 从0开始计数
+        
+        // 检查test_output目录是否存在，如果存在，则使用该目录
+        std::string output_dir = "";
+        if (std::filesystem::exists("test_output")) {
+            output_dir = "test_output/";
+        }
+        
+        // 构建文件路径
+        std::string filename = output_dir + "combined_plot_" + std::to_string(++plot_count) + ".png";
+        std::cout << "Saving plot to: " << filename << std::endl;
+        
+        // 如果需要，创建输出目录
+        if (!output_dir.empty()) {
+            try {
+                std::filesystem::create_directories(output_dir);
+            } catch (const std::filesystem::filesystem_error& e) {
+                std::cerr << "Failed to create directory: " << e.what() << std::endl;
+                throw;
+            }
+        }
+        
+        // 保存图像
+        if (!cv::imwrite(filename, image)) {
+            std::cerr << "Failed to save image to: " << filename << std::endl;
+            throw std::runtime_error("Failed to save image");
+        }
+        
+        // 等待文件写入完成
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        
+        // 检查文件是否存在
+        std::ifstream file(filename);
+        if (!file.good()) {
+            std::cerr << "File not found after first attempt, trying again: " << filename << std::endl;
+            // 如果文件不存在，再次尝试保存并等待
+            if (!cv::imwrite(filename, image)) {
+                std::cerr << "Failed to save image on second attempt" << std::endl;
+                throw std::runtime_error("Failed to save image on second attempt");
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            
+            // 再次检查文件
+            std::ifstream retry_file(filename);
+            if (!retry_file.good()) {
+                std::cerr << "File still not found after second attempt" << std::endl;
+                throw std::runtime_error("Failed to verify file existence after second attempt");
+            }
+            retry_file.close();
+        }
+        file.close();
+        
+        std::cout << "Successfully saved plot to: " << filename << std::endl;
+        
+        // 列出目录内容
+        std::string list_dir = output_dir.empty() ? "." : output_dir;
+        std::cout << "Directory contents of " << list_dir << ":" << std::endl;
+        for (const auto& entry : std::filesystem::directory_iterator(list_dir)) {
+            std::cout << "  " << entry.path().filename().string() << std::endl;
+        }
+    }
+}
+
+
 
 //
 } // namespace tree2pipe

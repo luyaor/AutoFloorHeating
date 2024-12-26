@@ -1,6 +1,8 @@
 // tests/test_pipe_layout_generator.cpp
 #include "../include/tree2pipe.hpp"
 #include <gtest/gtest.h>
+#include <fstream>
+#include <filesystem>
 
 using namespace tree2pipe;
 
@@ -60,4 +62,98 @@ TEST(Tree2PipeTest, Test2) {
     auto points = tree_to_points(root_node);
     // 绘制
     plot_points_linked(points);
+}
+
+TEST(Tree2PipeTest, TestSharedPlotting) {
+    // Test case 1: Simple triangle
+    std::vector<Vector2d> triangle = {
+        Vector2d(0, 0),
+        Vector2d(1, 0),
+        Vector2d(0.5, 1),
+        Vector2d(0, 0)  // Close the shape
+    };
+    
+    // Test case 2: Square
+    std::vector<Vector2d> square = {
+        Vector2d(0.2, 0.2),
+        Vector2d(0.8, 0.2),
+        Vector2d(0.8, 0.8),
+        Vector2d(0.2, 0.8),
+        Vector2d(0.2, 0.2)  // Close the shape
+    };
+    
+    // Test case 3: Pentagon
+    std::vector<Vector2d> pentagon = {
+        Vector2d(0.5, 0),
+        Vector2d(1, 0.4),
+        Vector2d(0.8, 1),
+        Vector2d(0.2, 1),
+        Vector2d(0, 0.4),
+        Vector2d(0.5, 0)  // Close the shape
+    };
+
+    // Plot all shapes and save to a single file
+    plot_points_linked_shared(triangle, false, "b");  // Blue triangle
+    plot_points_linked_shared(square, false, "r");    // Red square
+    plot_points_linked_shared(pentagon, true, "g");   // Green pentagon and save plot
+
+    // Verify that the file was created
+    std::ifstream file("combined_plot_1.png");
+    EXPECT_TRUE(file.good());
+    file.close();
+}
+
+TEST(Tree2PipeTest, TestSharedPlottingWithM1) {
+    // 创建临时目录
+    std::string temp_dir = "test_output";
+    std::filesystem::create_directories(temp_dir);
+    
+    double w = 0.15;
+    
+    // Create first structure
+    auto m1_first = make_shared<NodeM1>(
+        Vector2d(0, 0),
+        CfgM1 { Vector2d::Zero(), w },
+        vector<shared_ptr<M1>> { 
+            make_shared<RectM1>(
+                Vector2d(0, 0),
+                Vector2d(1, 1),
+                CfgM1 { Vector2d(1, 1).normalized(), w * 0.7 }
+            )
+        }
+    );
+
+    // Create second structure
+    auto m1_second = make_shared<NodeM1>(
+        Vector2d(2, 0),
+        CfgM1 { Vector2d::Zero(), w },
+        vector<shared_ptr<M1>> { 
+            make_shared<RectM1>(
+                Vector2d(2, 0),
+                Vector2d(3, 1),
+                CfgM1 { Vector2d(1, 1).normalized(), w * 0.7 }
+            )
+        }
+    );
+
+    try {
+        // Convert both structures to trees and get points
+        auto points1 = tree_to_points(m1_first->to_tree(CfgM1 { std::nullopt, std::nullopt }));
+        auto points2 = tree_to_points(m1_second->to_tree(CfgM1 { std::nullopt, std::nullopt }));
+
+        // Plot both structures and save to a single file
+        plot_points_linked_shared(points1, false, "b");  // First structure in blue
+        plot_points_linked_shared(points2, true, "r");   // Second structure in red and save plot
+
+        // 检查文件是否存在
+        std::string filename = temp_dir + "/combined_plot_1.png";
+        std::ifstream file(filename);
+        EXPECT_TRUE(file.good()) << "Failed to find file at: " << filename;
+        file.close();
+
+        EXPECT_GT(points1.size(), 0);
+        EXPECT_GT(points2.size(), 0);
+    } catch (const std::exception& e) {
+        FAIL() << "Exception thrown: " << e.what();
+    }
 }
