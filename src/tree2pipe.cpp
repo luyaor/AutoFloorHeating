@@ -436,14 +436,28 @@ void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool save_plot,
         global_y_min = std::min(global_y_min, pt.y());
     }
 
+    // 计算坐标范围
+    double x_range = global_x_max - global_x_min;
+    double y_range = global_y_max - global_y_min;
+    
     // 在所有点都添加后计算全局缩放
-    const int margin = 50;  // 边距
-    const double width = 1000 - 2 * margin;
-    const double height = 1000 - 2 * margin;
-    global_scale = std::min(
-        width / (global_x_max - global_x_min),
-        height / (global_y_max - global_y_min)
-    );
+    const int margin = 100;  // 增加边距
+    const double width = 800;  // 减小有效绘图区域
+    const double height = 800;
+    
+    // 保持纵横比
+    double aspect_ratio = x_range / y_range;
+    if (aspect_ratio > 1.0) {
+        // 宽度较大，以宽度为准
+        global_scale = width / x_range;
+    } else {
+        // 高度较大，以高度为准
+        global_scale = height / y_range;
+    }
+
+    // 计算居中偏移
+    double offset_x = margin + (width - x_range * global_scale) / 2.0;
+    double offset_y = margin + (height - y_range * global_scale) / 2.0;
 
     std::cout << "Global bounds: x=[" << global_x_min << ", " << global_x_max 
               << "], y=[" << global_y_min << ", " << global_y_max 
@@ -452,8 +466,8 @@ void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool save_plot,
     // 坐标转换函数 - 使用全局缩放和边界
     auto transform_point = [&](const Vector2d& p) -> cv::Point {
         return cv::Point(
-            static_cast<int>((p.x() - global_x_min) * global_scale) + margin,
-            static_cast<int>((p.y() - global_y_min) * global_scale) + margin
+            static_cast<int>((p.x() - global_x_min) * global_scale + offset_x),
+            static_cast<int>((p.y() - global_y_min) * global_scale + offset_y)
         );
     };
 
@@ -474,13 +488,17 @@ void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool save_plot,
         cv::line(shared_image, p1, p2, draw_color, 2);
     }
 
-    plot_count++;  // 增加计数
+    plot_count++;
 
     if (save_plot) {
         static int plot_count = 0;  // 从0开始计数
         
+        // 创建输出目录
+        std::string output_dir = "test_output";
+        std::filesystem::create_directories(output_dir);
+        
         // 构建文件路径
-        std::string filename = "combined_plot_" + std::to_string(++plot_count) + ".png";
+        std::string filename = output_dir + "/combined_plot_" + std::to_string(++plot_count) + ".png";
         std::cout << "Saving plot to: " << filename << std::endl;
         
         // 保存图像
@@ -517,7 +535,7 @@ void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool save_plot,
         
         // 列出当前目录内容
         std::cout << "Directory contents:" << std::endl;
-        for (const auto& entry : std::filesystem::directory_iterator(".")) {
+        for (const auto& entry : std::filesystem::directory_iterator(output_dir)) {
             std::cout << "  " << entry.path().filename().string() << std::endl;
         }
         
