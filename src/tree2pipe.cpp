@@ -407,8 +407,15 @@ void plot_points_linked(const std::vector<Vector2d>& pts) {
 void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool save_plot, const std::string& color) {
     std::cout << "plot_points_linked_shared called with save_plot=" << save_plot << ", color=" << color << std::endl;
     
-    // 创建图像，大小为1000x1000，白色背景
-    cv::Mat image(1000, 1000, CV_8UC3, cv::Scalar(255, 255, 255));
+    // 使用静态变量保存图像状态
+    static cv::Mat shared_image;
+    static bool first_call = true;
+    
+    // 第一次调用时创建图像
+    if (first_call) {
+        shared_image = cv::Mat(1000, 1000, CV_8UC3, cv::Scalar(255, 255, 255));
+        first_call = false;
+    }
 
     // 找到边界
     double x_max = -std::numeric_limits<double>::infinity();
@@ -452,34 +459,18 @@ void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool save_plot,
     for (size_t i = 0; i < pts.size(); ++i) {
         cv::Point p1 = transform_point(pts[i]);
         cv::Point p2 = transform_point(pts[(i + 1) % pts.size()]);
-        cv::line(image, p1, p2, draw_color, 2);
+        cv::line(shared_image, p1, p2, draw_color, 2);
     }
 
     if (save_plot) {
         static int plot_count = 0;  // 从0开始计数
         
-        // 检查test_output目录是否存在，如果存在，则使用该目录
-        std::string output_dir = "";
-        if (std::filesystem::exists("test_output")) {
-            output_dir = "test_output/";
-        }
-        
         // 构建文件路径
-        std::string filename = output_dir + "combined_plot_" + std::to_string(++plot_count) + ".png";
+        std::string filename = "combined_plot_" + std::to_string(++plot_count) + ".png";
         std::cout << "Saving plot to: " << filename << std::endl;
         
-        // 如果需要，创建输出目录
-        if (!output_dir.empty()) {
-            try {
-                std::filesystem::create_directories(output_dir);
-            } catch (const std::filesystem::filesystem_error& e) {
-                std::cerr << "Failed to create directory: " << e.what() << std::endl;
-                throw;
-            }
-        }
-        
         // 保存图像
-        if (!cv::imwrite(filename, image)) {
+        if (!cv::imwrite(filename, shared_image)) {
             std::cerr << "Failed to save image to: " << filename << std::endl;
             throw std::runtime_error("Failed to save image");
         }
@@ -492,7 +483,7 @@ void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool save_plot,
         if (!file.good()) {
             std::cerr << "File not found after first attempt, trying again: " << filename << std::endl;
             // 如果文件不存在，再次尝试保存并等待
-            if (!cv::imwrite(filename, image)) {
+            if (!cv::imwrite(filename, shared_image)) {
                 std::cerr << "Failed to save image on second attempt" << std::endl;
                 throw std::runtime_error("Failed to save image on second attempt");
             }
@@ -510,12 +501,14 @@ void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool save_plot,
         
         std::cout << "Successfully saved plot to: " << filename << std::endl;
         
-        // 列出目录内容
-        std::string list_dir = output_dir.empty() ? "." : output_dir;
-        std::cout << "Directory contents of " << list_dir << ":" << std::endl;
-        for (const auto& entry : std::filesystem::directory_iterator(list_dir)) {
+        // 列出当前目录内容
+        std::cout << "Directory contents:" << std::endl;
+        for (const auto& entry : std::filesystem::directory_iterator(".")) {
             std::cout << "  " << entry.path().filename().string() << std::endl;
         }
+        
+        // 重置图像状态，为下一次绘制做准备
+        first_call = true;
     }
 }
 
