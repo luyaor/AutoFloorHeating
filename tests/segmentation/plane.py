@@ -5,6 +5,7 @@ import numpy as np
 from numpy.linalg import norm
 from typing import List, Tuple, Callable, Optional, Dict
 from dataclasses import dataclass
+from loguru import logger
 
 
 EPS = 1e-8
@@ -62,7 +63,7 @@ def norm_fn(v: np.ndarray, fn: Callable):
 
 # A, B, C are the coefficients of the line Ax + By + C = 0
 def line_cross(a: np.ndarray, b: np.ndarray) -> Optional[Point]:
-    if same_line(a, b):
+    if parallel(a, b):
         return None
     x = (a[1] * b[2] - a[2] * b[1]) / (a[0] * b[1] - a[1] * b[0])
     y = (a[2] * b[0] - a[0] * b[2]) / (a[0] * b[1] - a[1] * b[0])
@@ -145,19 +146,19 @@ def inner_nxt_pt_dir(
     outer: List[Tuple[Point, Line]], width
 ) -> Tuple[Optional[Point], Optional[Vec]]:
     # print(outer[-1], outer[0])
-    print("#", outer[-1], outer[0])
+    # logger.info("#", outer[-1], outer[0])
     cross = line_cross(line_at_dir(*outer[-1]), line_at_dir(*outer[0]))
     if cross is None:
-        print("parallel")
+        # print("parallel")
         return None, None
     if not eq(normalized(cross - outer[-1][0]) @ outer[-1][1], 1):
-        print("cross not on line")
+        # print("cross not on line")
         return None, None
     theta = vec_angle_signed(outer[-1][1], outer[0][1])
     go = cross - outer[-1][0]
     expected_norm = norm(go) - width / np.sin(theta)
     if expected_norm <= 0:
-        print("expected norm <= 0")
+        # print("expected norm <= 0")
         return None, None
     nxt_pt = outer[-1][0] + norm_fn(go, lambda _: expected_norm)
     return nxt_pt, outer[0][1]
@@ -216,7 +217,7 @@ def inner_recursive_v2(
     outer = copy.deepcopy(outer)
     res = []
     debug = 0
-    while len(outer) >= 3 and debug < 25:
+    while len(outer) >= 3 and debug < 1e9:
         debug += 1
         pt, dir = inner_nxt_pt_dir(outer, width)
         if pt is None:
@@ -224,7 +225,7 @@ def inner_recursive_v2(
             res.pop()
             continue
         if len(res) > 0 and (res[-1][1]) @ (pt - res[-1][0]) < width / 2:
-            print("too close")
+            # print("too close")
             outer.pop()
             res.pop()
             continue
@@ -249,7 +250,12 @@ def is_clockwise(points: List[Point]) -> bool:
     return area > 0
 
 
-def poly_edge_pipe_width_v1(poly: Polygon, pipes: List[float], sug_w: float):
+def poly_edge_pipe_width_v1(
+    poly: Polygon, edge_pipe_num: List[float], sug_w: float
+) -> List[float]:
+    """
+    返回输入顺序第 i 条边上所有管道的宽度
+    """
     # first edge is poly[0] -> poly[1]
     # 每边限制：不超邻边，与非邻边不相交
     n = len(poly)
@@ -262,8 +268,12 @@ def poly_edge_pipe_width_v1(poly: Polygon, pipes: List[float], sug_w: float):
         return norm(seg[1] - seg[0])
 
     for i in range(n):
-        ans[i] = min(ans[i], seg_norm(ith_edge(i - 1)) / pipes[i])
-        ans[i] = min(ans[i], seg_norm(ith_edge(i + 1)) / pipes[i])
+        if edge_pipe_num[i] == 0:
+            ans[i] = 0
+            continue
+        ans[i] = min(ans[i], seg_norm(ith_edge(i - 1)) / edge_pipe_num[i])
+        ans[i] = min(ans[i], seg_norm(ith_edge(i + 1)) / edge_pipe_num[i])
+
         for j in range(n):
 
             def nxt(x):
@@ -272,7 +282,9 @@ def poly_edge_pipe_width_v1(poly: Polygon, pipes: List[float], sug_w: float):
             if i == j or i == nxt(j) or j == nxt(i):
                 continue
             ans[i] = min(
-                ans[i], seg_dis(ith_edge(i), ith_edge(j)) / (pipes[i] + pipes[j])
+                ans[i],
+                seg_dis(ith_edge(i), ith_edge(j))
+                / (edge_pipe_num[i] + edge_pipe_num[j]),
             )
     return ans
 
@@ -281,14 +293,15 @@ def poly_edge_pipe_width_v1(poly: Polygon, pipes: List[float], sug_w: float):
 class PipeOnAxis:
     id: int
     x: float
-    w: float
+    rw: float  # 右边宽度
+    lw: float
 
 
-def pt_edge_pipes_generate_pts_v1(
+def pt_edge_pipes_expand_pts_v1(
     center: Point, edge_pipes: List[List[PipeOnAxis]], edge_dir: List[Vec]
 ) -> Dict[int, Point]:
     """
-    !!! 仅适用于垂直情况
+    !!! [仅适用于垂直情况]
     给出 dir 朝外，pipe 逆时针（从右往左）
     Axis 轴正方向为向左
     边也是逆时针
@@ -305,21 +318,21 @@ def pt_edge_pipes_generate_pts_v1(
         assert all(
             eq(
                 edge_pipes[i][j].x - edge_pipes[i][j - 1].x,
-                (edge_pipes[i][j - 1].w + edge_pipes[i][j].w) / 2.0,
+                (edge_pipes[i][j - 1].lw + edge_pipes[i][j].rw),
             )
             for j in range(1, m)
         )
         pre = (i - 1 + n) % n
         nxt = (i + 1) % n
-        fallback = max(edge_pipes[i][-1].w, edge_pipes[i][0].w) / 2.0
+        fallback = max(edge_pipes[i][-1].lw, edge_pipes[i][0].rw)
         pre_contrib = (
-            abs(edge_pipes[pre][-1].x + edge_pipes[pre][-1].w / 2.0)
+            abs(edge_pipes[pre][-1].x + edge_pipes[pre][-1].lw)
             if eq(vec_angle(edge_dir[pre], edge_dir[i]), np.pi / 2)
             and len(edge_pipes[pre]) > 0
             else fallback
         )
         nxt_contrib = (
-            abs(edge_pipes[nxt][0].x - edge_pipes[nxt][0].w / 2.0)
+            abs(edge_pipes[nxt][0].x - edge_pipes[nxt][0].rw)
             if eq(vec_angle(edge_dir[i], edge_dir[nxt]), np.pi / 2)
             and len(edge_pipes[nxt]) > 0
             else fallback
@@ -335,14 +348,28 @@ def pt_edge_pipes_generate_pts_v1(
 
 
 def test3():
-    P = PipeOnAxis
-    res = pt_edge_pipes_generate_pts_v1(
+    def get_p(id, x, w):
+        return PipeOnAxis(id, x, w / 2.0, w / 2.0)
+
+    res = pt_edge_pipes_expand_pts_v1(
         arr(10, 10),
         [
-            [P(0, -3.5, 1), P(1, -2, 2), P(2, -0.5, 1)],
-            [P(3, -2, 1), P(4, -1, 1), P(5, 0, 1), P(6, 1, 1), P(7, 2, 1)],
-            [P(8, 0.5, 1), P(9, 1.5, 1), P(10, 2.5, 1)],
-            [P(11, -2.5, 2), P(12, -1, 1), P(13, 0, 1), P(14, 1, 1), P(15, 2.5, 2)],
+            [get_p(0, -3.5, 1), get_p(1, -2, 2), get_p(2, -0.5, 1)],
+            [
+                get_p(3, -2, 1),
+                get_p(4, -1, 1),
+                get_p(5, 0, 1),
+                get_p(6, 1, 1),
+                get_p(7, 2, 1),
+            ],
+            [get_p(8, 0.5, 1), get_p(9, 1.5, 1), get_p(10, 2.5, 1)],
+            [
+                get_p(11, -2.5, 2),
+                get_p(12, -1, 1),
+                get_p(13, 0, 1),
+                get_p(14, 1, 1),
+                get_p(15, 2.5, 2),
+            ],
         ],
         [arr(1, 0), arr(0, 1), arr(-1, 0), arr(0, -1)],
     )
@@ -362,9 +389,11 @@ def test1():
     # poly: Polygon = list(reversed([arr(0, 0), arr(1, 2), arr(2, 1), arr(1, 0)]))
     poly: Polygon = [
         arr(0, 0),
-        arr(1, 0),
+        arr(0.98, 0),
+        arr(1, 0.02),
         arr(1, 1),
-        arr(0.4, 1),
+        arr(0.43, 1),
+        arr(0.4, 1.03),
         arr(0.4, 1.2),
         arr(0, 1.2),
     ]
