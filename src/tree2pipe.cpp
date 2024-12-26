@@ -347,7 +347,7 @@ std::shared_ptr<Node> PolygonM1::to_tree(const CfgM1& anc_recommend) {
         auto& current_layer = node_layers[layer];
         for (size_t i = 1; i < current_layer.size(); ++i) {
             cur_node->sons.push_back(current_layer[i]); // 连接当前节点
-            cur_node = current_layer[i]; // 更新当前节点
+            cur_node = current_layer[i]; // 更新当前��点
         }
 
         // 层间连接：当前层最后一个点连接到下一层第一个点
@@ -411,42 +411,50 @@ void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool save_plot,
     static cv::Mat shared_image;
     static bool first_call = true;
     static int plot_count = 0;
-    static double global_x_min = std::numeric_limits<double>::infinity();
-    static double global_x_max = -std::numeric_limits<double>::infinity();
-    static double global_y_min = std::numeric_limits<double>::infinity();
-    static double global_y_max = -std::numeric_limits<double>::infinity();
-    static double global_scale = 1.0;
+    static std::vector<std::vector<Vector2d>> all_points;  // 存储所有图形的点
+    static std::vector<std::string> all_colors;  // 存储所有图形的颜色
     
-    // 第一次调用时创建图像
+    // 第一次调用时创建图像和初始化
     if (first_call) {
         shared_image = cv::Mat(1000, 1000, CV_8UC3, cv::Scalar(255, 255, 255));
         first_call = false;
         plot_count = 0;
-        global_x_min = std::numeric_limits<double>::infinity();
-        global_x_max = -std::numeric_limits<double>::infinity();
-        global_y_min = std::numeric_limits<double>::infinity();
-        global_y_max = -std::numeric_limits<double>::infinity();
+        all_points.clear();
+        all_colors.clear();
     }
+    
+    // 保��当前图形的点和颜色
+    all_points.push_back(pts);
+    all_colors.push_back(color);
+    plot_count++;
 
-    // 更新全局边界
-    for (const auto& pt : pts) {
-        global_x_max = std::max(global_x_max, pt.x());
-        global_x_min = std::min(global_x_min, pt.x());
-        global_y_max = std::max(global_y_max, pt.y());
-        global_y_min = std::min(global_y_min, pt.y());
+    // 计算所有点的全局边界
+    double global_x_min = std::numeric_limits<double>::infinity();
+    double global_x_max = -std::numeric_limits<double>::infinity();
+    double global_y_min = std::numeric_limits<double>::infinity();
+    double global_y_max = -std::numeric_limits<double>::infinity();
+
+    for (const auto& shape_pts : all_points) {
+        for (const auto& pt : shape_pts) {
+            global_x_max = std::max(global_x_max, pt.x());
+            global_x_min = std::min(global_x_min, pt.x());
+            global_y_max = std::max(global_y_max, pt.y());
+            global_y_min = std::min(global_y_min, pt.y());
+        }
     }
 
     // 计算坐标范围
     double x_range = global_x_max - global_x_min;
     double y_range = global_y_max - global_y_min;
     
-    // 在所有点都添加后计算全局缩放
-    const int margin = 100;  // 增加边距
-    const double width = 800;  // 减小有效绘图区域
+    // 计算全局缩放
+    const int margin = 100;  // 边距
+    const double width = 800;  // 有效绘图区域
     const double height = 800;
     
     // 保持纵横比
     double aspect_ratio = x_range / y_range;
+    double global_scale;
     if (aspect_ratio > 1.0) {
         // 宽度较大，以宽度为准
         global_scale = width / x_range;
@@ -459,11 +467,15 @@ void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool save_plot,
     double offset_x = margin + (width - x_range * global_scale) / 2.0;
     double offset_y = margin + (height - y_range * global_scale) / 2.0;
 
-    std::cout << "Global bounds: x=[" << global_x_min << ", " << global_x_max 
+    std::cout << "Current shape: " << color << ", Total shapes: " << all_points.size() << std::endl;
+    std::cout << "Global bounds for all shapes: x=[" << global_x_min << ", " << global_x_max 
               << "], y=[" << global_y_min << ", " << global_y_max 
-              << "], scale=" << global_scale << std::endl;
+              << "], unified scale=" << global_scale << std::endl;
 
-    // 坐标转换函数 - 使用全局缩放和边界
+    // 清空图像
+    shared_image = cv::Mat(1000, 1000, CV_8UC3, cv::Scalar(255, 255, 255));
+
+    // 坐标转换函数
     auto transform_point = [&](const Vector2d& p) -> cv::Point {
         return cv::Point(
             static_cast<int>((p.x() - global_x_min) * global_scale + offset_x),
@@ -471,24 +483,26 @@ void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool save_plot,
         );
     };
 
-    // 设置绘制颜色
-    cv::Scalar draw_color;
-    if (color == "r") {
-        draw_color = cv::Scalar(0, 0, 255);  // 红色
-    } else if (color == "g") {
-        draw_color = cv::Scalar(0, 255, 0);  // 绿色
-    } else {
-        draw_color = cv::Scalar(255, 0, 0);  // 蓝色
-    }
+    // 重新绘制所有图形
+    for (size_t shape_idx = 0; shape_idx < all_points.size(); ++shape_idx) {
+        // 设置绘制颜色
+        cv::Scalar draw_color;
+        if (all_colors[shape_idx] == "r") {
+            draw_color = cv::Scalar(0, 0, 255);  // 红色
+        } else if (all_colors[shape_idx] == "g") {
+            draw_color = cv::Scalar(0, 255, 0);  // 绿色
+        } else {
+            draw_color = cv::Scalar(255, 0, 0);  // 蓝色
+        }
 
-    // 绘制连接线
-    for (size_t i = 0; i < pts.size(); ++i) {
-        cv::Point p1 = transform_point(pts[i]);
-        cv::Point p2 = transform_point(pts[(i + 1) % pts.size()]);
-        cv::line(shared_image, p1, p2, draw_color, 2);
+        // 绘制当前图形
+        const auto& shape_pts = all_points[shape_idx];
+        for (size_t i = 0; i < shape_pts.size(); ++i) {
+            cv::Point p1 = transform_point(shape_pts[i]);
+            cv::Point p2 = transform_point(shape_pts[(i + 1) % shape_pts.size()]);
+            cv::line(shared_image, p1, p2, draw_color, 2);
+        }
     }
-
-    plot_count++;
 
     if (save_plot) {
         static int plot_count = 0;  // 从0开始计数

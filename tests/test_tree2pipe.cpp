@@ -215,3 +215,57 @@ TEST(Tree2PipeTest, TestMultipleShapesAtDifferentPositions) {
     EXPECT_TRUE(f.good()) << "Failed to find file at: " << filename;
     f.close();
 }
+
+TEST(Tree2PipeTest, TestFourCornersShapes) {
+    // 创建输出目录
+    std::string output_dir = "test_output";
+    std::filesystem::create_directories(output_dir);
+    
+    // 左上角：三角形 (大小约1x1)
+    std::vector<Vector2d> triangle = {
+        Vector2d(-5, 4),
+        Vector2d(-4, 4),
+        Vector2d(-4.5, 5),
+        Vector2d(-5, 4)  // 闭合图形
+    };
+    
+    // 右上角：正方形 (大小1x1)
+    std::vector<Vector2d> square = {
+        Vector2d(4, 4),
+        Vector2d(5, 4),
+        Vector2d(5, 5),
+        Vector2d(4, 5),
+        Vector2d(4, 4)  // 闭合图形
+    };
+    
+    // 左下角：五边形 (大小约1x1)
+    std::vector<Vector2d> pentagon = {
+        Vector2d(-5, -5),
+        Vector2d(-4, -5),
+        Vector2d(-4, -4),
+        Vector2d(-4.5, -3.5),
+        Vector2d(-5, -4),
+        Vector2d(-5, -5)  // 闭合图形
+    };
+    
+    // 右下角：矩形 (大小1x1)
+    std::vector<Vector2d> rectangle = {
+        Vector2d(4, -5),
+        Vector2d(5, -5),
+        Vector2d(5, -4),
+        Vector2d(4, -4),
+        Vector2d(4, -5)  // 闭合图形
+    };
+    
+    // 依次绘制所有图形，使用不同的颜色
+    plot_points_linked_shared(triangle, false, "b");   // 左上角蓝色三角形
+    plot_points_linked_shared(square, false, "r");     // 右上角红色正方形
+    plot_points_linked_shared(pentagon, false, "g");   // 左下角绿色五边形
+    plot_points_linked_shared(rectangle, true, "r");   // 右下角红色矩形
+    
+    // 验证最终图像是否生成
+    std::string filename = output_dir + "/combined_plot_1.png";
+    std::ifstream f(filename);
+    EXPECT_TRUE(f.good()) << "Failed to find file at: " << filename;
+    f.close();
+}
