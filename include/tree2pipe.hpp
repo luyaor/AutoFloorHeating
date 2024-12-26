@@ -10,6 +10,9 @@
 
 #include <Eigen/Core>
 
+#include <chrono>
+#include <thread>
+
 namespace tree2pipe {
 
 using std::array;
@@ -106,6 +109,8 @@ public:
 vector<Vector2d> lines_to_points(const vector<Vector3d>& lines, bool verbose = false);
 
 void plot_points_linked(const std::vector<Vector2d>& pts);
+
+void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool show_plot = false, const std::string& color = "b");
 
 vector<Vector2d> tree_to_points(shared_ptr<Node> root, Vector2d up_dir = Vector2d::Zero());
 
