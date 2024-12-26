@@ -407,41 +407,53 @@ void plot_points_linked(const std::vector<Vector2d>& pts) {
 void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool save_plot, const std::string& color) {
     std::cout << "plot_points_linked_shared called with save_plot=" << save_plot << ", color=" << color << std::endl;
     
-    // 使用静态变量保存图像状态
+    // 使用静态变量保存图像状态和坐标系信息
     static cv::Mat shared_image;
     static bool first_call = true;
+    static int plot_count = 0;
+    static double global_x_min = std::numeric_limits<double>::infinity();
+    static double global_x_max = -std::numeric_limits<double>::infinity();
+    static double global_y_min = std::numeric_limits<double>::infinity();
+    static double global_y_max = -std::numeric_limits<double>::infinity();
+    static double global_scale = 1.0;
     
     // 第一次调用时创建图像
     if (first_call) {
         shared_image = cv::Mat(1000, 1000, CV_8UC3, cv::Scalar(255, 255, 255));
         first_call = false;
+        plot_count = 0;
+        global_x_min = std::numeric_limits<double>::infinity();
+        global_x_max = -std::numeric_limits<double>::infinity();
+        global_y_min = std::numeric_limits<double>::infinity();
+        global_y_max = -std::numeric_limits<double>::infinity();
     }
 
-    // 找到边界
-    double x_max = -std::numeric_limits<double>::infinity();
-    double x_min = std::numeric_limits<double>::infinity();
-    double y_max = -std::numeric_limits<double>::infinity();
-    double y_min = std::numeric_limits<double>::infinity();
-
+    // 更新全局边界
     for (const auto& pt : pts) {
-        x_max = std::max(x_max, pt.x());
-        x_min = std::min(x_min, pt.x());
-        y_max = std::max(y_max, pt.y());
-        y_min = std::min(y_min, pt.y());
+        global_x_max = std::max(global_x_max, pt.x());
+        global_x_min = std::min(global_x_min, pt.x());
+        global_y_max = std::max(global_y_max, pt.y());
+        global_y_min = std::min(global_y_min, pt.y());
     }
 
-    std::cout << "Points bounds: x=[" << x_min << ", " << x_max << "], y=[" << y_min << ", " << y_max << "]" << std::endl;
+    // 在所有点都添加后计算全局缩放
+    const int margin = 50;  // 边距
+    const double width = 1000 - 2 * margin;
+    const double height = 1000 - 2 * margin;
+    global_scale = std::min(
+        width / (global_x_max - global_x_min),
+        height / (global_y_max - global_y_min)
+    );
 
-    // 计算缩放和偏移
-    double scale = std::min(800.0 / (x_max - x_min), 800.0 / (y_max - y_min));
-    double offset_x = 100;
-    double offset_y = 100;
+    std::cout << "Global bounds: x=[" << global_x_min << ", " << global_x_max 
+              << "], y=[" << global_y_min << ", " << global_y_max 
+              << "], scale=" << global_scale << std::endl;
 
-    // 坐标转换函数
+    // 坐标转换函数 - 使用全局缩放和边界
     auto transform_point = [&](const Vector2d& p) -> cv::Point {
         return cv::Point(
-            static_cast<int>((p.x() - x_min) * scale) + offset_x,
-            static_cast<int>((p.y() - y_min) * scale) + offset_y
+            static_cast<int>((p.x() - global_x_min) * global_scale) + margin,
+            static_cast<int>((p.y() - global_y_min) * global_scale) + margin
         );
     };
 
@@ -461,6 +473,8 @@ void plot_points_linked_shared(const std::vector<Vector2d>& pts, bool save_plot,
         cv::Point p2 = transform_point(pts[(i + 1) % pts.size()]);
         cv::line(shared_image, p1, p2, draw_color, 2);
     }
+
+    plot_count++;  // 增加计数
 
     if (save_plot) {
         static int plot_count = 0;  // 从0开始计数

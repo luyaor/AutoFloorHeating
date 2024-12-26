@@ -3,8 +3,11 @@
 #include <gtest/gtest.h>
 #include <fstream>
 #include <filesystem>
+#include <Eigen/Core>
 
 using namespace tree2pipe;
+using namespace std;
+using Eigen::Vector2d;
 
 TEST(Tree2PipeTest, Test1) {
     double w = 0.15;
@@ -156,4 +159,59 @@ TEST(Tree2PipeTest, TestSharedPlottingWithM1) {
     } catch (const std::exception& e) {
         FAIL() << "Exception thrown: " << e.what();
     }
+}
+
+TEST(Tree2PipeTest, TestMultipleShapesAtDifferentPositions) {
+    // 创建输出目录
+    std::string output_dir = "test_output";
+    std::filesystem::create_directories(output_dir);
+    
+    // 创建几个不同位置的图形
+    
+    // 图形1：原点附近的正方形
+    std::vector<Vector2d> square1 = {
+        Vector2d(0, 0),
+        Vector2d(1, 0),
+        Vector2d(1, 1),
+        Vector2d(0, 1),
+        Vector2d(0, 0)  // 闭合图形
+    };
+    
+    // 图形2：右上方的正方形
+    std::vector<Vector2d> square2 = {
+        Vector2d(5, 5),
+        Vector2d(6, 5),
+        Vector2d(6, 6),
+        Vector2d(5, 6),
+        Vector2d(5, 5)  // 闭合图形
+    };
+    
+    // 图形3：左下方的三角形
+    std::vector<Vector2d> triangle = {
+        Vector2d(-2, -2),
+        Vector2d(-1, -2),
+        Vector2d(-1.5, -1),
+        Vector2d(-2, -2)  // 闭合图形
+    };
+    
+    // 图形4：右下方的矩形
+    std::vector<Vector2d> rectangle = {
+        Vector2d(3, -3),
+        Vector2d(5, -3),
+        Vector2d(5, -2),
+        Vector2d(3, -2),
+        Vector2d(3, -3)  // 闭合图形
+    };
+    
+    // 依次绘制所有图形，使用不同的颜色
+    plot_points_linked_shared(square1, false, "r");    // 红色
+    plot_points_linked_shared(square2, false, "g");    // 绿色
+    plot_points_linked_shared(triangle, false, "b");   // 蓝色
+    plot_points_linked_shared(rectangle, true, "r");   // 红色，并保存图像
+    
+    // 验证最终图像是否生成
+    std::string filename = output_dir + "/combined_plot_1.png";
+    std::ifstream f(filename);
+    EXPECT_TRUE(f.good()) << "Failed to find file at: " << filename;
+    f.close();
 }
