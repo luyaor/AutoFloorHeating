@@ -71,8 +71,12 @@ def vec_angle_signed(v1: np.ndarray, v2: np.ndarray) -> float:  # [-pi, pi]
     return np.arctan2(v1[0] * v2[1] - v1[1] * v2[0], v1 @ v2)
 
 
-def dir_left(dir: np.ndarray):
+def dir_left(dir: Vec):
     return np.array([-dir[1], dir[0]])
+
+
+def dir_right(dir: Vec):
+    return np.array([dir[1], -dir[0]])
 
 
 def normalized(v: np.ndarray):
@@ -180,7 +184,7 @@ def inner_nxt_pt_dir(
         # print("parallel")
         return None, None
     if not eq(normalized(cross - outer[-1][0]) @ outer[-1][1], 1):
-        # print("cross not on line")
+        # print("cross in the inverse direction")
         return None, None
     theta = vec_angle_signed(outer[-1][1], outer[0][1])
     go = cross - outer[-1][0]
