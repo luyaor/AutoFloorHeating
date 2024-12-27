@@ -31,6 +31,14 @@ def directed_area(p: Point, q: Point, r: Point) -> float:
     return ((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])) / 2.0
 
 
+def pt0_convex(pt_m1: Point, pt_0: Point, pt_1: Point, ccw: bool) -> bool:
+    return (
+        directed_area(pt_m1, pt_0, pt_1) > 0
+        if ccw
+        else directed_area(pt_m1, pt_0, pt_1) < 0
+    )
+
+
 def test_directed_area():
     p = arr(0, 0)
     q = arr(1, 0)
@@ -233,8 +241,11 @@ def seg_dis(s1: Seg, s2: Seg) -> float:
 
 
 def inner_recursive_v2(
-    outer: List[Tuple[Point, Vec]], width
-) -> Tuple[List[Tuple[Point, Vec]], List[Hashable]]:
+    outer: List[Tuple[Point, Vec]],
+    width,
+    dont_delete_outer=False,
+    start_must_be_convex=False,
+) -> Optional[Tuple[List[Tuple[Point, Vec]], List[Hashable]]]:
     outer = copy.deepcopy(outer)
     res = copy.deepcopy(outer)
 
@@ -243,18 +254,22 @@ def inner_recursive_v2(
     indices = list(zip(["outer"] * len(outer), range(len(outer))))
     # ("outer", 0), ("outer", 1)...
     # ("inner", 6, 0), ("inner", 6, 1)...
+    if start_must_be_convex and not pt0_convex(
+        outer[-1][0], outer[0][0], outer[1][0], ccw
+    ):
+        logger.info("Can't satisfy start_must_be_convex")
+        return None
 
     debug = 0
     while len(outer) >= 3 and debug < 250:
         debug += 1
         pt, dir = inner_nxt_pt_dir(outer, width, ccw)
-        if pt is None:
-            outer.pop()
-            res.pop()
-            indices.pop()
-            continue
-        if len(res) > 0 and (res[-1][1]) @ (pt - res[-1][0]) < width / 2.0:
-            # print("too close")
+        if pt is None or (
+            len(res) > 0 and (res[-1][1]) @ (pt - res[-1][0]) < width / 2.0
+        ):
+            if dont_delete_outer and indices[-1][0] == "outer":
+                logger.info("Can't satisfy dont_delete_outer")
+                return None
             outer.pop()
             res.pop()
             indices.pop()
@@ -286,7 +301,7 @@ def is_clockwise(points: List[Point]) -> bool:
 
 
 def poly_edge_pipe_width_v1(
-    poly: Polygon, edge_pipe_num: List[float], sug_w: float
+    poly: Polygon, edge_pipe_num: List[float], sug_w: float, verbose=False
 ) -> List[float]:
     """
     返回输入顺序第 i 条边上所有管道的宽度
@@ -307,33 +322,38 @@ def poly_edge_pipe_width_v1(
     def seg_dir(seg: Seg):
         return normalized(seg[1] - seg[0])
 
+    print("------") if verbose else None
     for i in range(n):
         # edge i, poly[i] -> poly[i + 1]
+        print(poly[i], poly[(i + 1) % n]) if verbose else None
         if edge_pipe_num[i] == 0:
             ans[i] = 0
             continue
         # i 为凸点
-        debug = False
         # 临时方案配合 fallback. 见 [pin] 241227.1.
-        if (
-            directed_area(poly[(i - 1 + n) % n], poly[i], poly[(i + 1) % n]) > 0
-            or debug
-        ):
+        print("---") if verbose else None
+        print(ans[i]) if verbose else None
+        if pt0_convex(poly[(i - 1 + n) % n], poly[i], poly[(i + 1) % n], ccw=True):
             ans[i] = min(
                 ans[i],
                 seg_norm(ith_edge(i - 1))
                 / (edge_pipe_num[i] + edge_pipe_num[(i - 1 + n) % n]),
             )
+
+        print(ans[i]) if verbose else None
         # i + 1 为凸点
-        if directed_area(poly[i], poly[(i + 1) % n], poly[(i + 2) % n]) > 0 or debug:
+        if pt0_convex(poly[i], poly[(i + 1) % n], poly[(i + 2) % n], ccw=True):
             ans[i] = min(
                 ans[i],
                 seg_norm(ith_edge(i + 1))
                 / (edge_pipe_num[i] + edge_pipe_num[(i + 1) % n]),
             )
 
+        print(ans[i]) if verbose else None
         # expand 后退需求
         ans[i] = min(ans[i], seg_norm(ith_edge(i)) / edge_pipe_num[i])
+
+        print(ans[i]) if verbose else None
 
         for j in range(n):
 
@@ -343,12 +363,14 @@ def poly_edge_pipe_width_v1(
             if i == j or i == nxt(j) or j == nxt(i):
                 continue
             # 两边必须相对才约束
-            if seg_dir(ith_edge(i)) @ seg_dir(ith_edge(j)) < 0 or debug:
+            if seg_dir(ith_edge(i)) @ seg_dir(ith_edge(j)) < 0:
                 ans[i] = min(
                     ans[i],
                     seg_dis(ith_edge(i), ith_edge(j))
                     / (edge_pipe_num[i] + edge_pipe_num[j]),
                 )
+
+        print(ans[i]) if verbose else None
     return ans
 
 
@@ -479,7 +501,7 @@ def test4():
 
 # 外部需要知道哪些外围点被删除了（一定是最后连续若干条），需要投影到新的外围最后一边
 def inner_recursive_v2_api(
-    poly: Polygon, width: float
+    poly: Polygon, width: float, dont_delete_outer=False, start_must_be_convex=False
 ) -> Tuple[List[Point], List[Hashable]]:
     # 不删除重复点
     outer = [
@@ -489,26 +511,35 @@ def inner_recursive_v2_api(
         )
         for i in range(len(poly))
     ]
-    res, indices = inner_recursive_v2(outer, width)
-    return [pt for pt, _ in res], indices
+    if (
+        res := inner_recursive_v2(outer, width, dont_delete_outer, start_must_be_convex)
+    ) is not None:
+        res, indices = res
+        return [pt for pt, _ in res], indices
+    return None
 
 
 def test101():
-    pts_xy = [
+    pts = [
+        np.array([102.0, 86.0]),
+        np.array([106.0, 90.0]),
+        np.array([152.0, 90.0]),
+        np.array([156.0, 86.0]),
+        np.array([156.0, 30.4]),
+        np.array([152.0, 26.6]),
+        np.array([99.8, 26.6]),
+        np.array([96.0, 30.4]),
+        np.array([96.0, 36.0]),
         np.array([97.0, 37.0]),
-        np.array([97.0, 37.0]),
-        np.array([96.5, 36.0]),
-        np.array([96.5, 20.0]),
-        np.array([98.5, 17.5]),
-        np.array([158.0, 17.5]),
-        np.array([160.5, 20.0]),
-        np.array([160.5, 89.0]),
-        np.array([158.0, 91.5]),
-        np.array([103.0, 91.5]),
-        np.array([98.5, 89.0]),
-        np.array([98.5, 40.0]),
+        np.array([102.0, 42.0]),
     ]
-    res, indices = inner_recursive_v2_api(pts_xy, 3)
+    res = inner_recursive_v2_api(
+        pts, 8, dont_delete_outer=True, start_must_be_convex=True
+    )
+    if res is None:
+        print("None")
+        return
+    res, indices = res
     print(indices)
     _plot_points_linked(res)
 
@@ -528,7 +559,9 @@ def test1():
         arr(0, 1.2),
     ]
     # poly.reverse()
-    res = inner_recursive_v2_api(poly, 0.1)
+    res = inner_recursive_v2_api(
+        poly, 0.1, dont_delete_outer=True, start_must_be_convex=True
+    )
     _plot_points_linked(res)
 
 
@@ -543,4 +576,4 @@ def test2():
 
 
 if __name__ == "__main__":
-    test4()
+    test101()
