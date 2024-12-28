@@ -173,19 +173,34 @@ def inner_nxt_pt_line(outer: List[Line], width) -> Tuple[Point, Line]:
     return nxt_pt, nxt_line
 
 
+def pt_dir_intersect(
+    pt_dir_start: Tuple[Point, Vec], pt_dir_end: Tuple[Point, Vec]
+) -> Optional[Point]:
+    cross = line_cross(line_at_dir(*pt_dir_start), line_at_dir(*pt_dir_end))
+    if cross is None:
+        return None
+    if not eq(normalized(cross - pt_dir_start[0]) @ pt_dir_start[1], 1):
+        return None
+    return cross
+
+
 # [problem] 现在无脑删除 outer[-1] 和 res[-1]，这样可能会导致删除了一个正确的点。
 def inner_nxt_pt_dir(
     outer: List[Tuple[Point, Line]], width, ccw: bool
 ) -> Tuple[Optional[Point], Optional[Vec]]:
-    # print(outer[-1], outer[0])
-    # logger.info("#", outer[-1], outer[0])
-    cross = line_cross(line_at_dir(*outer[-1]), line_at_dir(*outer[0]))
+    # cross = line_cross(line_at_dir(*outer[-1]), line_at_dir(*outer[0]))
+    # if cross is None:
+    #     # print("parallel")
+    #     return None, None
+    # if not eq(normalized(cross - outer[-1][0]) @ outer[-1][1], 1):
+    #     # print("cross in the inverse direction")
+    #     return None, None
+
+    # [v2]
+    cross = pt_dir_intersect(outer[-1], outer[0])
     if cross is None:
-        # print("parallel")
         return None, None
-    if not eq(normalized(cross - outer[-1][0]) @ outer[-1][1], 1):
-        # print("cross in the inverse direction")
-        return None, None
+
     theta = vec_angle_signed(outer[-1][1], outer[0][1])
     go = cross - outer[-1][0]
     expected_norm = norm(go) + (-1 if ccw else 1) * width / np.sin(theta)
@@ -268,6 +283,10 @@ def inner_recursive_v2(
     while len(outer) >= 3 and debug < 250:
         debug += 1
         pt, dir = inner_nxt_pt_dir(outer, width, ccw)
+        """
+        [BUG]
+        这里最后宽度 < w / 2.0 可能不应该删点
+        """
         if pt is None or (
             len(res) > 0 and (res[-1][1]) @ (pt - res[-1][0]) < width / 2.0
         ):
@@ -302,6 +321,10 @@ def is_clockwise(points: List[Point]) -> bool:
         x2, y2 = points[(i + 1) % n]
         area += (x2 - x1) * (y2 + y1)
     return area > 0
+
+
+def is_counter_clockwise(points: List[Point]) -> bool:
+    return not is_clockwise(points)
 
 
 def poly_edge_pipe_width_v1(
@@ -411,7 +434,7 @@ def pt_edge_pipes_expand_pts_v1(
                 (edge_pipes[i][j - 1].lw + edge_pipes[i][j].rw),
             )
             for j in range(1, m)
-        )
+        ), edge_pipes[i]
         pre = (i - 1 + n) % n
         nxt = (i + 1) % n
 
@@ -580,4 +603,4 @@ def test2():
 
 
 if __name__ == "__main__":
-    test101()
+    test3()
