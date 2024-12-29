@@ -766,3 +766,4 @@ build
 #.vscode
 .idea
 .cache
+compile_commands.json
