@@ -178,37 +178,44 @@ def pt_dir_intersect(
 ) -> Optional[Point]:
     cross = line_cross(line_at_dir(*pt_dir_start), line_at_dir(*pt_dir_end))
     if cross is None:
+        logger.warning("parallel")
         return None
     if not eq(normalized(cross - pt_dir_start[0]) @ pt_dir_start[1], 1):
+        logger.warning("cross in the inverse direction")
         return None
     return cross
 
 
 # [problem] 现在无脑删除 outer[-1] 和 res[-1]，这样可能会导致删除了一个正确的点。
+# [NOTE] 就算要切分成多个凸多边形，也是外部的事情
+#   - [pin] 241229.1
 def inner_nxt_pt_dir(
     outer: List[Tuple[Point, Line]], width, ccw: bool
 ) -> Tuple[Optional[Point], Optional[Vec]]:
-    # cross = line_cross(line_at_dir(*outer[-1]), line_at_dir(*outer[0]))
+    # [v2]
+    # cross = pt_dir_intersect(outer[-1], outer[0])
     # if cross is None:
-    #     # print("parallel")
-    #     return None, None
-    # if not eq(normalized(cross - outer[-1][0]) @ outer[-1][1], 1):
-    #     # print("cross in the inverse direction")
     #     return None, None
 
-    # [v2]
-    cross = pt_dir_intersect(outer[-1], outer[0])
+    # theta = vec_angle_signed(outer[-1][1], outer[0][1])
+    # go = cross - outer[-1][0]
+    # expected_norm = norm(go) + (-1 if ccw else 1) * width / np.sin(theta)
+    # if expected_norm <= 0:
+    #     # print("expected norm <= 0")
+    #     logger.warning("expected norm <= 0")
+    #     return None, None
+    # nxt_pt = outer[-1][0] + norm_fn(go, lambda _: expected_norm)
+    # return nxt_pt, outer[0][1]
+
+    # [v3]
+    # last 向左平移 if ccw
+    pt0, dir0 = outer[0]
+    dir_inner = dir_left(dir0) if ccw else dir_right(dir0)
+    pt_inner = pt0 + dir_inner * width
+    cross = pt_dir_intersect(outer[-1], (pt_inner, dir0))
     if cross is None:
         return None, None
-
-    theta = vec_angle_signed(outer[-1][1], outer[0][1])
-    go = cross - outer[-1][0]
-    expected_norm = norm(go) + (-1 if ccw else 1) * width / np.sin(theta)
-    if expected_norm <= 0:
-        # print("expected norm <= 0")
-        return None, None
-    nxt_pt = outer[-1][0] + norm_fn(go, lambda _: expected_norm)
-    return nxt_pt, outer[0][1]
+    return cross, outer[0][1]
 
 
 # [deprecated]
@@ -279,14 +286,15 @@ def inner_recursive_v2(
         logger.info("Can't satisfy start_must_be_convex")
         return None
 
-    debug = 0
-    while len(outer) >= 3 and debug < 250:
-        debug += 1
+    debug = 250
+    while len(outer) >= 3 and debug > 0:
+        debug -= 1
         pt, dir = inner_nxt_pt_dir(outer, width, ccw)
         """
         [BUG]
         这里最后宽度 < w / 2.0 可能不应该删点
         """
+        # 直线交反：退当前
         if pt is None or (
             len(res) > 0 and (res[-1][1]) @ (pt - res[-1][0]) < width / 2.0
         ):
@@ -297,6 +305,8 @@ def inner_recursive_v2(
             res.pop()
             indices.pop()
             continue
+        # 线段太近：跳以后并忽略新点
+        
         outer = outer[1:] + [(pt, dir)]
         idx = (
             ("inner", indices[-1][1], 0)
@@ -305,6 +315,8 @@ def inner_recursive_v2(
         )
         indices.append(idx)
         res.append((pt, dir))
+    if debug == 0:
+        logger.error("Inner debug limit reached, YOU MUST CHECK HERE!")
     return res, indices
 
 
@@ -547,21 +559,12 @@ def inner_recursive_v2_api(
 
 
 def test101():
-    pts = [
-        np.array([102.0, 86.0]),
-        np.array([106.0, 90.0]),
-        np.array([152.0, 90.0]),
-        np.array([156.0, 86.0]),
-        np.array([156.0, 30.4]),
-        np.array([152.0, 26.6]),
-        np.array([99.8, 26.6]),
-        np.array([96.0, 30.4]),
-        np.array([96.0, 36.0]),
-        np.array([97.0, 37.0]),
-        np.array([102.0, 42.0]),
-    ]
+    pts = [np.array([146.,  16.]), np.array([143.5,   8.5]), np.array([101.5,   8.5]), np.array([99., 11.]), 
+       np.array([99.  , 92.25]), np.array([99. , 98.5]), np.array([99.  , 99.75]), np.array([101.5  , 101.625]), 
+       np.array([115.5  , 101.625]), np.array([118.  ,  99.75]), np.array([118.,  91.]), np.array([123.,  86.]), 
+       np.array([143.5,  86. ]), np.array([146. ,  83.5])]
     res = inner_recursive_v2_api(
-        pts, 8, dont_delete_outer=True, start_must_be_convex=True
+        pts, 5, dont_delete_outer=True, start_must_be_convex=True
     )
     if res is None:
         print("None")
@@ -603,4 +606,4 @@ def test2():
 
 
 if __name__ == "__main__":
-    test3()
+    test101()
