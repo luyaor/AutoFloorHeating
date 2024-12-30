@@ -18,6 +18,10 @@ Polygon = List[Point]
 Seg = Tuple[Point, Point]
 
 
+def arr(*args):
+    return np.array(args)
+
+
 @np.vectorize
 def eq(a: float, b: float) -> bool:
     return abs(a - b) < EPS
@@ -31,14 +35,6 @@ def directed_area(p: Point, q: Point, r: Point) -> float:
     return ((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])) / 2.0
 
 
-def pt0_convex(pt_m1: Point, pt_0: Point, pt_1: Point, ccw: bool) -> bool:
-    return (
-        directed_area(pt_m1, pt_0, pt_1) > 0
-        if ccw
-        else directed_area(pt_m1, pt_0, pt_1) < 0
-    )
-
-
 def test_directed_area():
     p = arr(0, 0)
     q = arr(1, 0)
@@ -50,8 +46,41 @@ def test_directed_area():
     assert eq(directed_area(p, q, r), -0.5)
 
 
-def arr(*args):
-    return np.array(args)
+def directed_poly_area(poly: Polygon, ccw: bool) -> float:
+    n = len(poly)
+    if n < 3:
+        return 0.0
+    return sum(
+        directed_area(poly[0], poly[i], poly[(i + 1) % n]) for i in range(1, n - 1)
+    ) * (1 if ccw else -1)
+
+
+def test_directed_poly_area():
+    assert eq(
+        directed_poly_area([arr(0, 0), arr(1, 0), arr(1, 1), arr(0, 2)], ccw=False),
+        -1.5,
+    )
+
+
+if __name__ == "__main__":
+    test_directed_poly_area()
+    test_directed_area()
+
+
+def pt0_convex(pt_m1: Point, pt_0: Point, pt_1: Point, ccw: bool) -> bool:
+    return (
+        directed_area(pt_m1, pt_0, pt_1) > 0
+        if ccw
+        else directed_area(pt_m1, pt_0, pt_1) < 0
+    )
+
+
+def dir0_convex(dir_m1: Vec, dir0: Vec, ccw: bool) -> bool:
+    return (
+        vec_angle_signed(dir_m1, dir0) > 0
+        if ccw
+        else vec_angle_signed(dir_m1, dir0) < 0
+    )
 
 
 def same_line(p: np.ndarray, q: np.ndarray) -> bool:
@@ -67,8 +96,9 @@ def vec_angle(v1: np.ndarray, v2: np.ndarray) -> float:  # [0, pi]
     return np.arccos(v1 @ v2 / (norm(v1) * norm(v2)))
 
 
-def vec_angle_signed(v1: np.ndarray, v2: np.ndarray) -> float:  # [-pi, pi]
-    return np.arctan2(v1[0] * v2[1] - v1[1] * v2[0], v1 @ v2)
+def vec_angle_signed(v1: np.ndarray, v2: np.ndarray, ccw=True) -> float:  # [-pi, pi]
+    res = np.arctan2(v1[0] * v2[1] - v1[1] * v2[0], v1 @ v2)
+    return res if ccw else -res
 
 
 def dir_left(dir: Vec):
@@ -186,11 +216,11 @@ def pt_dir_intersect(
     return cross
 
 
-# [problem] 现在无脑删除 outer[-1] 和 res[-1]，这样可能会导致删除了一个正确的点。
-# [NOTE] 就算要切分成多个凸多边形，也是外部的事情
+# [BUG] 现在无脑删除 outer[-1] 和 res[-1]，这样可能会导致删除了一个正确的点。
+# [NOTE] 就算想切分成多个凸多边形，也是外部的事情
 #   - [pin] 241229.1
 def inner_nxt_pt_dir(
-    outer: List[Tuple[Point, Line]], width, ccw: bool
+    outer: List[Tuple[Point, Vec]], width, ccw: bool
 ) -> Tuple[Optional[Point], Optional[Vec]]:
     # [v2]
     # cross = pt_dir_intersect(outer[-1], outer[0])
@@ -266,6 +296,61 @@ def seg_dis(s1: Seg, s2: Seg) -> float:
     )
 
 
+def pt_from_pt_dir_signed_distance(pt: Point, pt_dir: Tuple[Point, Vec]) -> float:
+    ...
+    # 距离正方向为 dir 方向向左
+    return np.dot(pt - pt_dir[0], dir_left(pt_dir[1]))
+
+
+def pt_project_to_pt_dir_x(pt: Point, pt_dir: Tuple[Point, Vec]) -> float:
+    return np.dot(pt - pt_dir[0], pt_dir[1])
+
+
+def seg_line_cross(seg: Seg, line: Line) -> Optional[Point]:
+    cross = line_cross(line, line_from_1_to_2(*seg))
+    if cross is None:
+        return None
+    pt, dir = seg[0], normalized(seg[1] - seg[0])
+    proj_x = pt_project_to_pt_dir_x(cross, (pt, dir))
+    if 0 <= proj_x <= norm(seg[1] - seg[0]):
+        return cross
+    return None
+
+
+def seg1_from_seg2_signed_distance(seg1: Seg, seg2: Seg) -> Optional[float]:
+    # seg2 正方向为 seg[1] - seg[0]
+    # 距离正方向为 seg[1] - seg[0] 方向向左
+
+    pt2, dir2 = seg2[0], normalized(seg2[1] - seg2[0])
+    candidate = []
+    for endpoint in [seg1[0], seg1[1]]:
+        if (
+            0
+            <= pt_project_to_pt_dir_x(endpoint, (pt2, dir2))
+            <= norm(seg2[1] - seg2[0])
+        ):
+            candidate.append(endpoint)
+    for line in [line_at_dir(seg2pt, dir_left(dir2)) for seg2pt in seg2]:
+        if (cross := seg_line_cross(seg1, line)) is not None:
+            candidate.append(cross)
+    if len(candidate) == 0:
+        return None
+    return min([pt_from_pt_dir_signed_distance(pt, (pt2, dir2)) for pt in candidate])
+
+
+def test_seg1_from_seg2_signed_distance():
+    assert eq(
+        seg1_from_seg2_signed_distance(
+            (arr(9, 10), arr(10, 12)), (arr(9, 9), arr(10, 10))
+        ),
+        1 / 2**0.5,
+    )
+
+
+if __name__ == "__main__":
+    test_seg1_from_seg2_signed_distance()
+
+
 def inner_recursive_v2(
     outer: List[Tuple[Point, Vec]],
     width,
@@ -286,37 +371,161 @@ def inner_recursive_v2(
         logger.info("Can't satisfy start_must_be_convex")
         return None
 
-    debug = 250
+    debug = 240
     while len(outer) >= 3 and debug > 0:
+        # print("------")
         debug -= 1
-        pt, dir = inner_nxt_pt_dir(outer, width, ccw)
-        """
-        [BUG]
-        这里最后宽度 < w / 2.0 可能不应该删点
-        """
-        # 直线交反：退当前
-        if pt is None or (
-            len(res) > 0 and (res[-1][1]) @ (pt - res[-1][0]) < width / 2.0
-        ):
-            if dont_delete_outer and indices[-1][0] == "outer":
-                logger.info("Can't satisfy dont_delete_outer")
-                return None
-            outer.pop()
-            res.pop()
-            indices.pop()
-            continue
-        # 线段太近：跳以后并忽略新点
-        
-        outer = outer[1:] + [(pt, dir)]
-        idx = (
+        # if len(res) >= 18:
+        # print("ok")
+
+        # 此为 .[-1] pt dir 和向内平移后的 .[0] line(pt dir) 交点
+
+        pt_new, dir_new = inner_nxt_pt_dir(outer, width, ccw)
+        # 新点为 pt_new，新线段为 outer[-1][0] -> pt_new
+        seg_new = (outer[-1][0], pt_new)
+        idx_new = (
             ("inner", indices[-1][1], 0)
             if indices[-1][0] == "outer"
             else ("inner", indices[-1][1], indices[-1][2] + 1)
         )
-        indices.append(idx)
-        res.append((pt, dir))
+        # [无法求得交点（逆方向或平行）]：跳过下一边
+        if pt_new is None:
+            # [BUG] 这个还合法吗
+            if dont_delete_outer and indices[-1][0] == "outer":
+                logger.info("Can't satisfy dont_delete_outer")
+                return None
+            # outer.pop()
+            # res.pop()
+            # indices.pop()
+            outer = outer[1:]
+            continue
+
+        # [线段太近, 充分不必要探测]：跳以后并忽略新点
+        # 检查未来所有线段（1->2 ..= -2->-1）平移后是否相交. 这里不查直线，只查线段
+        # 有相交：
+        """
+        - 不能等到交叉在判断  
+            - 交叉判一次也是 O(n)
+            - 不知道要跳哪些点
+        - 不能后面线段平移后以直线交叉
+            - 有超远的平行线段，其实不该限制
+        """
+        # continuous_valid_outer: List[List[int]] = []
+        # cur_continuous: List[int] = []
+        # for seg_st_idx in range(1, len(outer) - 1):
+        #     pt_st, pt_ed = outer[seg_st_idx][0], outer[seg_st_idx + 1][0]
+        #     dir_st = outer[seg_st_idx][1]
+        #     dir_inner = dir_left(dir_st) if ccw else dir_right(dir_st)
+        #     pt_st_inner, pt_ed_inner = (
+        #         pt_st + dir_inner * width,
+        #         pt_ed + dir_inner * width,
+        #     )
+
+        #     seg_new = (outer[-1][0], pt_new)
+        #     if (
+        #         eq(seg_dis(seg_new, (pt_st, pt_st_inner), 0))
+        #         or eq(seg_dis(seg_new, (pt_st_inner, pt_ed_inner), 0))
+        #         or eq(seg_dis(seg_new, (pt_ed_inner, pt_ed), 0))
+        #         or eq(seg_dis(seg_new, (pt_ed, pt_st), 0))
+        #     ):
+        #         # 膨胀路径相交
+        #         if len(cur_continuous) > 0:
+        #             continuous_valid_outer.append(cur_continuous)
+        #             cur_continuous = []
+        #     else:
+        #         cur_continuous.append(seg_st_idx)
+        # if len(cur_continuous) > 0:
+        #     continuous_valid_outer.append(cur_continuous)
+
+        # [预测删除 v1]
+        """
+        - 新点 n -> 是凹点，有 outer[1 -> .. ] 的某线段 s -> 离新线段很近。新点基于下一边生成
+            1. 拒绝新点. outer 删除 s -> 之前
+                - 相交则必须选择此策略
+                - 估计面积为 outer - 下方
+            2. 允许生成新点，outer 删除 s -> 之后
+                - 估计面积为 s -> n -> 其他
+
+        - 新点 n 是凸点，未来有凹点 s 离新线段很近
+            1. 拒绝新点，outer 删除 s -> 之前
+                - 相交则必须选择此策略
+                - 估计面积为 outer 减下方面积
+            2. 允许生成新点，outer 删除 s -> 之后
+                - 估计面积为 s -> n -> 其他
+        """
+        # pt_super = None
+        # if not dir0_convex(outer[-1][1], dir_new, ccw):
+        #     # 凹点.
+        #     ...
+
+        # [预测删除 v2]
+        f"""
+        未来某个线段 s -> s + 1 到新线段有向距离（定义见上方函数）{seg1_from_seg2_signed_distance}
+        <= width 则选择跳过 s 及之前或 s + 1 及之后
+        否则不用跳过，正常执行即可
+        """
+
+        def need_jump_and_jumped() -> bool:
+            nonlocal outer, res, indices
+            for s_idx in range(1, len(outer) - 2):
+                # 传入函数的距离正方向是向左
+                # 如果 clockwise，实际需要的距离正方向是向右，传入函数之前反一下
+                seg_s = (
+                    (outer[s_idx][0], outer[s_idx + 1][0])
+                    if ccw
+                    else (
+                        outer[s_idx + 1][0],
+                        outer[s_idx][0],
+                    )
+                )
+                if (
+                    dis := seg1_from_seg2_signed_distance(seg_new, seg_s)
+                ) is not None and dis <= 1.1 * width:
+                    # logger.info(f"{(s_idx, s_idx + 1)} is too close")
+                    s_and_before_area_estimated = directed_poly_area(
+                        [pt_new] + list(map(lambda x: x[0], outer[: s_idx + 1])), ccw
+                    )
+                    s1_and_after_area_estimated = directed_poly_area(
+                        list(map(lambda x: x[0], outer[s_idx + 1 :])), ccw
+                    )
+                    # print(s_and_before_area_estimated, s1_and_after_area_estimated)
+                    assert (
+                        s_and_before_area_estimated >= 0
+                        and s1_and_after_area_estimated >= 0
+                    )
+                    if s_and_before_area_estimated > s1_and_after_area_estimated:
+                        # ok to append new one, delete some outer
+                        # logger.warning(f"jumped {s_idx + 1} and after")
+                        outer = (
+                            # outer[1:s_idx]
+                            # + [(outer[s_idx][0], normalized(pt_new - outer[s_idx][0]))]
+                            # + [(pt_new, dir_new)]
+                            outer[1 : s_idx + 1] + outer[-1:] + [(pt_new, dir_new)]
+                        )
+                        # [fix]
+                        indices.append(idx_new)
+                        res.append((pt_new, dir_new))
+                    else:
+                        # don't append new one, delete some outer
+                        # logger.warning(
+                        #     f"jumped {s_idx}'s before, which is {outer[s_idx - 1]}"
+                        # )
+                        outer = outer[s_idx:]
+                    return True
+            return False
+
+        if need_jump_and_jumped():
+            continue
+
+        # [normal case]
+        outer = outer[1:] + [(pt_new, dir_new)]
+        indices.append(idx_new)
+        res.append((pt_new, dir_new))
+        logger.info(f"normal case {idx_new}")
     if debug == 0:
         logger.error("Inner debug limit reached, YOU MUST CHECK HERE!")
+    logger.warning(f"len(res) = {len(res)}")
+
     return res, indices
 
 
@@ -559,10 +768,22 @@ def inner_recursive_v2_api(
 
 
 def test101():
-    pts = [np.array([146.,  16.]), np.array([143.5,   8.5]), np.array([101.5,   8.5]), np.array([99., 11.]), 
-       np.array([99.  , 92.25]), np.array([99. , 98.5]), np.array([99.  , 99.75]), np.array([101.5  , 101.625]), 
-       np.array([115.5  , 101.625]), np.array([118.  ,  99.75]), np.array([118.,  91.]), np.array([123.,  86.]), 
-       np.array([143.5,  86. ]), np.array([146. ,  83.5])]
+    pts = [
+        np.array([146.0, 16.0]),
+        np.array([143.5, 8.5]),
+        np.array([101.5, 8.5]),
+        np.array([99.0, 11.0]),
+        np.array([99.0, 92.25]),
+        np.array([99.0, 98.5]),
+        np.array([99.0, 99.75]),
+        np.array([101.5, 101.625]),
+        np.array([115.5, 101.625]),
+        np.array([118.0, 99.75]),
+        np.array([118.0, 91.0]),
+        np.array([123.0, 86.0]),
+        np.array([143.5, 86.0]),
+        np.array([146.0, 83.5]),
+    ]
     res = inner_recursive_v2_api(
         pts, 5, dont_delete_outer=True, start_must_be_convex=True
     )
@@ -589,7 +810,7 @@ def test1():
         arr(0, 1.2),
     ]
     # poly.reverse()
-    res = inner_recursive_v2_api(
+    res, indices = inner_recursive_v2_api(
         poly, 0.1, dont_delete_outer=True, start_must_be_convex=True
     )
     _plot_points_linked(res)
