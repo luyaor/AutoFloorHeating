@@ -8,7 +8,7 @@
 #include<vector>
 #include<algorithm>
 
-#include <Eigen/Core>
+#include <Eigen/Dense>
 
 #include <chrono>
 #include <thread>
