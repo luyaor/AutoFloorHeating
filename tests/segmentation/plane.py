@@ -402,62 +402,6 @@ def inner_recursive_v2(
 
         # [线段太近, 充分不必要探测]：跳以后并忽略新点
         # 检查未来所有线段（1->2 ..= -2->-1）平移后是否相交. 这里不查直线，只查线段
-        # 有相交：
-        """
-        - 不能等到交叉在判断  
-            - 交叉判一次也是 O(n)
-            - 不知道要跳哪些点
-        - 不能后面线段平移后以直线交叉
-            - 有超远的平行线段，其实不该限制
-        """
-        # continuous_valid_outer: List[List[int]] = []
-        # cur_continuous: List[int] = []
-        # for seg_st_idx in range(1, len(outer) - 1):
-        #     pt_st, pt_ed = outer[seg_st_idx][0], outer[seg_st_idx + 1][0]
-        #     dir_st = outer[seg_st_idx][1]
-        #     dir_inner = dir_left(dir_st) if ccw else dir_right(dir_st)
-        #     pt_st_inner, pt_ed_inner = (
-        #         pt_st + dir_inner * width,
-        #         pt_ed + dir_inner * width,
-        #     )
-
-        #     seg_new = (outer[-1][0], pt_new)
-        #     if (
-        #         eq(seg_dis(seg_new, (pt_st, pt_st_inner), 0))
-        #         or eq(seg_dis(seg_new, (pt_st_inner, pt_ed_inner), 0))
-        #         or eq(seg_dis(seg_new, (pt_ed_inner, pt_ed), 0))
-        #         or eq(seg_dis(seg_new, (pt_ed, pt_st), 0))
-        #     ):
-        #         # 膨胀路径相交
-        #         if len(cur_continuous) > 0:
-        #             continuous_valid_outer.append(cur_continuous)
-        #             cur_continuous = []
-        #     else:
-        #         cur_continuous.append(seg_st_idx)
-        # if len(cur_continuous) > 0:
-        #     continuous_valid_outer.append(cur_continuous)
-
-        # [预测删除 v1]
-        """
-        - 新点 n -> 是凹点，有 outer[1 -> .. ] 的某线段 s -> 离新线段很近。新点基于下一边生成
-            1. 拒绝新点. outer 删除 s -> 之前
-                - 相交则必须选择此策略
-                - 估计面积为 outer - 下方
-            2. 允许生成新点，outer 删除 s -> 之后
-                - 估计面积为 s -> n -> 其他
-
-        - 新点 n 是凸点，未来有凹点 s 离新线段很近
-            1. 拒绝新点，outer 删除 s -> 之前
-                - 相交则必须选择此策略
-                - 估计面积为 outer 减下方面积
-            2. 允许生成新点，outer 删除 s -> 之后
-                - 估计面积为 s -> n -> 其他
-        """
-        # pt_super = None
-        # if not dir0_convex(outer[-1][1], dir_new, ccw):
-        #     # 凹点.
-        #     ...
-
         # [预测删除 v2]
         f"""
         未来某个线段 s -> s + 1 到新线段有向距离（定义见上方函数）{seg1_from_seg2_signed_distance}
@@ -521,7 +465,7 @@ def inner_recursive_v2(
         outer = outer[1:] + [(pt_new, dir_new)]
         indices.append(idx_new)
         res.append((pt_new, dir_new))
-        logger.info(f"normal case {idx_new}")
+        # logger.info(f"normal case {idx_new}")
     if debug == 0:
         logger.error("Inner debug limit reached, YOU MUST CHECK HERE!")
     logger.warning(f"len(res) = {len(res)}")
