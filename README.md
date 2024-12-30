@@ -4,20 +4,54 @@
 
 ## 安装
 
-依赖:
+### 依赖项
 
-```
-brew install opencv
-brew install eigen
+需要安装以下依赖：
+
+```bash
+# 核心依赖
+brew install opencv@4.10.0
+brew install eigen@3.4.0
 brew install jsoncpp@1.9.6
 brew install matplotplusplus
+
+# 开发依赖
+brew install cmake@3.28
+brew install googletest
 ```
 
-确保您的系统已安装 CMake、OpenCV 和 JsonCpp。然后执行以下命令：
-   ```sh
+### libdxfrw 安装
+libdxfrw 需要手动编译安装：
+```bash
+git clone https://github.com/LibreCAD/libdxfrw.git
+cd libdxfrw
+mkdir build && cd build
+cmake ..
+make
+sudo make install
+```
+
+### 系统要求
+- CMake 3.28 或更高版本
+- C++20 编译器
+- pkg-config
+
+### 依赖项版本要求
+- OpenCV 4.10.0
+- Eigen 3.4.0
+- JsonCpp 1.9.6
+- Matplotplusplus (最新版本)
+- libdxfrw (最新版本)
+- GoogleTest (最新版本)
+
+### 构建
+
+确保系统已安装所有依赖后，执行以下命令：
+
+```sh
 chmod +x scripts/build.sh
 ./scripts/build.sh
-   ```
+```
 
 ## 使用
 
@@ -42,5 +76,3 @@ chmod +x scripts/build.sh
 
 - 多边形
 
-## 贡献
-欢迎贡献代码，请遵循以下指南...
