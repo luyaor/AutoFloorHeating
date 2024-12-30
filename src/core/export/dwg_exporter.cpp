@@ -1,21 +1,41 @@
 #include "core/export/dwg_exporter.hpp"
 #include <iostream>
 #include <cmath>
+#include <filesystem>
+#include <libdxfrw/libdxfrw.h>
 
 DwgExporter::DwgExporter() {}
 
 DwgExporter::~DwgExporter() {}
 
 bool DwgExporter::exportToFile(const std::string& filename, const HeatingDesign& design) {
-    writer = std::make_unique<dxfRW>(filename.c_str());
-    currentDesign = design;
-    
-    // 开始写入DWG文件
-    bool success = writer->write(this, DRW::AC1021, false);  // AC1021 corresponds to AutoCAD 2007
-    if (!success) {
-        std::cerr << "Error writing DWG file: " << filename << std::endl;
+    try {
+        // 检查目录是否存在，如果不存在则创建
+        std::filesystem::path filePath(filename);
+        if (!filePath.parent_path().empty()) {
+            if (!std::filesystem::exists(filePath.parent_path())) {
+                if (!std::filesystem::create_directories(filePath.parent_path())) {
+                    std::cerr << "Error creating directory: " << filePath.parent_path() << std::endl;
+                    return false;
+                }
+            }
+        }
+
+        // 创建 DXF 写入器
+        dxfRW writer(filename.c_str());
+        currentDesign = design;
+        
+        // 开始写入 DWG 文件
+        bool success = writer.write(this, DRW::AC1021, false);  // AC1021 corresponds to AutoCAD 2007
+        if (!success) {
+            std::cerr << "Error writing DWG file: " << filename << std::endl;
+            return false;
+        }
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Error exporting to file: " << filename << " - " << e.what() << std::endl;
+        return false;
     }
-    return success;
 }
 
 void DwgExporter::writeHeader(DRW_Header& data) {
