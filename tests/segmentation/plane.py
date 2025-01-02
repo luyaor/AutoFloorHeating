@@ -27,51 +27,56 @@ def eq(a: float, b: float) -> bool:
     return abs(a - b) < EPS
 
 
+@np.vectorize
+def strictly_less(a: float, b: float) -> bool:
+    return a < b - EPS
+
+
 def same_point(p: Point, q: Point) -> bool:
     return eq(p[0], q[0]) and eq(p[1], q[1])
 
 
-def directed_area(p: Point, q: Point, r: Point) -> float:
+def signed_area(p: Point, q: Point, r: Point) -> float:
     return ((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])) / 2.0
 
 
-def test_directed_area():
+def test_signed_area():
     p = arr(0, 0)
     q = arr(1, 0)
     r = arr(0, 1)
-    assert eq(directed_area(p, q, r), 0.5)
+    assert eq(signed_area(p, q, r), 0.5)
     p = arr(0, 0)
     q = arr(1, 1)
     r = arr(1, 0)
-    assert eq(directed_area(p, q, r), -0.5)
+    assert eq(signed_area(p, q, r), -0.5)
 
 
-def directed_poly_area(poly: Polygon, ccw: bool) -> float:
+def signed_poly_area(poly: Polygon, ccw: bool) -> float:
     n = len(poly)
     if n < 3:
         return 0.0
     return sum(
-        directed_area(poly[0], poly[i], poly[(i + 1) % n]) for i in range(1, n - 1)
+        signed_area(poly[0], poly[i], poly[(i + 1) % n]) for i in range(1, n - 1)
     ) * (1 if ccw else -1)
 
 
-def test_directed_poly_area():
+def test_signed_poly_area():
     assert eq(
-        directed_poly_area([arr(0, 0), arr(1, 0), arr(1, 1), arr(0, 2)], ccw=False),
+        signed_poly_area([arr(0, 0), arr(1, 0), arr(1, 1), arr(0, 2)], ccw=False),
         -1.5,
     )
 
 
 if __name__ == "__main__":
-    test_directed_poly_area()
-    test_directed_area()
+    test_signed_poly_area()
+    test_signed_area()
 
 
 def pt0_convex(pt_m1: Point, pt_0: Point, pt_1: Point, ccw: bool) -> bool:
     return (
-        directed_area(pt_m1, pt_0, pt_1) > 0
+        signed_area(pt_m1, pt_0, pt_1) > 0
         if ccw
-        else directed_area(pt_m1, pt_0, pt_1) < 0
+        else signed_area(pt_m1, pt_0, pt_1) < 0
     )
 
 
@@ -426,10 +431,10 @@ def inner_recursive_v2(
                     dis := seg1_from_seg2_signed_distance(seg_new, seg_s)
                 ) is not None and dis <= 1.1 * width:
                     # logger.info(f"{(s_idx, s_idx + 1)} is too close")
-                    s_and_before_area_estimated = directed_poly_area(
+                    s_and_before_area_estimated = signed_poly_area(
                         [pt_new] + list(map(lambda x: x[0], outer[: s_idx + 1])), ccw
                     )
-                    s1_and_after_area_estimated = directed_poly_area(
+                    s1_and_after_area_estimated = signed_poly_area(
                         list(map(lambda x: x[0], outer[s_idx + 1 :])), ccw
                     )
                     # print(s_and_before_area_estimated, s1_and_after_area_estimated)
