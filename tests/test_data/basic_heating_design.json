@@ -1,0 +1,56 @@
+{
+    "HeatingCoils": [
+        {
+            "LevelName": "1F",
+            "LevelNo": 1,
+            "LevelDesc": "First Floor",
+            "HouseName": "A101",
+            "Expansions": [
+                {
+                    "StartPoint": {"x": 0.0, "y": 0.0, "z": 0.0},
+                    "EndPoint": {"x": 100.0, "y": 0.0, "z": 0.0},
+                    "CurveType": 0
+                }
+            ],
+            "CollectorCoils": [
+                {
+                    "CollectorName": "C1",
+                    "Loops": 1,
+                    "CoilLoops": [
+                        {
+                            "Length": 100.0,
+                            "Curvity": 20,
+                            "Areas": [
+                                {
+                                    "AreaName": "LivingRoom"
+                                }
+                            ],
+                            "Path": [
+                                {
+                                    "StartPoint": {"x": 0.0, "y": 0.0, "z": 0.0},
+                                    "EndPoint": {"x": 50.0, "y": 0.0, "z": 0.0},
+                                    "CurveType": 0
+                                },
+                                {
+                                    "StartPoint": {"x": 50.0, "y": 0.0, "z": 0.0},
+                                    "EndPoint": {"x": 50.0, "y": 50.0, "z": 0.0},
+                                    "CurveType": 0
+                                },
+                                {
+                                    "StartPoint": {"x": 50.0, "y": 50.0, "z": 0.0},
+                                    "EndPoint": {"x": 0.0, "y": 50.0, "z": 0.0},
+                                    "CurveType": 0
+                                },
+                                {
+                                    "StartPoint": {"x": 0.0, "y": 50.0, "z": 0.0},
+                                    "EndPoint": {"x": 0.0, "y": 0.0, "z": 0.0},
+                                    "CurveType": 0
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+} 

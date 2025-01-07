@@ -17,8 +17,16 @@ private:
     static Json::Value collectorCoilToJson(const CollectorCoil& collector);
     static Json::Value heatingCoilToJson(const HeatingCoil& coil);
 
+    static Point pointFromJson(const Json::Value& json);
+    static CurveInfo curveInfoFromJson(const Json::Value& json);
+    static CoilArea coilAreaFromJson(const Json::Value& json);
+    static CoilLoop coilLoopFromJson(const Json::Value& json);
+    static CollectorCoil collectorCoilFromJson(const Json::Value& json);
+    static HeatingCoil heatingCoilFromJson(const Json::Value& json);
+
 public:
     static std::string toJson(const HeatingDesign& design);
+    static HeatingDesign fromJson(const Json::Value& json);
 };
 
 } // namespace parsers
