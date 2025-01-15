@@ -1,0 +1,143 @@
+{
+    "HeatingCoils": [
+        {
+            "LevelName": "1F",
+            "LevelNo": 1,
+            "LevelDesc": "First Floor",
+            "HouseName": "A101",
+            "Expansions": [
+                {
+                    "StartPoint": {"x": 0.0, "y": 0.0, "z": 0.0},
+                    "EndPoint": {"x": 200.0, "y": 0.0, "z": 0.0},
+                    "CurveType": 0
+                },
+                {
+                    "StartPoint": {"x": 200.0, "y": 0.0, "z": 0.0},
+                    "EndPoint": {"x": 200.0, "y": 150.0, "z": 0.0},
+                    "CurveType": 0
+                }
+            ],
+            "CollectorCoils": [
+                {
+                    "CollectorName": "C1",
+                    "Loops": 2,
+                    "CoilLoops": [
+                        {
+                            "Length": 100.0,
+                            "Curvity": 20,
+                            "Areas": [
+                                {
+                                    "AreaName": "LivingRoom"
+                                }
+                            ],
+                            "Path": [
+                                {
+                                    "StartPoint": {"x": 0.0, "y": 0.0, "z": 0.0},
+                                    "EndPoint": {"x": 50.0, "y": 0.0, "z": 0.0},
+                                    "CurveType": 0
+                                },
+                                {
+                                    "StartPoint": {"x": 50.0, "y": 0.0, "z": 0.0},
+                                    "EndPoint": {"x": 50.0, "y": 50.0, "z": 0.0},
+                                    "CurveType": 1,
+                                    "Center": {"x": 25.0, "y": 25.0, "z": 0.0},
+                                    "Radius": 25.0,
+                                    "StartAngle": 0.0,
+                                    "EndAngle": 1.5708
+                                }
+                            ]
+                        },
+                        {
+                            "Length": 150.0,
+                            "Curvity": 20,
+                            "Areas": [
+                                {
+                                    "AreaName": "Bedroom"
+                                }
+                            ],
+                            "Path": [
+                                {
+                                    "StartPoint": {"x": 100.0, "y": 0.0, "z": 0.0},
+                                    "EndPoint": {"x": 150.0, "y": 0.0, "z": 0.0},
+                                    "CurveType": 0
+                                },
+                                {
+                                    "StartPoint": {"x": 150.0, "y": 0.0, "z": 0.0},
+                                    "EndPoint": {"x": 150.0, "y": 50.0, "z": 0.0},
+                                    "CurveType": 0
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "LevelName": "2F",
+            "LevelNo": 2,
+            "LevelDesc": "Second Floor",
+            "HouseName": "A201",
+            "Expansions": [
+                {
+                    "StartPoint": {"x": 0.0, "y": 0.0, "z": 3000.0},
+                    "EndPoint": {"x": 200.0, "y": 0.0, "z": 3000.0},
+                    "CurveType": 0
+                }
+            ],
+            "CollectorCoils": [
+                {
+                    "CollectorName": "C2",
+                    "Loops": 2,
+                    "CoilLoops": [
+                        {
+                            "Length": 120.0,
+                            "Curvity": 20,
+                            "Areas": [
+                                {
+                                    "AreaName": "MasterBedroom"
+                                }
+                            ],
+                            "Path": [
+                                {
+                                    "StartPoint": {"x": 0.0, "y": 0.0, "z": 3000.0},
+                                    "EndPoint": {"x": 60.0, "y": 0.0, "z": 3000.0},
+                                    "CurveType": 0
+                                },
+                                {
+                                    "StartPoint": {"x": 60.0, "y": 0.0, "z": 3000.0},
+                                    "EndPoint": {"x": 60.0, "y": 60.0, "z": 3000.0},
+                                    "CurveType": 1,
+                                    "Center": {"x": 30.0, "y": 30.0, "z": 3000.0},
+                                    "Radius": 30.0,
+                                    "StartAngle": 0.0,
+                                    "EndAngle": 1.5708
+                                }
+                            ]
+                        },
+                        {
+                            "Length": 180.0,
+                            "Curvity": 20,
+                            "Areas": [
+                                {
+                                    "AreaName": "Study"
+                                }
+                            ],
+                            "Path": [
+                                {
+                                    "StartPoint": {"x": 100.0, "y": 0.0, "z": 3000.0},
+                                    "EndPoint": {"x": 160.0, "y": 0.0, "z": 3000.0},
+                                    "CurveType": 0
+                                },
+                                {
+                                    "StartPoint": {"x": 160.0, "y": 0.0, "z": 3000.0},
+                                    "EndPoint": {"x": 160.0, "y": 60.0, "z": 3000.0},
+                                    "CurveType": 0
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -9,7 +9,7 @@
 
 // 回路区域结构
 struct CoilArea {
-    std::string AreaName;  // 你可以根据需要扩展该结构
+    std::string AreaName;  
 };
 
 // 户型盘管回路结构
