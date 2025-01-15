@@ -348,6 +348,7 @@ void plot_points_linked(const std::vector<Vector2d>& pts) {
     show();
 }
 
+
 int main() {
     /*
 n2 = Node([1, 1], None, [])
