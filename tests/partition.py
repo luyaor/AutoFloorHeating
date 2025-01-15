@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from shapely.geometry import Polygon, LineString, MultiPoint, Point
 from shapely.ops import split, unary_union
 
-input_pg = []
+from partition_data import *
 
 def get_natural_segmentation_lines(polygon):
     nat_lines = []
@@ -88,21 +88,20 @@ def remove_collinear(points, tol=1e-7):
     """
     去除连续共线的点。points 为顺序排列的不重复点序列。
     """
-    global input_pg
-    if len(points) < 3:
-        return points[:]
-    filtered = []
-    n = len(points)
-    for i in range(n):
-        prev = points[i - 1]
-        curr = points[i]
-        next = points[(i + 1) % n]
-        # 计算三角形面积的两倍（不除以 2），判断是否共线
-        area2 = abs((curr[0] - prev[0]) * (next[1] - prev[1]) - (next[0] - prev[0]) * (curr[1] - prev[1]))
-        # if area2 > tol:
-        if (area2 > tol) or (curr in input_pg):
-            filtered.append(curr)
-    return filtered
+    return points
+    # if len(points) < 3:
+    #     return points[:]
+    # filtered = []
+    # n = len(points)
+    # for i in range(n):
+    #     prev = points[i - 1]
+    #     curr = points[i]
+    #     next = points[(i + 1) % n]
+    #     # 计算三角形面积的两倍（不除以 2），判断是否共线
+    #     area2 = abs((curr[0] - prev[0]) * (next[1] - prev[1]) - (next[0] - prev[0]) * (curr[1] - prev[1]))
+    #     if area2 > tol:
+    #         filtered.append(curr)
+    # return filtered
 
 def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
     # -------------------- Step 1: 网格切分 --------------------
@@ -210,7 +209,7 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
             break
 
     final_polygons = [data['geometry'] for _, data in G.nodes(data=True)]
-    print("最终分区数：", len(final_polygons))
+    # print("最终分区数：", len(final_polygons))
 
     # -------------------- Step 4: 构造全局点列表和区域信息 --------------------
     # 1. 收集所有多边形的外部边界点，去除重复和共线点
@@ -320,181 +319,66 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
 
     return final_polygons, nat_lines, global_points, region_info
 
+
+
+
+def work(nid):
+    polygon_coords = SEG_PTS[nid]
+    
+    if nid != "5":
+        polygon_coords = [(x[0]/100, x[1]/100) for x in polygon_coords]
+
+    num_x, num_y = 2, 3
+    final_polygons, nat_lines, global_points, region_info = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
+    #plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=global_points)
+    
+    # print("全局点列表（按索引排列）：")
+    # for i, pt in enumerate(global_points):
+    #     print(f"{i}: {pt}")
+    # print("\n区域信息（区域边界点索引，均按顺时针排列）：")
+    # for i, region in enumerate(region_info):
+    #     print(f"Region {i+1}: {region}")
+
+    # print(global_points)
+    # print(region_info)
+
+    def dis(x,y):
+        return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
+
+    allp = [x for x in polygon_coords]
+    # for p in global_points:
+    #     l = len(allp)
+    #     for i in range(l):
+    #         if (dis(allp[i], p) > 1e-9) and (dis(p, allp[(i + 1) % l]) > 1e-9) and \
+    #         (abs(dis(allp[i], p) + dis(p, allp[(i + 1) % l]) - dis(allp[i], allp[(i + 1) % l])) < 1e-9):
+    #             allp = allp[:i + 1] + [p] + allp[i + 1:]
+    #             break
+    num_of_nodes = len(allp)
+
+    ind = []
+    for p in global_points:
+        if p not in allp:
+            allp.append(p)
+        ind.append(allp.index(p))
+
+    # for x in polygon_coords:
+    #     if x not in global_points:
+    #         print("error=", x)
+
+    new_region_info = []
+    cnt = -1
+    for r in region_info:
+        r = [ind[x] for x in r]
+        cnt = cnt + 1
+        new_region_info.append((r[::-1], cnt % 5))
+
+    print("SEG_WALL_PT_NUM=", num_of_nodes)
+    print("SEG_PTS=", allp)
+    print("CAC_REGIONS_FAKE=", new_region_info)
+    print("")
+
+
 if __name__ == "__main__":
-    SEG_PTS = {}
-    # case-5
-    SEG_PTS[5] = [
-        (6, 54), (6, 48), (18, 48), (18, 38), (18, 0), (96, 0), 
-        (168, 0), (238, 0), (238, 94), (238, 158), (168, 158), 
-        (98, 158), (98, 94), (98, 38), (96, 38), (94, 38), 
-        (94, 41), (94, 158), (58, 158), (58, 42), (72, 42), 
-        (72, 41), (72, 38), (44, 38), (44, 60), (44, 144), 
-        (18, 144), (18, 60), (6, 60)
-    ]
-
-    # case-0
-    SEG_PTS[0] = [
-        [12250,12550],
-        [12250,13700],
-        [14850,13700],
-        [14850,12550],
-        [17250,12550],
-        [17250,10350],
-        [14850,10350],
-        [14850,8850],
-        [12250,8850],
-        [12250,10350],
-        [9850,10350],
-        [9850,12550]
-    ]
-
-    # case-1
-    SEG_PTS[1] = [
-        [100, 100],
-        [9650, 100],
-        [14850, 100],
-        [17750, 100],
-        [25000, 100],
-        [27500, 100],
-        [28000, 100],
-        [29000, 100],
-        [29000, 3600],
-        [28000, 3600],
-        [28000, 8850],
-        [27500, 8850],
-        [27500, 9600],
-        [25000, 9600],
-        [17750, 9600],
-        [17750, 10350],
-        [14850, 10350],
-        [14850, 8850],
-        [12050, 8850],
-        [12050, 10350],
-        [9650, 10350],
-        [9650, 9600],
-        [4000, 9600],
-        [4000, 8850],
-        [100, 8850],
-    ]
-
-    # case-2
-    SEG_PTS[2] = [
-        [13800, 150],
-        [17550, 150],
-        [21000, 150],
-        [25700, 150],
-        [27450, 150],
-        [27450, 5750],
-        [25700, 5750],
-        [25700, 9350],
-        [21000, 9350],
-        [17550, 9350],
-        [17550, 10150],
-        [14850, 10150],
-        [14850, 12550],
-        [13500, 12550],
-        [13500, 10150],
-        [13500, 6900],
-        [13800, 6900],
-        [13800, 5750]
-    ]
-
-    # case-3
-    SEG_PTS[3] = [
-        [100, 900],
-        [3400, 900],
-        [7250, -950],
-        [10800, 900],
-        [13600, 900],
-        [16600, 900],
-        [24000, -1020],
-        [27604,180],
-        [29000,871],
-        [29000,3600],
-        [27500,3600],
-        [27500,5800],
-        [25750,5800],
-        [25750,6700],
-        [25750,9400],
-        [24000,9400],
-        [22250,9400],
-        [20350,9400],
-        [17750,9400],
-        [17750,10150],
-        [15050,10150],
-        [15050,6700],
-        [13600,6700],
-        [9650,6700],
-        [9650,9400],
-        [7250,9400],
-        [5350,9400],
-        [3400,9400],
-        [1850,9400],
-        [1850,6700],
-        [100,6700],
-        [100,2300]
-    ]
-
-    SEG_PTS[4] = [[1000, 1000], [1000, 10000], [1000, 20000], [12000, 20000], [12000, 1000]]
-
-
-    def work(nid):
-        polygon_coords = SEG_PTS[nid]
-        
-        if nid != "5":
-            polygon_coords = [(x[0]/100, x[1]/100) for x in polygon_coords]
-
-        input_pg = polygon_coords
-        num_x, num_y = 3, 4
-        final_polygons, nat_lines, global_points, region_info = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
-        #plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=global_points)
-        
-        print("全局点列表（按索引排列）：")
-        for i, pt in enumerate(global_points):
-            print(f"{i}: {pt}")
-        print("\n区域信息（区域边界点索引，均按顺时针排列）：")
-        for i, region in enumerate(region_info):
-            print(f"Region {i+1}: {region}")
-
-        print(global_points)
-        print(region_info)
-        #polygon_coords.index()
-
-        def dis(x,y):
-            return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
-
-        allp = [x for x in polygon_coords]
-        # for p in global_points:
-        #     l = len(allp)
-        #     for i in range(l):
-        #         if (dis(allp[i], p) > 1e-9) and (dis(p, allp[(i + 1) % l]) > 1e-9) and \
-        #         (abs(dis(allp[i], p) + dis(p, allp[(i + 1) % l]) - dis(allp[i], allp[(i + 1) % l])) < 1e-9):
-        #             allp = allp[:i + 1] + [p] + allp[i + 1:]
-        #             break
-        num_of_nodes = len(allp)
-
-        ind = []
-        for p in global_points:
-            if p not in allp:
-                allp.append(p)
-            ind.append(allp.index(p))
-
-        # for x in polygon_coords:
-        #     if x not in global_points:
-        #         print("error=", x)
-
-        new_region_info = []
-        cnt = -1
-        for r in region_info:
-            r = [ind[x] for x in r]
-            cnt = cnt + 1
-            new_region_info.append((r[::-1], cnt % 5))
-
-        print("SEG_WALL_PT_NUM=", num_of_nodes)
-        print("SEG_PTS=", allp)
-        print("CAC_REGIONS_FAKE=", new_region_info)
-        print("")
-
     work(4)
     # for i in [0,1,2,3,5]:
     #     work(i)
