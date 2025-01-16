@@ -322,15 +322,13 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
 
 
 
-def work(nid):
+def work(nid, num_x = 1, num_y = 2):
     polygon_coords = SEG_PTS[nid]
     
-    if nid != "5":
+    if nid != 5:
         polygon_coords = [(x[0]/100, x[1]/100) for x in polygon_coords]
 
-    num_x, num_y = 2, 3
     final_polygons, nat_lines, global_points, region_info = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
-    #plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=global_points)
     
     # print("全局点列表（按索引排列）：")
     # for i, pt in enumerate(global_points):
@@ -346,13 +344,14 @@ def work(nid):
         return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
 
     allp = [x for x in polygon_coords]
-    # for p in global_points:
-    #     l = len(allp)
-    #     for i in range(l):
-    #         if (dis(allp[i], p) > 1e-9) and (dis(p, allp[(i + 1) % l]) > 1e-9) and \
-    #         (abs(dis(allp[i], p) + dis(p, allp[(i + 1) % l]) - dis(allp[i], allp[(i + 1) % l])) < 1e-9):
-    #             allp = allp[:i + 1] + [p] + allp[i + 1:]
-    #             break
+    for p in global_points:
+        l = len(allp)
+        for i in range(l):
+            if (dis(allp[i], p) > 1e-9) and (dis(p, allp[(i + 1) % l]) > 1e-9) and \
+            (abs(dis(allp[i], p) + dis(p, allp[(i + 1) % l]) - dis(allp[i], allp[(i + 1) % l])) < 1e-9):
+                allp = allp[:i + 1] + [p] + allp[i + 1:]
+                break
+    allp = allp[::-1]
     num_of_nodes = len(allp)
 
     ind = []
@@ -372,10 +371,14 @@ def work(nid):
         cnt = cnt + 1
         new_region_info.append((r[::-1], cnt % 5))
 
-    print("SEG_WALL_PT_NUM=", num_of_nodes)
+    print("WALL_PT_PATH=", [i for i in range(num_of_nodes)])
+    # print("SEG_WALL_PT_NUM=", num_of_nodes)
     print("SEG_PTS=", allp)
     print("CAC_REGIONS_FAKE=", new_region_info)
     print("")
+
+    plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
+    
 
 
 if __name__ == "__main__":
