@@ -489,30 +489,30 @@ if __name__ == "__main__":
     ar_design = get_example_data()
     processed_data, polygons = process_ar_design(ar_design)
     
-    # Collect door data
-    doors = []
-    for key, points in processed_data.items():
-        if key.startswith("door"):
-            if len(points) == 2:  # Make sure we have start and end points
-                doors.append((points[0], points[1]))
-    
-    # Print the processed data for verification
-    print("Original Points Data:")
-    for key, points in processed_data.items():
-        if key.startswith("room"):  # Only print room data for clarity
-            print(f"\n{key}:")
-            print(f"Points: {points}")
-    
-    print("\nPolygons (Counter-clockwise ordered):")
+    # Print the merged polygons points in counter-clockwise order
+    print("\nMerged Polygons Points (Counter-clockwise order):")
     for key, points in polygons.items():
-        if key.startswith("polygon"):  # Only print room polygons for clarity
-            print(f"\n{key}:")
-            print(f"Points: {points}")
-            # Verify if polygon is closed
+        if key.startswith("polygon"):
+            # Ensure points are in counter-clockwise order
+            if is_clockwise(points):
+                points = points[::-1]
+            
+            # Remove the last point if it's the same as the first (closing point)
             if points and points[0] == points[-1]:
-                print("Polygon is properly closed")
-            else:
-                print("Warning: Polygon is not closed")
+                points = points[:-1]
+            
+            print(f"\n{key}:")
+            print("Points = [")
+            for x, y in points:
+                print(f"    ({x:.2f}, {y:.2f}),")
+            print("]")
+            
+            # Verify counter-clockwise order
+            area = 0.0
+            for i in range(len(points)):
+                j = (i + 1) % len(points)
+                area += points[i][0] * points[j][1] - points[j][0] * points[i][1]
+            print(f"Area (should be positive for CCW): {area/2:.2f}")
     
-    # Plot the comparison
-    plot_comparison(processed_data, polygons, doors)
+    # Comment out plotting code
+    # plot_comparison(processed_data, polygons, [])
