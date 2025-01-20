@@ -4,7 +4,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from shapely.geometry import Polygon, LineString, MultiPoint, Point
 from shapely.ops import split, unary_union
-from ..data.test_data import *
+from data.test_data import *
 
 # from partition_data import *
 
