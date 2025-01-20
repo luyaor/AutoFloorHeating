@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# Hello
-
-# In[ ]:
-
 case_id = 4
 
 import numpy as np
@@ -18,8 +14,6 @@ from typing import List, Tuple, Dict, Set, Final, Hashable
 import importlib
 from loguru import logger
 
-
-# In[ ]:
 
 
 def arr(*l):
@@ -41,10 +35,6 @@ class CacRegion:
 测试时进需要修改本单元格的数据
 """
 
-# [可视化图像宽高]
-GLB_H = 300
-GLB_W = 300
-GLOBAL_MAT = np.zeros((GLB_H + 1, GLB_W + 1), dtype=int)
 
 # [数字颜色对应关系]
 CMAP = {-1: "black", 0: "grey", 1: "blue", 2: "yellow", 3: "red", 4: "cyan"}
@@ -57,41 +47,72 @@ for i in range(5, 50):
 # CAC_REGIONS_FAKE= [([0, 1, 4, 5, 6], 0), ([1, 2, 3, 4], 1)]
 # from cactus_data.case0 import *
 
-from data.test_data import SEG_PTS, CAC_REGIONS_FAKE, WALL_PT_PATH
+# from data.test_data import SEG_PTS, CAC_REGIONS_FAKE, WALL_PT_PATH
 
-# SEG_PTS = [np.array(x) for x in SEG_PTS]
-SEG_PTS = [np.array([x[0]/100, x[1]/100]) for x in SEG_PTS[case_id]]
+class CactusInput:
 
-# print(CAC_REGIONS_FAKE)
-CAC_REGIONS_FAKE = [CacRegion(x[0][::1], x[1]) for x in CAC_REGIONS_FAKE]
-
-
-# 分水器所在区域编号
-DESTINATION_PT = 0
-
-SUGGESTED_M0_PIPE_INTERVAL = 2.5
+    def __init__(self, seg_pts, regions, wall_path):
+        self.seg_pts = seg_pts
+        self.regions = regions
+        self.wall_path = wall_path
 
 
-# In[ ]:
+        self.seg_pts = [np.array([x[0]/100, x[1]/100]) for x in seg_pts]
+        self.regions = [CacRegion(x[0][::1], x[1]) for x in regions]
+        # assert 每个区域是 ccw 给出的
+        for cac in self.regions:
+            assert is_counter_clockwise([self.seg_pts[x] for x in cac.ccw_pts_id]), cac.ccw_pts_id
+
+        assert all(isinstance(x, np.ndarray) for x in self.seg_pts)
+
+        # 分水器所在区域编号
+        self.dest_pt = 0
+
+        self.pipe_width = 2.5
+        self.G0_PIPE_WIDTH = self.pipe_width * 2.0
+        
+        # [可视化图像宽高]
+        self.GLB_H = 300
+        self.GLB_W = 300
+        self.GLOBAL_MAT = np.zeros((self.GLB_H + 1, self.GLB_W + 1), dtype=int)
+        self.BLACKS = generate_segment_points([self.seg_pts[i] for i in self.wall_path], close=True)
+        for x, y in self.BLACKS:
+            self.GLOBAL_MAT[x, y] = -1
+
+        # dijkstra 求各个 Region 反向 dijkstra 顺序
+        self.PT_EDGE_TO = [[] for _ in range(len(self.seg_pts))]
+        for r in self.regions:
+            for x, y in zip(r.ccw_pts_id, r.ccw_pts_id[1:] + [r.ccw_pts_id[0]]):
+                self.PT_EDGE_TO[x].append(y)
+                self.PT_EDGE_TO[y].append(x)
+        # 每个点的出点按极角排序 -pi ~ pi
+        for id in range(len(self.seg_pts)):
+            # 去重
+            self.PT_EDGE_TO[id] = list(set(self.PT_EDGE_TO[id]))
+            self.PT_EDGE_TO[id] = sorted(self.PT_EDGE_TO[id], key=lambda x: np.arctan2(self.seg_pts[x][1] - self.seg_pts[id][1], self.seg_pts[x][0] - self.seg_pts[id][0]))
+
+        self.PTS_DIS = dijk1(self.seg_pts, self.dest_pt, self.PT_EDGE_TO)
+        self.CAC_REGIONS_DIS = [min([self.PTS_DIS[x] for x in r.ccw_pts_id]) for r in self.regions]
+        # print PT_EDGE_TO
+        print("PT_EDGE_TO:")
+        for idx, pt in enumerate(self.seg_pts):
+            print(idx, self.PT_EDGE_TO[idx])
+        self.EDGE_PIPES = None
+        self.PIPE_XW = None
+
+    def update_pipe_xw(self, edge_pipes):
+        self.EDGE_PIPES = edge_pipes
+        self.PIPE_XW = get_xw_for_each_pipe(
+            self.regions, self.seg_pts, self.wall_path, edge_pipes, self.G0_PIPE_WIDTH
+        )
 
 
-# [new]
 import plane
 importlib.reload(plane)
 from plane import is_counter_clockwise
-# assert 每个区域是 ccw 给出的
-for cac in CAC_REGIONS_FAKE:
-    assert is_counter_clockwise([SEG_PTS[x] for x in cac.ccw_pts_id]), cac.ccw_pts_id
-
-assert all(isinstance(x, np.ndarray) for x in SEG_PTS)
 
 
-# In[ ]:
-
-
-G0_PIPE_WIDTH = SUGGESTED_M0_PIPE_INTERVAL * 2.0
-
-def seg_pts(pts: list, close=False):
+def generate_segment_points(pts: list, close=False):
     z = zip(pts, pts[1:] + [pts[0]]) if close else zip(pts[:-1], pts[1:])
     blacks = []
     lx, ly = -1, -1
@@ -106,9 +127,6 @@ def seg_pts(pts: list, close=False):
     return blacks
 
 
-BLACKS = seg_pts([SEG_PTS[i] for i in WALL_PT_PATH], close=True)
-for x, y in BLACKS:
-    GLOBAL_MAT[x, y] = -1
 
 
 def plot_matrix(matrix, title=None):
@@ -181,20 +199,8 @@ class EdgePipes:
         return self.ccw_pipes if x_lt_y else list(reversed(self.ccw_pipes))
 
 
-# In[ ]:
 
 
-# dijkstra 求各个 Region 反向 dijkstra 顺序
-PT_EDGE_TO = [[] for _ in range(len(SEG_PTS))]
-for r in CAC_REGIONS_FAKE:
-    for x, y in zip(r.ccw_pts_id, r.ccw_pts_id[1:] + [r.ccw_pts_id[0]]):
-        PT_EDGE_TO[x].append(y)
-        PT_EDGE_TO[y].append(x)
-# 每个点的出点按极角排序 -pi ~ pi
-for id in range(len(SEG_PTS)):
-    # 去重
-    PT_EDGE_TO[id] = list(set(PT_EDGE_TO[id]))
-    PT_EDGE_TO[id] = sorted(PT_EDGE_TO[id], key=lambda x: np.arctan2(SEG_PTS[x][1] - SEG_PTS[id][1], SEG_PTS[x][0] - SEG_PTS[id][0]))
 
 def pt_dis(pt1, pt2):
     return np.sqrt((pt1[0] - pt2[0]) ** 2 + (pt1[1] - pt2[1]) ** 2)
@@ -212,13 +218,6 @@ def dijk1(set_pts, dest_pt, pt_to):
                 q.put((dis[y], y))
     return dis
 
-PTS_DIS = dijk1(SEG_PTS, DESTINATION_PT, PT_EDGE_TO)
-
-CAC_REGIONS_DIS = [min([PTS_DIS[x] for x in r.ccw_pts_id]) for r in CAC_REGIONS_FAKE]
-# print PT_EDGE_TO
-print("PT_EDGE_TO:")
-for idx, pt in enumerate(SEG_PTS):
-    print(idx, PT_EDGE_TO[idx])
 
 
 # In[ ]:
@@ -463,6 +462,8 @@ def get_djk_transfer_for_color(
                 for i in range(st - 1, ed - 1, -1):
                     ccw_cross_i(i)
 
+        if len(djk_states) == 0:
+            continue
         ls = djk_states[0]
         cnt_state_sets: Dict[Tuple, Set[StateT]] = {key(cnt_di): {ls}}
         for s in djk_states[1:]:
@@ -531,7 +532,7 @@ def test_transfer():
 
 
 # color 不为零的进行考虑边上 pipes 的反向 Dijkstra
-def dijk2(seg_pts, pt_to, cac_regions, destination_pt, cac_regions_dis, w_sug):
+def dijk2(cactusInput:CactusInput ):
     """
     order:
     - 原点相关
@@ -558,23 +559,23 @@ def dijk2(seg_pts, pt_to, cac_regions, destination_pt, cac_regions_dis, w_sug):
                  - x, y, i (and y, x, i)
         - transfer
     """
-    djk_order = np.argsort(cac_regions_dis)
+    djk_order = np.argsort(cactusInput.CAC_REGIONS_DIS)
     edge_pipes: Dict[Tuple[int, int], EdgePipes] = dict()
-    for r in cac_regions:
+    for r in cactusInput.regions:
         for x, y in zip(r.ccw_pts_id, r.ccw_pts_id[1:] + [r.ccw_pts_id[0]]):
             if edge_id((x, y)) not in edge_pipes:
                 edge_pipes[edge_id((x, y))] = EdgePipes()
 
     # 每个 Disjoint Set 存储管道线段的 id 的集合
     pt_pipe_sets: Dict[int, DisjointSet] = {
-        x: DisjointSet() for x in range(len(seg_pts))
+        x: DisjointSet() for x in range(len(cactusInput.seg_pts))
     }
     pipe_color = (
         list()
     )  # start from 0，.[i] 存储第 i 个管道的颜色. pipe 实际上是 pipe 线段.
-    region_start_pipes = [[] for _ in range(len(cac_regions))]
+    region_start_pipes = [[] for _ in range(len(cactusInput.regions))]
     # 每个有色区域逆时针一周添加管道。相邻的添加的管道在一个 pt_pipe_seg 中
-    for i, r in enumerate(cac_regions):
+    for i, r in enumerate(cactusInput.regions):
         if r.color == 0:
             continue
         pipes_added = []
@@ -604,34 +605,34 @@ def dijk2(seg_pts, pt_to, cac_regions, destination_pt, cac_regions_dis, w_sug):
     colors_finished_states: Dict[int, Set[StateT]] = dict()
     for region_ord in djk_order:
         # print(f"--- {region_ord} ---")
-        region_color = cac_regions[region_ord].color
+        region_color = cactusInput.regions[region_ord].color
         if region_color == 0:
             continue
         djk_states_pt, transfer = get_djk_transfer_for_color(
-            pt_to, region_color, edge_pipes, pipe_color, seg_pts, pt_pipe_sets, w_sug
+            cactusInput.PT_EDGE_TO, region_color, edge_pipes, pipe_color, cactusInput.seg_pts, pt_pipe_sets, cactusInput.G0_PIPE_WIDTH
         )
         dis = {}
         # Father state
         fa_s: Dict[StateT, StateT] = dict()
-        for pt in range(len(seg_pts)):
+        for pt in range(len(cactusInput.seg_pts)):
             for s in djk_states_pt[pt]:
                 dis[s] = INF
                 fa_s[s] = (-1, -1, -1)
 
         def state_is_finished(s):
             if region_color not in colors_finished_states:
-                return s[0] == destination_pt
+                return s[0] == cactusInput.dest_pt
             return s in colors_finished_states[region_color]
 
         def state_is_illegal(s):
             # 本颜色已经有区域连到终点了，则不许再搜到终点
-            return region_color in colors_finished_states and s[0] == destination_pt
+            return region_color in colors_finished_states and s[0] == cactusInput.dest_pt
 
         q = PriorityQueue()
         this_region_is_finished = False
 
         region_start_states = []
-        for pt in range(len(seg_pts)):
+        for pt in range(len(cactusInput.seg_pts)):
             for s in djk_states_pt[pt]:
                 if state_attach_region(s, region_ord):
                     if state_is_finished(s):
@@ -662,6 +663,9 @@ def dijk2(seg_pts, pt_to, cac_regions, destination_pt, cac_regions_dis, w_sug):
         for k, v in dis.items():
             if state_is_finished(k):
                 found_finished_states_and_dis.append((k, v))
+        if not found_finished_states_and_dis:
+            logger.error(f"No valid path found to destination for region {region_ord}")
+            continue
         back_s = found_finished_states_and_dis[
             np.argmin([v for k, v in found_finished_states_and_dis])
         ][0]
@@ -768,7 +772,7 @@ def dijk2(seg_pts, pt_to, cac_regions, destination_pt, cac_regions_dis, w_sug):
         """
 
     # [test]
-    def test_plot_transfer():
+    def test_plot_transfer(cactusInput: CactusInput):
         def plot_transfer(transfer, seg_pts):
             for s, li in transfer.items():
                 for t in li:
@@ -802,57 +806,49 @@ def dijk2(seg_pts, pt_to, cac_regions, destination_pt, cac_regions_dis, w_sug):
                     )
 
         plt.figure(figsize=(20, 10))
-        plot_matrix(GLOBAL_MAT, title="test")
-        plot_num(SEG_PTS)
-        plot_transfer(transfer, SEG_PTS)
+        plot_matrix(cactusInput.GLOBAL_MAT, title="test")
+        plot_num(cactusInput.SEG_PTS)
+        plot_transfer(transfer, cactusInput.SEG_PTS)
         # plt.show()
 
-    def test_plot_pipes():
-        def plot_pipes(edge_pipes, seg_pts, pipe_color, cmap):
+    def test_plot_pipes(cactusInput: CactusInput):
+        def plot_pipes(edge_pipes, seg_pts, pipe_color, cmap, pipe_xw):
             for (x, y), edge in edge_pipes.items():
-                st, ed = seg_pts[x], seg_pts[y]
+                st, ed = cactusInput.seg_pts[x], cactusInput.seg_pts[y]
 
                 def normalized(v):
                     return v / np.linalg.norm(v)
 
                 dir = normalized(ed - st)
-                dir_left = np.array([-dir[1], dir[0]])
-                oy, ox = dir_left * 1.6
+                dir_left = np.array([-dir[1], dir[0]])  # x 正方向
 
-                sti = -len(edge.ccw_pipes) / 2 + 0.5
                 for idx, pipe_id in enumerate(edge.ccw_pipes):
                     color = cmap[pipe_color[pipe_id]]
-                    i = idx + sti
+                    x = pipe_xw[pipe_id].x
+                    so_st = st + dir_left * x
+                    so_ed = ed + dir_left * x
                     plt.plot(
-                        [st[1] + i * ox, ed[1] + i * ox],
-                        [st[0] + i * oy, ed[0] + i * oy],
+                        [so_st[1], so_ed[1]],
+                        [so_st[0], so_ed[0]],
                         color=color,
-                        linewidth=2,
+                        linewidth=0.5,
                     )
 
         plt.figure(figsize=(20, 10))
-        plot_matrix(GLOBAL_MAT, title="test")
-        plot_num(SEG_PTS)
-        plot_pipes(edge_pipes, SEG_PTS, pipe_color, CMAP)
+        plot_matrix(cactusInput.GLOBAL_MAT, title="test")
+        plot_num(cactusInput.seg_pts)
+        # cactusInput.update_pipe_xw(cactusInput.EDGE_PIPES)
+        # plot_pipes(edge_pipes, cactusInput.seg_pts, pipe_color, CMAP ,cactusInput.PIPE_XW)
         # plt.show()
 
-    test_plot_pipes()
+    test_plot_pipes(cactusInput)
     return edge_pipes, pt_pipe_sets, pipe_color
 
 
-EDGE_PIPES, PT_PIPE_SETS, PIPE_COLOR = dijk2(
-    SEG_PTS, PT_EDGE_TO, CAC_REGIONS_FAKE, DESTINATION_PT, CAC_REGIONS_DIS, G0_PIPE_WIDTH
-)
 
 
 # - 点分，边拆
 # - 每个并查集选一个中心点 (x, y)
-
-# In[ ]:
-
-
-# [new]
-# def poly_edge_pipe_width_v1(poly: Polygon, edge_pipe_num: List[float], sug_w: float):
 # 检查所有 region。如果边为墙边，则 num = len，否则 len / 2
 import plane
 import importlib
@@ -877,7 +873,8 @@ def pt_edge_pipes_generate_pts_v1(
 
 # 约定是墙必须由连续的开始组成
 def edge_is_wall(eid: EdgeId, wall_pt_path):
-    assert eid[0] < eid[1]
+    # Sort the edge ID to ensure consistent comparison
+    eid = edge_id(eid)
     for e in zip(wall_pt_path, wall_pt_path[1:] + [wall_pt_path[0]]):
         if edge_id(e) == eid:
             return True
@@ -952,8 +949,10 @@ def get_xw_for_each_pipe(regions, seg_pts, wall_pt_path, edge_pipes, sug_w):
                     if dir == 1:
                         # 朝着 l 方向走的
                         pipe_xw[edge_pipes[eid].ccw_pipes[int_mid]].lw = half_w
+                        pipe_xw[edge_pipes[eid].ccw_pipes[int_mid]].rw = half_w
                     else:
                         pipe_xw[edge_pipes[eid].ccw_pipes[int_mid]].rw = half_w
+                        pipe_xw[edge_pipes[eid].ccw_pipes[int_mid]].lw = half_w
                     pipe_xw[edge_pipes[eid].ccw_pipes[int_mid]].x = 0
                     range_update(
                         dir_range2(x, y, int(np.round(mid + dir)), dir), half_w * dir
@@ -962,17 +961,13 @@ def get_xw_for_each_pipe(regions, seg_pts, wall_pt_path, edge_pipes, sug_w):
     return pipe_xw
 
 
-PIPE_XW = get_xw_for_each_pipe(
-    CAC_REGIONS_FAKE, SEG_PTS, WALL_PT_PATH, EDGE_PIPES, G0_PIPE_WIDTH
-)
-
-# [assert no nan]
 
 
-def test_plot_pipes():
+
+def test_plot_pipes(cactusInput: CactusInput):
     def plot_pipes(edge_pipes, seg_pts, pipe_color, cmap, pipe_xw):
         for (x, y), edge in edge_pipes.items():
-            st, ed = seg_pts[x], seg_pts[y]
+            st, ed = cactusInput.seg_pts[x], cactusInput.seg_pts[y]
 
             def normalized(v):
                 return v / np.linalg.norm(v)
@@ -992,36 +987,14 @@ def test_plot_pipes():
                     linewidth=0.5,
                 )
 
-    # [pt sets]
-    # print('--- pt sets ---')
-    # for k, v in pt_pipe_sets.items():
-    #     print(f'{k}:')
-    #     print(v.get_sets_di())
-
     plt.figure(figsize=(20, 10))
-    plot_matrix(GLOBAL_MAT, title="test")
-    plot_num(SEG_PTS)
-    plot_pipes(EDGE_PIPES, SEG_PTS, PIPE_COLOR, CMAP, PIPE_XW)
+    plot_matrix(cactusInput.GLOBAL_MAT, title="test")
+    plot_num(cactusInput.seg_pts)
+    plot_pipes(cactusInput.EDGE_PIPES, cactusInput.seg_pts, cactusInput.PIPE_COLOR, CMAP, cactusInput.PIPE_XW)
     # plt.show()
 
 
-# (21, 22) 为一 eid
-# 获取其上所有 pipe_id (int)
-# PIPE_XW[pipe_id] 存的 x, rw, lw 方向为 eid 方向
-# [BUG] 这里宽度为啥 3.16，不到 4.5?
-test_plot_pipes()
 
-for K, V in EDGE_PIPES.items():
-    print(f"{K}: {V.ccw_pipes}")
-
-for K, V in PIPE_XW.items():
-    MES = f"pipe {K} has nan member"
-    assert not np.isnan(V.x), MES
-    assert not np.isnan(V.rw), MES
-    assert not np.isnan(V.lw), MES
-
-
-# In[ ]:
 
 
 import importlib
@@ -1061,6 +1034,12 @@ class G0EdgeInfo:
 
     
 
+def g2_node_less(n1: Tuple[int, int], n2: Tuple[int, int]) -> bool:
+    # Compare pipe_id first, then pt_id
+    if n1[0] != n2[0]:
+        return n1[0] < n2[0]
+    return n1[1] < n2[1]
+
 def get_endpoint_for_each_pipe(seg_pts, pt_edge_to, edge_pipes, pipe_wx):
     # 初步生成
     node_set: Set[G2Node] = set()
@@ -1068,7 +1047,6 @@ def get_endpoint_for_each_pipe(seg_pts, pt_edge_to, edge_pipes, pipe_wx):
     node_pos: Dict[G2Node, Point] = dict()
     pipe_pt: Dict[int, List[int]] = dict()
     edge_info_s1: Dict[G2Edge, G0EdgeInfo] = dict()
-
 
     for uid in range(len(seg_pts)):
         center = seg_pts[uid]
@@ -1097,7 +1075,8 @@ def get_endpoint_for_each_pipe(seg_pts, pt_edge_to, edge_pipes, pipe_wx):
             for pipe_id in edge_pipes[eid].ccw_pipes:
                 g2_node_ex = (pipe_id, eid[0])
                 g2_node_ey = (pipe_id, eid[1])
-                assert g2_node_ex < g2_node_ey
+                if not g2_node_less(g2_node_ex, g2_node_ey):
+                    g2_node_ex, g2_node_ey = g2_node_ey, g2_node_ex
                 # pipe_wx 内 rw 为 min(u, v) -> max(u, v) 主方向
                 # 此步骤中恰好 ex -> ey 为主方向
                 g2_edge_id = (g2_node_ex, g2_node_ey)
@@ -1122,7 +1101,7 @@ def get_endpoint_for_each_pipe(seg_pts, pt_edge_to, edge_pipes, pipe_wx):
             node_pos[(pipe_id, uid)] = pos
     return pipe_pt, node_set, edge_dict, node_pos, edge_info_s1
 
-PIPE_PT, NODE_SET_S1, EDGE_DICT_S1, NODE_POS_S1, EDGE_INFO_S1 = get_endpoint_for_each_pipe(SEG_PTS, PT_EDGE_TO, EDGE_PIPES, PIPE_XW)
+
 """
 PIPE_PT: pipe_id -> 两个 [pt_id]
 """
@@ -1130,10 +1109,10 @@ PIPE_PT: pipe_id -> 两个 [pt_id]
 # def get_s1_edge_info(pipe_wx):
 #     ...
 
-def test_plot_pipes2():
+def test_plot_pipes2(cactusInput: CactusInput):
     def plot_pipes(edge_pipes, seg_pts, pipe_color, cmap, pipe_pt, node_pos):
         for (x, y), edge in edge_pipes.items():
-            st, ed = seg_pts[x], seg_pts[y]
+            st, ed = cactusInput.seg_pts[x], cactusInput.seg_pts[y]
             def normalized(v):
                 return v / np.linalg.norm(v)
 
@@ -1155,19 +1134,18 @@ def test_plot_pipes2():
     #     print(f'{k}:')
     #     print(v.get_sets_di())
 
-    plt.figure(figsize=(20, 10))
-    plot_num(SEG_PTS)
-    plot_pipes(EDGE_PIPES, SEG_PTS, PIPE_COLOR, CMAP, PIPE_PT, NODE_POS_S1)
-    plot_matrix(GLOBAL_MAT, title='test')
+    # plt.figure(figsize=(20, 10))
+    # plot_num(cactusInput.seg_pts)
+    # plot_pipes(EDGE_PIPES, cactusInput.SEG_PTS, cactusInput.PIPE_COLOR, CMAP, PIPE_PT, NODE_POS_S1)
+    # plot_matrix(cactusInput.GLOBAL_MAT, title='test')
     # plt.show()
 
 # test_plot_pipes2()
 
 
-# In[ ]:
 
 
-def test_plot_pipes3(pipes_to_plot):
+def test_plot_pipes3(cactusInput: CactusInput, pipes_to_plot):
     def plot_pipes(edge_pipes, seg_pts, pipe_color, cmap, pipe_pt, node_pos):
         for (x, y), edge in edge_pipes.items():
             st, ed = seg_pts[x], seg_pts[y]
@@ -1194,16 +1172,14 @@ def test_plot_pipes3(pipes_to_plot):
     #     print(f'{k}:')
     #     print(v.get_sets_di())
 
-    plt.figure(figsize=(20, 10))
-    plot_matrix(GLOBAL_MAT, title='test')
-    plot_num(SEG_PTS)
-    plot_pipes(EDGE_PIPES, SEG_PTS, PIPE_COLOR, CMAP, PIPE_PT, NODE_POS_S1)
+    # plt.figure(figsize=(20, 10))
+    # plot_matrix(cactusInput.GLOBAL_MAT, title='test')
+    # plot_num(cactusInput.SEG_PTS)
+    # plot_pipes(cactusInput.EDGE_PIPES, cactusInput.SEG_PTS, cactusInput.PIPE_COLOR, CMAP, PIPE_PT, NODE_POS_S1)
     # plt.show()
 
-# test_plot_pipes3([13, 17])
 
 
-# In[ ]:
 
 
 from plane import same_point
@@ -1243,29 +1219,7 @@ def build_linked_g2(node_set, edge_dict, pt_pipe_sets, edge_info_s1, pipe_pt):
 
     return node_set, edge_dict, edge_info_s2
 
-NODE_SET_S2, EDGE_DICT_S2, EDGE_INFO_S2 = build_linked_g2(NODE_SET_S1, EDGE_DICT_S1, PT_PIPE_SETS, EDGE_INFO_S1, PIPE_PT)
-# print(NODE_SET_S2)
-for k, v in EDGE_DICT_S2.items():
-    # print(f"{k}: {v}")
-    assert k in NODE_SET_S2
-    assert all([x in NODE_SET_S2 for x in v])
 
-def test_g2_s2():
-    plt.figure(figsize=(20, 10))
-    plot_matrix(GLOBAL_MAT, title='test')
-    # plot_num(SEG_PTS)
-    # plot all edge in EDGE_DICT_S2
-    
-    for k, v in EDGE_DICT_S2.items():
-        for vv in v:
-            st = NODE_POS_S1[k]
-            ed = NODE_POS_S1[vv]
-            plt.plot([st[1], ed[1]],
-                    [st[0], ed[0]],
-                    color=CMAP[PIPE_COLOR[k[0]]], linewidth=1.1)
-    # plt.show()
-
-# test_g2_s2()
 
 # 去重. 几乎重合的点合并，边关系也合并
 def g2_unique_xy(node_set_s2, edge_dict_s2, node_pos_s2, edge_info_s2, dest_pt):
@@ -1313,35 +1267,13 @@ def g2_unique_xy(node_set_s2, edge_dict_s2, node_pos_s2, edge_info_s2, dest_pt):
 
     return node_set_s3, edge_dict_s3, node_pos_s3, edge_info_s3
 
-G2_NODE_SET_S3, G2_EDGE_DICT_S3, G2_NODE_POS_S3, G2_EDGE_INFO_S3 = g2_unique_xy(NODE_SET_S2, EDGE_DICT_S2, NODE_POS_S1, EDGE_INFO_S2, DESTINATION_PT)
     
-def test_g2_s3():
-    plt.figure(figsize=(20, 10))
-    plot_matrix(GLOBAL_MAT, title='test')
-    # plot_num(SEG_PTS)
-    # plot all edge in EDGE_DICT_S2
-    plot_num(SEG_PTS)
-    
-    for k, v in G2_EDGE_DICT_S3.items():
-        for vv in v:
-            st = G2_NODE_POS_S3[k]
-            ed = G2_NODE_POS_S3[vv]
-            plt.plot([st[1], ed[1]],
-                    [st[0], ed[0]],
-                    color=CMAP[PIPE_COLOR[k[0]]], linewidth=1.1)
-    plt.show()
-
-# test_g2_s3()
-print(len(G2_NODE_SET_S3), len(NODE_SET_S2))
 
 
-# In[ ]:
 
 
-print(PT_PIPE_SETS[1].get_sets_di())
 
 
-# In[ ]:
 
 
 importlib.reload(plane)
@@ -1509,72 +1441,10 @@ def g2_get_start_nodes(g2_node_set, pipe_color, dest_pt):
                 raise ValueError(f'There are more than one start node in the same color {pipe_color[node[0]]}. Note dest_pt must be in a white region.')
     return res
 
-G2_START_NODES = g2_get_start_nodes(G2_NODE_SET_S3, PIPE_COLOR, DESTINATION_PT)
-
-print(f'G2_START_NODES: {G2_START_NODES}')
-
-def test_g3_one_color():
-    s = G2_START_NODES[0]
-    print(s)
-    print(PIPE_COLOR[s[0]])
-    n, e, p, i = g3_tarjan_for_a_color(
-        s,
-        G2_NODE_SET_S3,
-        G2_EDGE_DICT_S3,
-        G2_NODE_POS_S3,
-        G2_EDGE_INFO_S3,
-        G0_PIPE_WIDTH
-    )
-    # [blue]
-    # print(i[(("outer", (14, 5)), ("outer", (14, 6)))])
-    # print(i[(("outer", (10, 12)), ("outer", (10, 29)))])
-    # print(i[(("outer", (9, 16)), ("outer", (9, 21)))])
-
-    # [yellow]
-
-    plt.figure(figsize=(20, 10))
-    plot_matrix(GLOBAL_MAT, title='test')
-    # plot_num(SEG_PTS)
-    def dfs_plot(u):
-        for v in e.get(u, []):
-            plt.plot([p[u][1], p[v][1]], [p[u][0], p[v][0]], color=CMAP[PIPE_COLOR[s[0]]], linewidth=1)
-            dfs_plot(v)
-
-    dfs_plot(("outer", s))
-    # plt.show()
-
-# test_g3_one_color()
 
 
-# In[ ]:
 
 
-def test_g3_all_color():
-    plt.figure(figsize=(20, 10))
-    plot_matrix(GLOBAL_MAT, title='test')
-    for s in G2_START_NODES:
-        n, e, p, i = g3_tarjan_for_a_color(
-            s,
-            G2_NODE_SET_S3,
-            G2_EDGE_DICT_S3,
-            G2_NODE_POS_S3,
-            G2_EDGE_INFO_S3,
-            G0_PIPE_WIDTH
-        )
-
-        # plot_num(SEG_PTS)
-        def dfs_plot(u):
-            for v in e.get(u, []):
-                plt.plot([p[u][1], p[v][1]], [p[u][0], p[v][0]], color=CMAP[PIPE_COLOR[s[0]]], linewidth=1)
-                dfs_plot(v)
-
-        dfs_plot(("outer", s))
-    # plt.show()
-
-# test_g3_all_color()
-
-
-# In[ ]:
 
 
 # [M1]
@@ -1655,39 +1525,39 @@ def gen_one_color_m1(
     return res_ref
 
             
-def test_gen_one_color_m1():
 
-    one_color = 0
-    s = G2_START_NODES[one_color]
-    n, e, p, i = g3_tarjan_for_a_color(
-        s,
-        G2_NODE_SET_S3,
-        G2_EDGE_DICT_S3,
-        G2_NODE_POS_S3,
-        G2_EDGE_INFO_S3,
-        G0_PIPE_WIDTH
-    )
-    
-    res = gen_one_color_m1(
-        ("outer", s),
-        DESTINATION_PT,
-        e,
-        p,
-        i
-    )
+
+
+
+
+def test_gen_all_color_m1(cactus_input: CactusInput):
+    ################################################################################
+    EDGE_PIPES, PT_PIPE_SETS, PIPE_COLOR = dijk2( cactus_input    )
+    cactus_input.update_pipe_xw(EDGE_PIPES)
+    for K, V in EDGE_PIPES.items():
+        print(f"{K}: {V.ccw_pipes}")
+
+    for K, V in cactus_input.PIPE_XW.items():
+        MES = f"pipe {K} has nan member"
+        assert not np.isnan(V.x), MES
+        assert not np.isnan(V.rw), MES
+        assert not np.isnan(V.lw), MES
+
+    PIPE_PT, NODE_SET_S1, EDGE_DICT_S1, NODE_POS_S1, EDGE_INFO_S1 = get_endpoint_for_each_pipe(cactus_input.seg_pts, cactus_input.PT_EDGE_TO, EDGE_PIPES, cactus_input.PIPE_XW)
+    NODE_SET_S2, EDGE_DICT_S2, EDGE_INFO_S2 = build_linked_g2(NODE_SET_S1, EDGE_DICT_S1, PT_PIPE_SETS, EDGE_INFO_S1, PIPE_PT)
+    # print(NODE_SET_S2)
+    for k, v in EDGE_DICT_S2.items():
+        # print(f"{k}: {v}")
+        assert k in NODE_SET_S2
+        assert all([x in NODE_SET_S2 for x in v])
+
+    G2_NODE_SET_S3, G2_EDGE_DICT_S3, G2_NODE_POS_S3, G2_EDGE_INFO_S3 = g2_unique_xy(NODE_SET_S2, EDGE_DICT_S2, NODE_POS_S1, EDGE_INFO_S2, cactus_input.dest_pt)
+    G2_START_NODES = g2_get_start_nodes(G2_NODE_SET_S3, PIPE_COLOR, cactus_input.dest_pt)
+
+    print(f'G2_START_NODES: {G2_START_NODES}')
+    ################################################################################
     plt.figure(figsize=(20, 10))
-    plot_matrix(GLOBAL_MAT, title='test')
-    pts = [x[0] for x in res]
-    # plot them
-    for i in range(len(pts) - 1):
-        plt.plot([pts[i][1], pts[i + 1][1]], [pts[i][0], pts[i + 1][0]], color=CMAP[PIPE_COLOR[s[0]]], linewidth=1)
-    plt.show()
-
-# test_gen_one_color_m1()
-
-def test_gen_all_color_m1():
-    plt.figure(figsize=(20, 10))
-    plot_matrix(GLOBAL_MAT, title='test')
+    plot_matrix(cactus_input.GLOBAL_MAT, title='test')
     for one_color in range(len(G2_START_NODES)):
         s = G2_START_NODES[one_color]
         n, e, p, i = g3_tarjan_for_a_color(
@@ -1696,12 +1566,12 @@ def test_gen_all_color_m1():
             G2_EDGE_DICT_S3,
             G2_NODE_POS_S3,
             G2_EDGE_INFO_S3,
-            G0_PIPE_WIDTH
+            cactus_input.G0_PIPE_WIDTH
         )
         
         res = gen_one_color_m1(
             ("outer", s),
-            DESTINATION_PT,
+            cactus_input.dest_pt,
             e,
             p,
             i
@@ -1712,13 +1582,6 @@ def test_gen_all_color_m1():
             plt.plot([pts[i][1], pts[i + 1][1]], [pts[i][0], pts[i + 1][0]], color=CMAP[PIPE_COLOR[s[0]]], linewidth=1)
     plt.show()
         
-# test_gen_all_color_m1()
 
 
-# In[ ]:
-
-
-"""
-ok
-"""
 

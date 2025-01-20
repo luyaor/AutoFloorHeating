@@ -1,0 +1,3 @@
+SEG_PTS = None
+CAC_REGIONS_FAKE = None
+WALL_PT_PATH = None

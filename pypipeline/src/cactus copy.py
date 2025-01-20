@@ -1722,3 +1722,62 @@ def test_gen_all_color_m1():
 ok
 """
 
+
+def gen_all_color_with_partition(final_polygons, nat_lines, allp, new_region_info):
+    """
+    在分区的基础上生成管道布线
+    
+    Args:
+        final_polygons: 最终的分区多边形列表 (Polygon objects)
+        nat_lines: 自然线列表 (LineString objects)
+        allp: 全局点集
+        new_region_info: 区域信息
+    """
+    plt.figure(figsize=(20, 10))
+    
+    # 1. 绘制分区结果
+    # 画出分区多边形
+    for polygon in final_polygons:
+        # 获取多边形的顶点坐标
+        vertices = list(polygon.exterior.coords)
+        xs = [p[0] for p in vertices]
+        ys = [p[1] for p in vertices]
+        # plt.plot(xs, ys, 'k-', linewidth=1)
+    
+    # 画出自然线
+    for line in nat_lines:
+        # 获取LineString的坐标
+        coords = list(line.coords)
+        xs = [p[0] for p in coords]
+        ys = [p[1] for p in coords]
+        # plt.plot(xs, ys, 'b--', linewidth=1)
+    
+    # 2. 绘制管道 (复用原有逻辑)
+    plot_matrix(GLOBAL_MAT, title='Partition and Pipes')
+    for one_color in range(len(G2_START_NODES)):
+        s = G2_START_NODES[one_color]
+        n, e, p, i = g3_tarjan_for_a_color(
+            s,
+            G2_NODE_SET_S3,
+            G2_EDGE_DICT_S3,
+            G2_NODE_POS_S3,
+            G2_EDGE_INFO_S3,
+            G0_PIPE_WIDTH
+        )
+        
+        res = gen_one_color_m1(
+            ("outer", s),
+            DESTINATION_PT,
+            e,
+            p,
+            i
+        )
+        pts = [x[0] for x in res]
+        # plot them
+        for i in range(len(pts) - 1):
+            plt.plot([pts[i][1], pts[i + 1][1]], 
+                    [pts[i][0], pts[i + 1][0]], 
+                    color=CMAP[PIPE_COLOR[s[0]]], 
+                    linewidth=1)
+    
+    plt.show()
