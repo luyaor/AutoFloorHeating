@@ -2,6 +2,11 @@ from dataclasses import dataclass
 from typing import List, Tuple, Dict
 import json
 import os
+import math
+import matplotlib.pyplot as plt
+import numpy as np
+from shapely.geometry import Polygon, MultiPolygon
+from shapely.ops import unary_union
 
 @dataclass
 class Point:
@@ -95,8 +100,11 @@ def convert_json_line(json_line: dict) -> Line:
     )
 
 def get_points_from_room(room: Room) -> List[Tuple[float, float]]:
-    """Extract points from room boundary"""
-    return [(line.StartPoint.x, line.StartPoint.y) for line in room.Boundary]
+    """Extract points from room boundary maintaining the original order"""
+    points = []
+    for line in room.Boundary:
+        points.append((line.StartPoint.x, line.StartPoint.y))
+    return points
 
 def get_points_from_jcw(jcw: JCW) -> List[Tuple[float, float]]:
     """Extract points from JCW first and second lines"""
@@ -122,27 +130,239 @@ def get_door_points(door: Door) -> Tuple[Tuple[float, float], Tuple[float, float
         )
         return start, end
 
+def get_centroid(points: List[Tuple[float, float]]) -> Tuple[float, float]:
+    """Calculate the centroid of a set of points"""
+    x_coords = [p[0] for p in points]
+    y_coords = [p[1] for p in points]
+    center_x = sum(x_coords) / len(points)
+    center_y = sum(y_coords) / len(points)
+    return (center_x, center_y)
+
+def sort_points_ccw(points: List[Tuple[float, float]]) -> List[Tuple[float, float]]:
+    """Sort points in counter-clockwise order around their centroid"""
+    # Get centroid
+    center = get_centroid(points)
+    
+    # Sort points based on angle from centroid
+    def get_angle(point: Tuple[float, float]) -> float:
+        return math.atan2(point[1] - center[1], point[0] - center[0])
+    
+    return sorted(points, key=get_angle)
+
+def is_clockwise(points: List[Tuple[float, float]]) -> bool:
+    """Check if points are in clockwise order using shoelace formula"""
+    if len(points) < 3:
+        return False
+    
+    area = 0.0
+    for i in range(len(points)):
+        j = (i + 1) % len(points)
+        area += points[i][0] * points[j][1]
+        area -= points[j][0] * points[i][1]
+    return area < 0
+
+def create_polygon_from_points(points: List[Tuple[float, float]]) -> List[Tuple[float, float]]:
+    """Create a polygon from points, ensuring counter-clockwise order"""
+    if not points:
+        return points
+        
+    # Remove duplicate consecutive points
+    unique_points = []
+    for i in range(len(points)):
+        if i == 0 or points[i] != points[i-1]:
+            unique_points.append(points[i])
+    
+    # If first and last points are the same, remove the last one
+    if unique_points and len(unique_points) > 1 and unique_points[0] == unique_points[-1]:
+        unique_points.pop()
+    
+    # Check direction and reverse if clockwise
+    if is_clockwise(unique_points):
+        unique_points.reverse()
+    
+    # Close the polygon by adding the first point at the end
+    if unique_points and unique_points[0] != unique_points[-1]:
+        unique_points.append(unique_points[0])
+    
+    return unique_points
+
+def create_door_rectangle(door: Door) -> List[Tuple[float, float]]:
+    """Create a rectangle for the door based on its location, size and direction"""
+    if door.BaseLine:
+        # Get door direction from baseline
+        dx = door.BaseLine.EndPoint.x - door.BaseLine.StartPoint.x
+        dy = door.BaseLine.EndPoint.y - door.BaseLine.StartPoint.y
+        length = math.sqrt(dx*dx + dy*dy)
+        if length == 0:
+            return []
+        
+        # Normalize direction vector
+        dx, dy = dx/length, dy/length
+        
+        # Get perpendicular vector for door thickness
+        thickness = 500.0  # Increased thickness for better intersection
+        extension = 200.0  # Extension on both sides
+        px, py = -dy, dx  # Perpendicular vector
+        
+        # Calculate four corners of the door rectangle with extension
+        p1 = (door.BaseLine.StartPoint.x - dx * extension - px * thickness/2, 
+              door.BaseLine.StartPoint.y - dy * extension - py * thickness/2)
+        p2 = (door.BaseLine.EndPoint.x + dx * extension - px * thickness/2, 
+              door.BaseLine.EndPoint.y + dy * extension - py * thickness/2)
+        p3 = (door.BaseLine.EndPoint.x + dx * extension + px * thickness/2, 
+              door.BaseLine.EndPoint.y + dy * extension + py * thickness/2)
+        p4 = (door.BaseLine.StartPoint.x - dx * extension + px * thickness/2, 
+              door.BaseLine.StartPoint.y - dy * extension + py * thickness/2)
+        
+        return [p1, p2, p3, p4, p1]  # Return closed polygon
+    return []
+
+def merge_room_with_doors(room_points: List[Tuple[float, float]], 
+                         door_rectangles: List[List[Tuple[float, float]]]) -> List[Tuple[float, float]]:
+    """Merge room polygon with door rectangles to create connections between rooms"""
+    # Convert room points to Shapely polygon
+    room_polygon = Polygon(room_points)
+    
+    # Convert door rectangles to Shapely polygons
+    door_polygons = []
+    for rect in door_rectangles:
+        door_poly = Polygon(rect)
+        # Only consider doors that intersect with the room
+        if room_polygon.intersects(door_poly):
+            # Get the intersection between the room and the door
+            intersection = room_polygon.intersection(door_poly)
+            if not intersection.is_empty:
+                # Create a buffer around the intersection to ensure connection
+                buffered = intersection.buffer(50)
+                door_polygons.append(buffered)
+    
+    if not door_polygons:
+        return room_points
+    
+    # Union all intersecting door areas
+    door_union = unary_union(door_polygons)
+    
+    # Create the final polygon by unioning the room with the door areas
+    merged = unary_union([room_polygon, door_union])
+    
+    # Simplify the resulting polygon to remove small artifacts
+    merged = merged.simplify(1.0)
+    
+    # Convert back to list of points
+    if isinstance(merged, MultiPolygon):
+        # Take the largest polygon if multiple polygons are created
+        largest = max(merged.geoms, key=lambda p: p.area)
+        coords = list(largest.exterior.coords)
+    else:
+        coords = list(merged.exterior.coords)
+    
+    # Convert to list of tuples and ensure it's closed
+    result = [(x, y) for x, y in coords]
+    
+    # Remove duplicate consecutive points
+    unique_points = []
+    for i in range(len(result)):
+        if i == 0 or result[i] != result[i-1]:
+            unique_points.append(result[i])
+    
+    # Ensure counter-clockwise orientation
+    if is_clockwise(unique_points):
+        unique_points.reverse()
+    
+    return unique_points
+
 def process_ar_design(ar_design: ARDesign) -> Dict[str, List[Tuple[float, float]]]:
     """Process AR design data and return points in the format similar to test_data.py"""
     result = {}
+    polygons = {}
+    
+    # First, collect all rooms and doors
+    rooms = []
+    doors = []
     
     for floor in ar_design.Floor:
-        # Process rooms
         for i, room in enumerate(floor.Construction.Room):
             points = get_points_from_room(room)
             result[f"room_{floor.Num}_{i}"] = points
+            rooms.append((f"room_{floor.Num}_{i}", Polygon(points)))
         
-        # Process walls (JCWs)
-        for i, wall in enumerate(floor.Construction.Wall):
-            points = get_points_from_jcw(wall)
-            result[f"wall_{floor.Num}_{i}"] = points
-        
-        # Process doors
-        for i, door in enumerate(floor.Construction.Door):
-            start, end = get_door_points(door)
-            result[f"door_{floor.Num}_{i}"] = [start, end]
+        for door in floor.Construction.Door:
+            if door.BaseLine:
+                rect = create_door_rectangle(door)
+                if rect:
+                    doors.append(Polygon(rect))
     
-    return result
+    # Create a graph of connected rooms
+    from collections import defaultdict
+    connections = defaultdict(set)
+    
+    # Find rooms connected by doors
+    for i, (room1_name, room1_poly) in enumerate(rooms):
+        for j, (room2_name, room2_poly) in enumerate(rooms[i+1:], i+1):
+            # Check if these rooms are connected by any door
+            for door in doors:
+                if (room1_poly.intersects(door) and room2_poly.intersects(door)):
+                    connections[room1_name].add(room2_name)
+                    connections[room2_name].add(room1_name)
+    
+    # Find connected components (groups of connected rooms)
+    def find_connected_component(start, visited):
+        component = set()
+        stack = [start]
+        while stack:
+            node = stack.pop()
+            if node not in visited:
+                visited.add(node)
+                component.add(node)
+                stack.extend(connections[node] - visited)
+        return component
+    
+    visited = set()
+    room_groups = []
+    
+    # Group connected rooms
+    for room_name, _ in rooms:
+        if room_name not in visited:
+            component = find_connected_component(room_name, visited)
+            if component:
+                room_groups.append(component)
+    
+    # Merge rooms in each group
+    for i, group in enumerate(room_groups):
+        # Get polygons for all rooms in the group
+        group_polys = []
+        group_doors = []
+        
+        # Add room polygons
+        for room_name in group:
+            room_poly = next(poly for name, poly in rooms if name == room_name)
+            group_polys.append(room_poly)
+        
+        # Add connecting doors
+        for door in doors:
+            # If door connects to any room in the group
+            if any(room_poly.intersects(door) for room_poly in group_polys):
+                group_doors.append(door)
+        
+        # Merge all polygons
+        merged = unary_union(group_polys + group_doors)
+        
+        # Convert to points
+        if isinstance(merged, MultiPolygon):
+            # Take the largest polygon if multiple polygons are created
+            largest = max(merged.geoms, key=lambda p: p.area)
+            coords = list(largest.exterior.coords)
+        else:
+            coords = list(merged.exterior.coords)
+        
+        points = [(x, y) for x, y in coords]
+        polygons[f"polygon_group_{i}"] = points
+    
+    # Add door rectangles to result (for visualization only)
+    for i, door in enumerate(doors):
+        result[f"door_rect_{i}"] = list(door.exterior.coords)
+    
+    return result, polygons
 
 def get_example_data() -> ARDesign:
     """Load and convert real JSON data to ARDesign"""
@@ -216,32 +436,83 @@ def get_example_data() -> ARDesign:
     
     return ARDesign(Floor=floors)
 
+def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]], 
+                   polygons: Dict[str, List[Tuple[float, float]]], 
+                   doors: List[Tuple[Tuple[float, float], Tuple[float, float]]]):
+    """Plot original points and processed polygons side by side"""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
+    
+    # Plot original points
+    ax1.set_title('Original Points')
+    for key, points in original_data.items():
+        if key.startswith("room"):
+            points_array = np.array(points)
+            ax1.scatter(points_array[:, 0], points_array[:, 1], label=key)
+            for i in range(len(points)):
+                j = (i + 1) % len(points)
+                ax1.plot([points[i][0], points[j][0]], 
+                        [points[i][1], points[j][1]], 
+                        'b-', alpha=0.5)
+        elif key.startswith("door_rect"):
+            points_array = np.array(points)
+            ax1.plot(points_array[:, 0], points_array[:, 1], 
+                    'r-', alpha=0.7, linewidth=2)
+    
+    # Plot processed polygons
+    ax2.set_title('Processed Polygons with Merged Rooms')
+    colors = plt.cm.tab20(np.linspace(0, 1, len(polygons)))
+    for (key, points), color in zip(polygons.items(), colors):
+        if key.startswith("polygon"):
+            points_array = np.array(points)
+            ax2.fill(points_array[:, 0], points_array[:, 1], 
+                    color=color, alpha=0.3, label=key)
+            ax2.plot(points_array[:, 0], points_array[:, 1], 
+                    color=color, linewidth=2)
+    
+    # Set equal aspect ratio and grid for both subplots
+    for ax in [ax1, ax2]:
+        ax.axis('equal')
+        ax.grid(True)
+        ax.set_xlabel('X Coordinate')
+        ax.set_ylabel('Y Coordinate')
+        
+        # Add legend without duplicate labels
+        handles, labels = ax.get_legend_handles_labels()
+        by_label = dict(zip(labels, handles))
+        ax.legend(by_label.values(), by_label.keys())
+    
+    plt.tight_layout()
+    plt.show()
+
 if __name__ == "__main__":
     # Load and process the real data
     ar_design = get_example_data()
-    processed_data = process_ar_design(ar_design)
+    processed_data, polygons = process_ar_design(ar_design)
+    
+    # Collect door data
+    doors = []
+    for key, points in processed_data.items():
+        if key.startswith("door"):
+            if len(points) == 2:  # Make sure we have start and end points
+                doors.append((points[0], points[1]))
     
     # Print the processed data for verification
-    print("Processed AR Design Data:")
+    print("Original Points Data:")
     for key, points in processed_data.items():
-        print(f"\n{key}:")
-        print(f"Points: {points}")
-        
-    # # Print floor information
-    # print("\nFloor Information:")
-    # for floor in ar_design.Floor:
-    #     print(f"\nFloor {floor.Name} (Number: {floor.Num}):")
-    #     print(f"Level Height: {floor.LevelHeight}")
-    #     print(f"Number of Rooms: {len(floor.Construction.Room)}")
-    #     print(f"Number of Walls: {len(floor.Construction.Wall)}")
-    #     print(f"Number of Doors: {len(floor.Construction.Door)}")
-        
-    #     # Print room details
-    #     print("\nRooms:")
-    #     for room in floor.Construction.Room:
-    #         print(f"- {room.Name} (Category: {room.Category}, Area: {room.Area})")
-            
-    #     # Print door details
-    #     print("\nDoors:")
-    #     for door in floor.Construction.Door:
-    #         print(f"- {door.Name} (Type: {door.DoorType})")
+        if key.startswith("room"):  # Only print room data for clarity
+            print(f"\n{key}:")
+            print(f"Points: {points}")
+    
+    print("\nPolygons (Counter-clockwise ordered):")
+    for key, points in polygons.items():
+        if key.startswith("polygon"):  # Only print room polygons for clarity
+            print(f"\n{key}:")
+            print(f"Points: {points}")
+            # Verify if polygon is closed
+            if points and points[0] == points[-1]:
+                print("Polygon is properly closed")
+            else:
+                print("Warning: Polygon is not closed")
+    
+    # Plot the comparison
+    plot_comparison(processed_data, polygons, doors)
