@@ -271,8 +271,66 @@ def merge_room_with_doors(room_points: List[Tuple[float, float]],
     
     return unique_points
 
-def process_ar_design(ar_design: ARDesign) -> Dict[str, List[Tuple[float, float]]]:
-    """Process AR design data and return points in the format similar to test_data.py"""
+def process_ar_design(file_path: str) -> Dict[str, List[Tuple[float, float]]]:
+    """Process AR design data from a file path and return points in the format similar to test_data.py"""
+    # Load and convert JSON data to ARDesign
+    data = load_json_data(file_path)
+    
+    floors = []
+    for floor_data in data["Floor"]:
+        # Convert rooms
+        rooms = []
+        for room_data in floor_data["Construction"]["Room"]:
+            room = Room(
+                Name=room_data["Name"],
+                Boundary=[convert_json_line(line) for line in room_data["Boundary"]],
+                Area=float(room_data["Area"]),
+                Category=room_data["Category"],
+                Position=room_data["Position"]
+            )
+            rooms.append(room)
+        
+        # Convert walls
+        walls = []
+        
+        # Convert doors
+        doors = []
+        door_data_list = floor_data["Construction"].get("DoorAndWindow", [])
+        for door_data in door_data_list:
+            if door_data.get("Type") == "门":  # Only process door type
+                door = Door(
+                    Location=convert_json_point(door_data["Location"]),
+                    Size=Size(
+                        Width=float(door_data["Size"]["Width"]),
+                        Height=float(door_data["Size"]["Height"]),
+                        Thickness=float(door_data.get("Size", {}).get("Thickness", 0.0))
+                    ),
+                    FlipFaceNormal=convert_json_point(door_data["FlipFaceNormal"]),
+                    BaseLine=convert_json_line(door_data["BaseLine"]),
+                    Name=door_data.get("Name", ""),
+                    DoorType=door_data.get("DoorType", "")
+                )
+                doors.append(door)
+        
+        # Create construction
+        construction = Construction(
+            Wall=walls,
+            Room=rooms,
+            Door=doors
+        )
+        
+        # Create floor
+        floor = Floor(
+            Name=floor_data["Name"],
+            Num=floor_data["Num"],
+            LevelHeight=float(floor_data["LevelHeight"]),
+            Construction=construction
+        )
+        floors.append(floor)
+        break
+    
+    ar_design = ARDesign(Floor=floors)
+    
     result = {}
     polygons = {}
     
@@ -362,12 +420,26 @@ def process_ar_design(ar_design: ARDesign) -> Dict[str, List[Tuple[float, float]
     for i, door in enumerate(doors):
         result[f"door_rect_{i}"] = list(door.exterior.coords)
     
-    return result, polygons
+    # Process polygons to ensure counter-clockwise order
+    processed_polygons = {}
+    for key, points in polygons.items():
+        if key.startswith("polygon"):
+            # Ensure points are in counter-clockwise order
+            if is_clockwise(points):
+                points = points[::-1]
+            
+            # Remove the last point if it's the same as the first (closing point)
+            if points and points[0] == points[-1]:
+                points = points[:-1]
+            
+            processed_polygons[key] = points
+    
+    return result, processed_polygons
 
 def get_example_data() -> ARDesign:
     """Load and convert real JSON data to ARDesign"""
     # Load JSON data
-    json_path = os.path.join("example", "ARDesign.json")
+    json_path = os.path.join("data", "ARDesign.json")
     data = load_json_data(json_path)
     
     floors = []
@@ -485,22 +557,14 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
     plt.show()
 
 if __name__ == "__main__":
-    # Load and process the real data
-    ar_design = get_example_data()
-    processed_data, polygons = process_ar_design(ar_design)
+    # Process the real data from file
+    json_path = os.path.join("data", "ARDesign.json")
+    processed_data, polygons = process_ar_design(json_path)
     
-    # Print the merged polygons points in counter-clockwise order
-    print("\nMerged Polygons Points (Counter-clockwise order):")
+    # Print the merged polygons points
+    print("\nMerged Polygons Points:")
     for key, points in polygons.items():
         if key.startswith("polygon"):
-            # Ensure points are in counter-clockwise order
-            if is_clockwise(points):
-                points = points[::-1]
-            
-            # Remove the last point if it's the same as the first (closing point)
-            if points and points[0] == points[-1]:
-                points = points[:-1]
-            
             print(f"\n{key}:")
             print("Points = [")
             for x, y in points:
