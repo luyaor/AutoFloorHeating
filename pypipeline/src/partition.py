@@ -328,7 +328,18 @@ def work(nid, num_x = 1, num_y = 2):
     
     if nid != 5:
         polygon_coords = [(x[0]/100, x[1]/100) for x in polygon_coords]
+    
+    final_polygons, nat_lines, allp, new_region_info, wall_path = partition_work(polygon_coords, num_x=num_x, num_y=num_y)
+    # print("SEG_WALL_PT_NUM=", num_of_nodes)
+    print("SEG_PTS=", allp)
+    print("CAC_REGIONS_FAKE=", new_region_info)
+    print("WALL_PT_PATH=", wall_path)
+    print("")
 
+    plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
+
+
+def partition_work(polygon_coords, num_x = 1, num_y = 2):
     final_polygons, nat_lines, global_points, region_info = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
     
     # print("全局点列表（按索引排列）：")
@@ -372,13 +383,9 @@ def work(nid, num_x = 1, num_y = 2):
         cnt = cnt + 1
         new_region_info.append((r[::-1], cnt % 5))
 
-    print("WALL_PT_PATH=", [i for i in range(num_of_nodes)])
-    # print("SEG_WALL_PT_NUM=", num_of_nodes)
-    print("SEG_PTS=", allp)
-    print("CAC_REGIONS_FAKE=", new_region_info)
-    print("")
 
-    plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
+    wall_path = [i for i in range(num_of_nodes)]
+    return final_polygons, nat_lines, allp, new_region_info, wall_path
     
 
 

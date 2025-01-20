@@ -57,10 +57,10 @@ for i in range(5, 50):
 # CAC_REGIONS_FAKE= [([0, 1, 4, 5, 6], 0), ([1, 2, 3, 4], 1)]
 # from cactus_data.case0 import *
 
-from data.test_data import SEG_PTS, CAC_REGIONS_FAKE, WALL_PT_PATH
+from cactus_data import SEG_PTS, CAC_REGIONS_FAKE, WALL_PT_PATH
 
-# SEG_PTS = [np.array(x) for x in SEG_PTS]
-SEG_PTS = [np.array([x[0]/100, x[1]/100]) for x in SEG_PTS[case_id]]
+SEG_PTS = [np.array(x) for x in SEG_PTS]
+# SEG_PTS = [np.array([x[0]/100, x[1]/100]) for x in SEG_PTS[case_id]]
 
 # print(CAC_REGIONS_FAKE)
 CAC_REGIONS_FAKE = [CacRegion(x[0][::1], x[1]) for x in CAC_REGIONS_FAKE]
