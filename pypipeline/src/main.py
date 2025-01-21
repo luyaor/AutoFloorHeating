@@ -19,7 +19,7 @@ def run_pipeline(case_id: int, num_x: int = 3, num_y: int = 4):
     json_path = os.path.join("data", "ARDesign-min.json")
     processed_data, polygons = visualization_data.process_ar_design(json_path)
     # 绘制原始数据
-    visualization_data.plot_comparison(processed_data, polygons, [])
+    # visualization_data.plot_comparison(processed_data, polygons, [])
     
     for key, points in polygons.items():
         if key.startswith("polygon"):
