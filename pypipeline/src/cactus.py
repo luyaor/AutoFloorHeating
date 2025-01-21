@@ -66,6 +66,20 @@ SEG_PTS = [np.array([x[0]/100, x[1]/100]) for x in SEG_PTS[case_id]]
 CAC_REGIONS_FAKE = [CacRegion(x[0][::1], x[1]) for x in CAC_REGIONS_FAKE]
 
 
+
+SEG_PTS = [np.array(x) for x in SEG_PTS]
+
+
+# 分水器所在区域编号
+case_id = 8
+DESTINATION_PT = 0 
+
+if case_id == 7:
+    DESTINATION_PT = 35
+elif case_id == 8:
+    DESTINATION_PT = 11
+
+
 # 分水器所在区域编号
 DESTINATION_PT = 0
 
