@@ -920,12 +920,33 @@ def edge_is_wall(eid: EdgeId, wall_pt_path):
 
 def get_xw_for_each_pipe(regions, seg_pts, wall_pt_path, edge_pipes, sug_w):
     pipe_xw: Dict[int, PipeOnAxis] = dict()
+    # 记录每个管道出现在哪些边上
+    pipe_edges = {}
     for cac in regions:
         for pti, nxt in zip(cac.ccw_pts_id, cac.ccw_pts_id[1:] + [cac.ccw_pts_id[0]]):
-            for pipe_id in edge_pipes[edge_id((pti, nxt))].ccw_pipes:
-                if pipe_id not in pipe_xw:
-                    pipe_xw[pipe_id] = PipeOnAxis(pipe_id, np.nan, np.nan, np.nan)
-    # fill this
+            eid = edge_id((pti, nxt))
+            for pipe_id in edge_pipes[eid].ccw_pipes:
+                if pipe_id not in pipe_edges:
+                    pipe_edges[pipe_id] = []
+                pipe_edges[pipe_id].append((pti, nxt))
+                
+    # 初始化时打印信息
+    print(f"Pipe 22 appears on edges: {pipe_edges.get(22, [])}")
+
+    # 初始化所有管道
+    for pipe_id, edges in pipe_edges.items():
+        pipe_xw[pipe_id] = PipeOnAxis(pipe_id, np.nan, np.nan, np.nan)
+        # 如果管道只出现在一条边上，直接赋值默认宽度
+        if len(edges) == 1:
+            pti, nxt = edges[0]
+            eid = edge_id((pti, nxt))
+            if edge_is_wall(eid, wall_pt_path):
+                pipe_xw[pipe_id].rw = sug_w
+                pipe_xw[pipe_id].lw = sug_w
+            else:
+                pipe_xw[pipe_id].rw = sug_w / 2.0
+                pipe_xw[pipe_id].lw = sug_w / 2.0
+            pipe_xw[pipe_id].x = 0  # 单边管道放在中间
 
     for cac in regions:
         pts: Polygon = [seg_pts[i] for i in cac.ccw_pts_id]
@@ -993,6 +1014,13 @@ def get_xw_for_each_pipe(regions, seg_pts, wall_pt_path, edge_pipes, sug_w):
                         dir_range2(x, y, int(np.round(mid + dir)), dir), half_w * dir
                     )
 
+    # 处理完后检查未赋值的管道
+    unassigned_pipes = []
+    for pipe_id, info in pipe_xw.items():
+        if np.isnan(info.rw):
+            unassigned_pipes.append(pipe_id)
+    if unassigned_pipes:
+        print(f"Warning: Pipes {unassigned_pipes} were not assigned widths")
     return pipe_xw
 
 
