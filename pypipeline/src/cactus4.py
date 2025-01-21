@@ -69,6 +69,35 @@ SEG_PTS = [np.array(x) for x in SEG_PTS]
 # print(CAC_REGIONS_FAKE)
 CAC_REGIONS_FAKE = [CacRegion(x[0][::1], x[1]) for x in CAC_REGIONS_FAKE]
 
+print("SEG_PTS:", SEG_PTS)
+print("CAC_REGIONS_FAKE:", [(r.ccw_pts_id, r.color) for r in CAC_REGIONS_FAKE])
+used_points = set()
+for r in CAC_REGIONS_FAKE:
+    used_points.update(r.ccw_pts_id)
+    
+unused_points = set(range(len(SEG_PTS))) - used_points
+if unused_points:
+    print(f"Warning: Points {unused_points} are not used in any region")
+
+def clean_unused_points():
+    used_points = set()
+    for r in CAC_REGIONS_FAKE:
+        used_points.update(r.ccw_pts_id)
+    
+    # 只保留被使用的点
+    new_seg_pts = []
+    old_to_new = {}
+    for i, pt in enumerate(SEG_PTS):
+        if i in used_points:
+            old_to_new[i] = len(new_seg_pts)
+            new_seg_pts.append(pt)
+    
+    # 更新区域中的点索引
+    for r in CAC_REGIONS_FAKE:
+        r.ccw_pts_id = [old_to_new[i] for i in r.ccw_pts_id]
+    
+    return new_seg_pts
+SEG_PTS = clean_unused_points()
 
 # 分水器所在区域编号
 DESTINATION_PT = 0
@@ -466,6 +495,7 @@ def get_djk_transfer_for_color(
             else:
                 for i in range(st - 1, ed - 1, -1):
                     ccw_cross_i(i)
+
 
         ls = djk_states[0]
         cnt_state_sets: Dict[Tuple, Set[StateT]] = {key(cnt_di): {ls}}
