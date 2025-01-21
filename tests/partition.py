@@ -386,7 +386,7 @@ def work(nid, num_x = 1, num_y = 2):
 
 
 if __name__ == "__main__":
-    work(6, 5, 5)
+    work(6, 3, 3)
     # for i in [0,1,2,3,5]:
     #     work(i)
 
