@@ -54,8 +54,9 @@ for i in range(7, 50):
 # WALL_PT_PATH= [0, 1, 2, 3, 4, 5, 6]
 # SEG_PTS= [(120.0, 10.0), (120.0, 105.0), (120.0, 200.0), (10.0, 200.0), (10.0, 105.0), (10.0, 100.0), (10.0, 10.0)]
 # CAC_REGIONS_FAKE= [([0, 1, 4, 5, 6], 0), ([1, 2, 3, 4], 1)]
-from cactus_data.case10 import *
 
+from cactus_data.case11 import *
+case_id = 11
 
 
 SEG_PTS = [np.array(x) for x in SEG_PTS]
@@ -65,7 +66,15 @@ CAC_REGIONS_FAKE = [CacRegion(x[0][::1], x[1]) for x in CAC_REGIONS_FAKE]
 
 
 # 分水器所在区域编号
-DESTINATION_PT = 0  # case 8: 26
+DESTINATION_PT = 0 
+
+if case_id == 7:
+    DESTINATION_PT = 35
+elif case_id == 8:
+    DESTINATION_PT = 11
+
+
+
 
 SUGGESTED_M0_PIPE_INTERVAL = 2.5
 
