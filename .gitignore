@@ -770,3 +770,4 @@ build
 
 libdxfrw
 compile_commands.json
+.venv/
