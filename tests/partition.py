@@ -371,7 +371,7 @@ def work(nid, num_x = 1, num_y = 2):
     for r in region_info:
         r = [ind[x] for x in r]
         cnt = cnt + 1
-        new_region_info.append((r[::-1], cnt % 5))
+        new_region_info.append((r[::-1], cnt))
 
 
 
@@ -386,7 +386,7 @@ def work(nid, num_x = 1, num_y = 2):
 
 
 if __name__ == "__main__":
-    work(6, 2, 2)
+    work(6, 5, 5)
     # for i in [0,1,2,3,5]:
     #     work(i)
 
