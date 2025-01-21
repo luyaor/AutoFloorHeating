@@ -46,15 +46,18 @@ GLB_W = 300
 GLOBAL_MAT = np.zeros((GLB_H + 1, GLB_W + 1), dtype=int)
 
 # [数字颜色对应关系]
-CMAP = {-1: "black", 0: "grey", 1: "blue", 2: "yellow", 3: "red", 4: "cyan"}
+CMAP = {-1: "black", 0: "grey", 1: "blue", 2: "yellow", 3: "red", 4: "cyan", 5: "pink", 6: "brown"}
 
-for i in range(5, 50):
-    CMAP[i] = CMAP[i % 5]
+for i in range(7, 50):
+    CMAP[i] = CMAP[i % 6 + 1]
 
 # WALL_PT_PATH= [0, 1, 2, 3, 4, 5, 6]
 # SEG_PTS= [(120.0, 10.0), (120.0, 105.0), (120.0, 200.0), (10.0, 200.0), (10.0, 105.0), (10.0, 100.0), (10.0, 10.0)]
 # CAC_REGIONS_FAKE= [([0, 1, 4, 5, 6], 0), ([1, 2, 3, 4], 1)]
-from cactus_data.case5 import *
+
+from cactus_data.case11 import *
+case_id = 11
+
 
 SEG_PTS = [np.array(x) for x in SEG_PTS]
 
@@ -63,9 +66,48 @@ CAC_REGIONS_FAKE = [CacRegion(x[0][::1], x[1]) for x in CAC_REGIONS_FAKE]
 
 
 # 分水器所在区域编号
-DESTINATION_PT = 0
+DESTINATION_PT = 0 
+
+if case_id == 7:
+    DESTINATION_PT = 35
+elif case_id == 8:
+    DESTINATION_PT = 11
+
+
+
 
 SUGGESTED_M0_PIPE_INTERVAL = 2.5
+
+# #-------------------------------------
+# used_points = set()
+# for r in CAC_REGIONS_FAKE:
+#     used_points.update(r.ccw_pts_id)
+    
+# unused_points = set(range(len(SEG_PTS))) - used_points
+# if unused_points:
+#     print(f"Warning: Points {unused_points} are not used in any region")
+
+# def clean_unused_points():
+#     used_points = set()
+#     for r in CAC_REGIONS_FAKE:
+#         used_points.update(r.ccw_pts_id)
+    
+#     # 只保留被使用的点
+#     new_seg_pts = []
+#     old_to_new = {}
+#     for i, pt in enumerate(SEG_PTS):
+#         if i in used_points:
+#             old_to_new[i] = len(new_seg_pts)
+#             new_seg_pts.append(pt)
+    
+#     # 更新区域中的点索引
+#     for r in CAC_REGIONS_FAKE:
+#         r.ccw_pts_id = [old_to_new[i] for i in r.ccw_pts_id]
+    
+#     return new_seg_pts
+# SEG_PTS = clean_unused_points()
+# #-------------------------------------
+
 
 
 # In[ ]:
@@ -125,7 +167,7 @@ def plot_num(nums):
 plt.figure(figsize=(20, 10))  # 设置图像大小为 12x7
 plot_matrix(GLOBAL_MAT, title='test')
 plot_num(SEG_PTS)
-plt.show()
+# plt.show()
 
 
 # In[ ]:
@@ -801,7 +843,7 @@ def dijk2(seg_pts, pt_to, cac_regions, destination_pt, cac_regions_dis, w_sug):
         plot_matrix(GLOBAL_MAT, title="test")
         plot_num(SEG_PTS)
         plot_transfer(transfer, SEG_PTS)
-        plt.show()
+        # plt.show()
 
     def test_plot_pipes():
         def plot_pipes(edge_pipes, seg_pts, pipe_color, cmap):
@@ -830,7 +872,7 @@ def dijk2(seg_pts, pt_to, cac_regions, destination_pt, cac_regions_dis, w_sug):
         plot_matrix(GLOBAL_MAT, title="test")
         plot_num(SEG_PTS)
         plot_pipes(edge_pipes, SEG_PTS, pipe_color, CMAP)
-        plt.show()
+        # plt.show()
 
     test_plot_pipes()
     return edge_pipes, pt_pipe_sets, pipe_color
@@ -998,7 +1040,7 @@ def test_plot_pipes():
     plot_matrix(GLOBAL_MAT, title="test")
     plot_num(SEG_PTS)
     plot_pipes(EDGE_PIPES, SEG_PTS, PIPE_COLOR, CMAP, PIPE_XW)
-    plt.show()
+    # plt.show()
 
 
 # (21, 22) 为一 eid
@@ -1155,7 +1197,7 @@ def test_plot_pipes2():
     plot_num(SEG_PTS)
     plot_pipes(EDGE_PIPES, SEG_PTS, PIPE_COLOR, CMAP, PIPE_PT, NODE_POS_S1)
     plot_matrix(GLOBAL_MAT, title='test')
-    plt.show()
+    # plt.show()
 
 test_plot_pipes2()
 
@@ -1194,7 +1236,7 @@ def test_plot_pipes3(pipes_to_plot):
     plot_matrix(GLOBAL_MAT, title='test')
     plot_num(SEG_PTS)
     plot_pipes(EDGE_PIPES, SEG_PTS, PIPE_COLOR, CMAP, PIPE_PT, NODE_POS_S1)
-    plt.show()
+    # plt.show()
 
 test_plot_pipes3([13, 17])
 
@@ -1259,7 +1301,7 @@ def test_g2_s2():
             plt.plot([st[1], ed[1]],
                     [st[0], ed[0]],
                     color=CMAP[PIPE_COLOR[k[0]]], linewidth=1.1)
-    plt.show()
+    # plt.show()
 
 # test_g2_s2()
 

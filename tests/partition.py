@@ -229,7 +229,8 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
     index = 0
     for pt in all_points:
         # 四舍五入坐标以处理浮点精度问题
-        rounded_pt = (round(pt[0], 7), round(pt[1], 7))
+        # rounded_pt = (round(pt[0], 7), round(pt[1], 7))
+        rounded_pt = pt
         if rounded_pt not in unique_points:
             unique_points[rounded_pt] = index
             global_points.append(rounded_pt)
@@ -246,7 +247,8 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
         pts = remove_collinear(pts)
         region_idx = []
         for pt in pts:
-            rounded_pt = (round(pt[0], 7), round(pt[1], 7))
+            # rounded_pt = (round(pt[0], 7), round(pt[1], 7))
+            rounded_pt = pt
             idx = unique_points.get(rounded_pt)
             if idx is not None:
                 region_idx.append(idx)
@@ -369,20 +371,22 @@ def work(nid, num_x = 1, num_y = 2):
     for r in region_info:
         r = [ind[x] for x in r]
         cnt = cnt + 1
-        new_region_info.append((r[::-1], cnt % 5))
+        new_region_info.append((r[::-1], cnt))
+
+
 
     print("WALL_PT_PATH=", [i for i in range(num_of_nodes)])
     # print("SEG_WALL_PT_NUM=", num_of_nodes)
     print("SEG_PTS=", allp)
     print("CAC_REGIONS_FAKE=", new_region_info)
     print("")
-
+    
     plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
     
 
 
 if __name__ == "__main__":
-    work(4)
+    work(6, 3, 3)
     # for i in [0,1,2,3,5]:
     #     work(i)
 
