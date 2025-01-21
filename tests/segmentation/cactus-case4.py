@@ -54,7 +54,7 @@ for i in range(5, 50):
 # WALL_PT_PATH= [0, 1, 2, 3, 4, 5, 6]
 # SEG_PTS= [(120.0, 10.0), (120.0, 105.0), (120.0, 200.0), (10.0, 200.0), (10.0, 105.0), (10.0, 100.0), (10.0, 10.0)]
 # CAC_REGIONS_FAKE= [([0, 1, 4, 5, 6], 0), ([1, 2, 3, 4], 1)]
-from cactus_data.case7 import *
+from cactus_data.case8 import *
 
 SEG_PTS = [np.array(x) for x in SEG_PTS]
 
@@ -63,7 +63,7 @@ CAC_REGIONS_FAKE = [CacRegion(x[0][::1], x[1]) for x in CAC_REGIONS_FAKE]
 
 
 # 分水器所在区域编号
-DESTINATION_PT = 0
+DESTINATION_PT = 0  # case 8: 26
 
 SUGGESTED_M0_PIPE_INTERVAL = 2.5
 
@@ -156,7 +156,7 @@ def plot_num(nums):
 plt.figure(figsize=(20, 10))  # 设置图像大小为 12x7
 plot_matrix(GLOBAL_MAT, title='test')
 plot_num(SEG_PTS)
-plt.show()
+# plt.show()
 
 
 # In[ ]:
@@ -832,7 +832,7 @@ def dijk2(seg_pts, pt_to, cac_regions, destination_pt, cac_regions_dis, w_sug):
         plot_matrix(GLOBAL_MAT, title="test")
         plot_num(SEG_PTS)
         plot_transfer(transfer, SEG_PTS)
-        plt.show()
+        # plt.show()
 
     def test_plot_pipes():
         def plot_pipes(edge_pipes, seg_pts, pipe_color, cmap):
@@ -861,7 +861,7 @@ def dijk2(seg_pts, pt_to, cac_regions, destination_pt, cac_regions_dis, w_sug):
         plot_matrix(GLOBAL_MAT, title="test")
         plot_num(SEG_PTS)
         plot_pipes(edge_pipes, SEG_PTS, pipe_color, CMAP)
-        plt.show()
+        # plt.show()
 
     test_plot_pipes()
     return edge_pipes, pt_pipe_sets, pipe_color
@@ -1029,7 +1029,7 @@ def test_plot_pipes():
     plot_matrix(GLOBAL_MAT, title="test")
     plot_num(SEG_PTS)
     plot_pipes(EDGE_PIPES, SEG_PTS, PIPE_COLOR, CMAP, PIPE_XW)
-    plt.show()
+    # plt.show()
 
 
 # (21, 22) 为一 eid
@@ -1186,7 +1186,7 @@ def test_plot_pipes2():
     plot_num(SEG_PTS)
     plot_pipes(EDGE_PIPES, SEG_PTS, PIPE_COLOR, CMAP, PIPE_PT, NODE_POS_S1)
     plot_matrix(GLOBAL_MAT, title='test')
-    plt.show()
+    # plt.show()
 
 test_plot_pipes2()
 
@@ -1225,7 +1225,7 @@ def test_plot_pipes3(pipes_to_plot):
     plot_matrix(GLOBAL_MAT, title='test')
     plot_num(SEG_PTS)
     plot_pipes(EDGE_PIPES, SEG_PTS, PIPE_COLOR, CMAP, PIPE_PT, NODE_POS_S1)
-    plt.show()
+    # plt.show()
 
 test_plot_pipes3([13, 17])
 
@@ -1290,7 +1290,7 @@ def test_g2_s2():
             plt.plot([st[1], ed[1]],
                     [st[0], ed[0]],
                     color=CMAP[PIPE_COLOR[k[0]]], linewidth=1.1)
-    plt.show()
+    # plt.show()
 
 # test_g2_s2()
 
