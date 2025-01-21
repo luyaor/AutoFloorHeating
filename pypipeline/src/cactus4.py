@@ -59,48 +59,25 @@ for i in range(5, 50):
 
 from cactus_data import SEG_PTS, CAC_REGIONS_FAKE, WALL_PT_PATH
 
-print("SEG_PTS=", SEG_PTS)
-print("CAC_REGIONS_FAKE=", CAC_REGIONS_FAKE)
-print("WALL_PT_PATH=", WALL_PT_PATH)
-
 SEG_PTS = [np.array(x) for x in SEG_PTS]
 # SEG_PTS = [np.array([x[0]/100, x[1]/100]) for x in SEG_PTS[case_id]]
 
 # print(CAC_REGIONS_FAKE)
 CAC_REGIONS_FAKE = [CacRegion(x[0][::1], x[1]) for x in CAC_REGIONS_FAKE]
 
-print("SEG_PTS:", SEG_PTS)
-print("CAC_REGIONS_FAKE:", [(r.ccw_pts_id, r.color) for r in CAC_REGIONS_FAKE])
-used_points = set()
-for r in CAC_REGIONS_FAKE:
-    used_points.update(r.ccw_pts_id)
-    
-unused_points = set(range(len(SEG_PTS))) - used_points
-if unused_points:
-    print(f"Warning: Points {unused_points} are not used in any region")
 
-def clean_unused_points():
-    used_points = set()
-    for r in CAC_REGIONS_FAKE:
-        used_points.update(r.ccw_pts_id)
-    
-    # 只保留被使用的点
-    new_seg_pts = []
-    old_to_new = {}
-    for i, pt in enumerate(SEG_PTS):
-        if i in used_points:
-            old_to_new[i] = len(new_seg_pts)
-            new_seg_pts.append(pt)
-    
-    # 更新区域中的点索引
-    for r in CAC_REGIONS_FAKE:
-        r.ccw_pts_id = [old_to_new[i] for i in r.ccw_pts_id]
-    
-    return new_seg_pts
-SEG_PTS = clean_unused_points()
+SEG_PTS = [np.array(x) for x in SEG_PTS]
+
 
 # 分水器所在区域编号
-DESTINATION_PT = 0
+case_id = 8
+DESTINATION_PT = 0 
+
+if case_id == 7:
+    DESTINATION_PT = 35
+elif case_id == 8:
+    DESTINATION_PT = 11
+
 
 SUGGESTED_M0_PIPE_INTERVAL = 2.5
 
@@ -316,7 +293,7 @@ def test_disjoint_set():
     assert(ds.get_sets_di() == {4: [1, 2, 3, 4], 5: [5]})
     print(ds.get_ancestor_di())
         
-test_disjoint_set()
+# test_disjoint_set()
 
 
 # In[ ]:
@@ -383,7 +360,7 @@ def test_get_djk_states_for_color_at_pt():
     # 输出 [(2, 1, 4)]? 表示一个在 2 点上，指向 1 的边上，在 (1, 2) 边的第 4 个管道L位置上
 
 
-test_get_djk_states_for_color_at_pt()
+# test_get_djk_states_for_color_at_pt()
 
 
 def test_get_djk_states_for_color_at_pt2():
@@ -406,7 +383,7 @@ def test_get_djk_states_for_color_at_pt2():
         assert (y, pt, i) in state_set
 
 
-test_get_djk_states_for_color_at_pt2()
+# test_get_djk_states_for_color_at_pt2()
 
 
 def get_djk_transfer_for_color(
@@ -495,7 +472,6 @@ def get_djk_transfer_for_color(
             else:
                 for i in range(st - 1, ed - 1, -1):
                     ccw_cross_i(i)
-
 
         ls = djk_states[0]
         cnt_state_sets: Dict[Tuple, Set[StateT]] = {key(cnt_di): {ls}}
@@ -920,33 +896,12 @@ def edge_is_wall(eid: EdgeId, wall_pt_path):
 
 def get_xw_for_each_pipe(regions, seg_pts, wall_pt_path, edge_pipes, sug_w):
     pipe_xw: Dict[int, PipeOnAxis] = dict()
-    # 记录每个管道出现在哪些边上
-    pipe_edges = {}
     for cac in regions:
         for pti, nxt in zip(cac.ccw_pts_id, cac.ccw_pts_id[1:] + [cac.ccw_pts_id[0]]):
-            eid = edge_id((pti, nxt))
-            for pipe_id in edge_pipes[eid].ccw_pipes:
-                if pipe_id not in pipe_edges:
-                    pipe_edges[pipe_id] = []
-                pipe_edges[pipe_id].append((pti, nxt))
-                
-    # 初始化时打印信息
-    print(f"Pipe 22 appears on edges: {pipe_edges.get(22, [])}")
-
-    # 初始化所有管道
-    for pipe_id, edges in pipe_edges.items():
-        pipe_xw[pipe_id] = PipeOnAxis(pipe_id, np.nan, np.nan, np.nan)
-        # 如果管道只出现在一条边上，直接赋值默认宽度
-        if len(edges) == 1:
-            pti, nxt = edges[0]
-            eid = edge_id((pti, nxt))
-            if edge_is_wall(eid, wall_pt_path):
-                pipe_xw[pipe_id].rw = sug_w
-                pipe_xw[pipe_id].lw = sug_w
-            else:
-                pipe_xw[pipe_id].rw = sug_w / 2.0
-                pipe_xw[pipe_id].lw = sug_w / 2.0
-            pipe_xw[pipe_id].x = 0  # 单边管道放在中间
+            for pipe_id in edge_pipes[edge_id((pti, nxt))].ccw_pipes:
+                if pipe_id not in pipe_xw:
+                    pipe_xw[pipe_id] = PipeOnAxis(pipe_id, np.nan, np.nan, np.nan)
+    # fill this
 
     for cac in regions:
         pts: Polygon = [seg_pts[i] for i in cac.ccw_pts_id]
@@ -1014,13 +969,6 @@ def get_xw_for_each_pipe(regions, seg_pts, wall_pt_path, edge_pipes, sug_w):
                         dir_range2(x, y, int(np.round(mid + dir)), dir), half_w * dir
                     )
 
-    # 处理完后检查未赋值的管道
-    unassigned_pipes = []
-    for pipe_id, info in pipe_xw.items():
-        if np.isnan(info.rw):
-            unassigned_pipes.append(pipe_id)
-    if unassigned_pipes:
-        print(f"Warning: Pipes {unassigned_pipes} were not assigned widths")
     return pipe_xw
 
 
@@ -1605,7 +1553,7 @@ def test_g3_one_color():
     dfs_plot(("outer", s))
     # plt.show()
 
-test_g3_one_color()
+# test_g3_one_color()
 
 
 # In[ ]:
@@ -1631,9 +1579,9 @@ def test_g3_all_color():
                 dfs_plot(v)
 
         dfs_plot(("outer", s))
-    # plt.show()
+    plt.show()
 
-test_g3_all_color()
+# test_g3_all_color()
 
 
 # In[ ]:
@@ -1745,7 +1693,7 @@ def test_gen_one_color_m1():
         plt.plot([pts[i][1], pts[i + 1][1]], [pts[i][0], pts[i + 1][0]], color=CMAP[PIPE_COLOR[s[0]]], linewidth=1)
     plt.show()
 
-test_gen_one_color_m1()
+# test_gen_one_color_m1()
 
 def test_gen_all_color_m1():
     plt.figure(figsize=(20, 10))
