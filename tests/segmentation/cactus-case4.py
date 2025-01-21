@@ -54,7 +54,7 @@ for i in range(5, 50):
 # WALL_PT_PATH= [0, 1, 2, 3, 4, 5, 6]
 # SEG_PTS= [(120.0, 10.0), (120.0, 105.0), (120.0, 200.0), (10.0, 200.0), (10.0, 105.0), (10.0, 100.0), (10.0, 10.0)]
 # CAC_REGIONS_FAKE= [([0, 1, 4, 5, 6], 0), ([1, 2, 3, 4], 1)]
-from cactus_data.case0 import *
+from cactus_data.case5 import *
 
 SEG_PTS = [np.array(x) for x in SEG_PTS]
 
