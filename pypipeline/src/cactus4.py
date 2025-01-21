@@ -59,6 +59,10 @@ for i in range(5, 50):
 
 from cactus_data import SEG_PTS, CAC_REGIONS_FAKE, WALL_PT_PATH
 
+print("SEG_PTS=", SEG_PTS)
+print("CAC_REGIONS_FAKE=", CAC_REGIONS_FAKE)
+print("WALL_PT_PATH=", WALL_PT_PATH)
+
 SEG_PTS = [np.array(x) for x in SEG_PTS]
 # SEG_PTS = [np.array([x[0]/100, x[1]/100]) for x in SEG_PTS[case_id]]
 
@@ -283,7 +287,7 @@ def test_disjoint_set():
     assert(ds.get_sets_di() == {4: [1, 2, 3, 4], 5: [5]})
     print(ds.get_ancestor_di())
         
-# test_disjoint_set()
+test_disjoint_set()
 
 
 # In[ ]:
@@ -350,7 +354,7 @@ def test_get_djk_states_for_color_at_pt():
     # 输出 [(2, 1, 4)]? 表示一个在 2 点上，指向 1 的边上，在 (1, 2) 边的第 4 个管道L位置上
 
 
-# test_get_djk_states_for_color_at_pt()
+test_get_djk_states_for_color_at_pt()
 
 
 def test_get_djk_states_for_color_at_pt2():
@@ -373,7 +377,7 @@ def test_get_djk_states_for_color_at_pt2():
         assert (y, pt, i) in state_set
 
 
-# test_get_djk_states_for_color_at_pt2()
+test_get_djk_states_for_color_at_pt2()
 
 
 def get_djk_transfer_for_color(
@@ -1543,7 +1547,7 @@ def test_g3_one_color():
     dfs_plot(("outer", s))
     # plt.show()
 
-# test_g3_one_color()
+test_g3_one_color()
 
 
 # In[ ]:
@@ -1571,7 +1575,7 @@ def test_g3_all_color():
         dfs_plot(("outer", s))
     # plt.show()
 
-# test_g3_all_color()
+test_g3_all_color()
 
 
 # In[ ]:
@@ -1683,7 +1687,7 @@ def test_gen_one_color_m1():
         plt.plot([pts[i][1], pts[i + 1][1]], [pts[i][0], pts[i + 1][0]], color=CMAP[PIPE_COLOR[s[0]]], linewidth=1)
     plt.show()
 
-# test_gen_one_color_m1()
+test_gen_one_color_m1()
 
 def test_gen_all_color_m1():
     plt.figure(figsize=(20, 10))
