@@ -1545,7 +1545,7 @@ class CactusSolver:
             )
 
         # [m1]
-        seq_pts = []
+        pipe_pt_seq = []
         for s in g2_start_nodes:
             n, e, p, i = CactusSolver.g3_tarjan_for_a_color(
                 s,
@@ -1563,12 +1563,12 @@ class CactusSolver:
                 i,
             )
             pts = [x[0] for x in seq]
-            seq_pts.append(pts)
+            pipe_pt_seq.append(pts)
 
         if debug.m1:
             plt.figure(figsize=(20, 10))
             self.plot_matrix(self.global_mat, title="test")
-            for s, pts in zip(g2_start_nodes, seq_pts):
+            for s, pts in zip(g2_start_nodes, pipe_pt_seq):
                 for i in range(len(pts) - 1):
                     plt.plot(
                         [pts[i][1], pts[i + 1][1]],
@@ -1577,6 +1577,8 @@ class CactusSolver:
                         linewidth=1,
                     )
             plt.show()
+
+        return pipe_pt_seq
 
 
 if __name__ == "__main__":
@@ -1631,4 +1633,5 @@ if __name__ == "__main__":
         suggested_m0_pipe_interval=2.5,
     )
 
-    solver.process(CactusSolverDebug(m1=True))
+    tmp = solver.process(CactusSolverDebug(m1=False))
+    print(tmp)
