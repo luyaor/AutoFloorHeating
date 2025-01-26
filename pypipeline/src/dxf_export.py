@@ -33,6 +33,9 @@ def export_to_dxf(design_file: str, output_file: str = None) -> str:
     doc.layers.new('ROOMS', dxfattribs={'color': 3})  # 绿色
     doc.layers.new('TEXT', dxfattribs={'color': 7})   # 白色
     
+    # 坐标缩放因子
+    scale = 0.001  # 将毫米转换为米
+    
     # 5. 遍历每个楼层
     for floor in data.get('Floor', []):
         if 'Construction' not in floor:
@@ -48,8 +51,8 @@ def export_to_dxf(design_file: str, output_file: str = None) -> str:
                 end = boundary.get('EndPoint', {})
                 if start and end:
                     msp.add_line(
-                        (start['x'], start['y']),
-                        (end['x'], end['y']),
+                        (start['x'] * scale, start['y'] * scale),
+                        (end['x'] * scale, end['y'] * scale),
                         dxfattribs={'layer': 'ROOMS'}
                     )
             
@@ -60,8 +63,8 @@ def export_to_dxf(design_file: str, output_file: str = None) -> str:
                     room.get('Name', ''),
                     dxfattribs={
                         'layer': 'TEXT',
-                        'height': 200,  # 文本高度
-                        'insert': (point['x'], point['y'])  # 直接在创建时设置位置
+                        'height': 0.2,  # 文本高度也需要缩放
+                        'insert': (point['x'] * scale, point['y'] * scale)
                     }
                 )
         
@@ -74,8 +77,8 @@ def export_to_dxf(design_file: str, output_file: str = None) -> str:
                     end = base_line.get('EndPoint', {})
                     if start and end:
                         msp.add_line(
-                            (start['x'], start['y']),
-                            (end['x'], end['y']),
+                            (start['x'] * scale, start['y'] * scale),
+                            (end['x'] * scale, end['y'] * scale),
                             dxfattribs={'layer': 'DOORS'}
                         )
     
