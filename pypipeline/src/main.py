@@ -5,32 +5,47 @@ import visualization_data
 import json
 from pathlib import Path
 import pickle
+import dxf_export  # 新增导入
 
 
-def get_available_json_files():
-    """Get list of available JSON files in the example directory"""
-    example_dir = Path("data")
-    return sorted([f.name for f in example_dir.glob("*.json")])
-
-
-def select_input_file():
-    """
-    Interactive selection of input file
+def get_available_json_files(file_type="design"):
+    """Get list of available JSON files in the example directory
+    
+    Args:
+        file_type: 文件类型，可选值为 "design"（设计文件）或 "input"（输入数据文件）
     Returns:
         Selected file path
     """
-    available_files = get_available_json_files()
+    example_dir = Path("data")
+    if file_type == "design":
+        # AR设计文件
+        return sorted([f.name for f in example_dir.glob("ARDesign*.json")])
+    else:
+        # 输入数据文件
+        return sorted([f.name for f in example_dir.glob("inputData*.json")])
+
+
+def select_input_file(file_type="design"):
+    """
+    Interactive selection of input file
+    
+    Args:
+        file_type: 文件类型，可选值为 "design"（设计文件）或 "input"（输入数据文件）
+    Returns:
+        Selected file path
+    """
+    available_files = get_available_json_files(file_type)
     if not available_files:
-        raise FileNotFoundError("No JSON files found in example directory")
+        raise FileNotFoundError(f"No {file_type} JSON files found in data directory")
         
-    print("\n🔷 可用的输入文件:")
+    print(f"\n🔷 可用的{file_type}文件:")
     for fname in available_files:
         print(f"  @{fname}")
     
-    default_file = "ARDesign02.json"
+    default_file = "ARDesign02.json" if file_type == "design" else "inputData02.json"
     
     while True:
-        choice = input(f"\n🔷 请选择输入文件 [@{default_file}]: ").strip()
+        choice = input(f"\n🔷 请选择{file_type}文件 [@{default_file}]: ").strip()
         if not choice:
             return os.path.join("data", default_file)
             
@@ -52,23 +67,135 @@ def run_pipeline(input_file: str = None, num_x: int = 3, num_y: int = 3):
     """
     # 0. 处理输入数据
     print("🔷 正在处理输入数据...")
-    json_path = select_input_file()
-    print(f"\n✅ 成功读取文件: {json_path}")
     
-    # 加载原始JSON数据显示详细信息
-    with open(json_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+    # 选择设计文件
+    design_json_path = select_input_file("design")
+    print(f"\n✅ 成功读取设计文件: {design_json_path}")
+    
+    # 导出DXF文件
+    print("\n🔷 正在导出DXF文件...")
+    dxf_file = dxf_export.export_to_dxf(design_json_path)
+    print(f"✅ DXF文件已导出至: {dxf_file}")
+    
+    # 选择输入数据文件
+    input_json_path = select_input_file("input")
+    print(f"\n✅ 成功读取输入数据文件: {input_json_path}")
+    
+    # 加载设计JSON数据显示详细信息
+    with open(design_json_path, 'r', encoding='utf-8') as f:
+        design_data = json.load(f)
+    
+    # 加载输入数据JSON
+    with open(input_json_path, 'r', encoding='utf-8') as f:
+        input_data = json.load(f)
     
     print("\n📊 建筑信息:")
-    print(f"  建筑名称: {data.get('WebParam', {}).get('Name', '未知')}")
-    print(f"  建筑地址: {data.get('WebParam', {}).get('Address', '未知')}")
+    print(f"  建筑名称: {design_data.get('WebParam', {}).get('Name', '未知')}")
+    print(f"  建筑地址: {design_data.get('WebParam', {}).get('Address', '未知')}")
     
-    for floor in data.get("Floor", []):
+    # 打印输入数据的基本信息
+    print("\n📊 输入参数信息:")
+    web_data = input_data.get('WebData', {})
+    assist_data = input_data.get('AssistData', {})
+    
+    # 打印集水器信息
+    print("\n🔹 集水器信息:")
+    for floor in assist_data.get('Floor', []):
+        if 'Construction' in floor and floor['Construction']:
+            collectors = floor['Construction'].get('AssistCollector', [])
+            if collectors:
+                print(f"\n  楼层 {floor['Name']} (共{len(collectors)}个集水器):")
+                for idx, collector in enumerate(collectors, 1):
+                    location = collector['Location']
+                    print(f"    {idx}. 位置: ({location['x']:.2f}, {location['y']:.2f}, {location['z']:.2f})")
+                    if 'Borders' in collector:
+                        borders = collector['Borders']
+                        print(f"       边界点数: {len(borders)}个")
+                        # 打印边界框的大小
+                        if borders:
+                            x_coords = []
+                            y_coords = []
+                            for border in borders:
+                                x_coords.extend([border['StartPoint']['x'], border['EndPoint']['x']])
+                                y_coords.extend([border['StartPoint']['y'], border['EndPoint']['y']])
+                            width = max(x_coords) - min(x_coords)
+                            height = max(y_coords) - min(y_coords)
+                            print(f"       边界框大小: {width:.2f}×{height:.2f}mm")
+    
+    # 打印基本参数
+    print("\n🔹 基本参数:")
+    print(f"  不平衡率: {web_data.get('ImbalanceRatio', '未知')}%")
+    print(f"  连接管间距: {web_data.get('JointPipeSpan', '未知')}mm")
+    print(f"  密集区墙距: {web_data.get('DenseAreaWallSpan', '未知')}mm")
+    print(f"  密集区管距: {web_data.get('DenseAreaSpanLess', '未知')}mm")
+    
+    # 打印环路间距设置
+    loop_spans = web_data.get('LoopSpanSet', [])
+    if loop_spans:
+        print("\n🔹 环路间距设置:")
+        for span in loop_spans:
+            print(f"  - {span['TypeName']}:")
+            print(f"    最小间距: {span['MinSpan']}mm")
+            print(f"    最大间距: {span['MaxSpan']}mm")
+            print(f"    曲率: {span['Curvity']}")
+    
+    # 打印障碍物间距设置
+    obs_spans = web_data.get('ObsSpanSet', [])
+    if obs_spans:
+        print("\n🔹 障碍物间距设置:")
+        for span in obs_spans:
+            print(f"  - {span['ObsName']}:")
+            print(f"    最小间距: {span['MinSpan']}mm")
+            print(f"    最大间距: {span['MaxSpan']}mm")
+    
+    # 打印入户管间距设置
+    delivery_spans = web_data.get('DeliverySpanSet', [])
+    if delivery_spans:
+        print("\n🔹 入户管间距设置:")
+        for span in delivery_spans:
+            print(f"  - {span['ObsName']}:")
+            print(f"    最小间距: {span['MinSpan']}mm")
+            print(f"    最大间距: {span['MaxSpan']}mm")
+    
+    # 打印管道间距设置
+    pipe_spans = web_data.get('PipeSpanSet', [])
+    if pipe_spans:
+        print("\n🔹 管道间距设置:")
+        for span in pipe_spans[:3]:  # 只显示前3个示例
+            print(f"  - {span['LevelDesc']}-{span['FuncName']}-{','.join(span['Directions'])}:")
+            print(f"    外墙数: {span['ExterWalls']}")
+            print(f"    管距: {span['PipeSpan']}mm")
+        if len(pipe_spans) > 3:
+            print(f"    ... 等共{len(pipe_spans)}条设置")
+    
+    # 打印弹性间距设置
+    elastic_spans = web_data.get('ElasticSpanSet', [])
+    if elastic_spans:
+        print("\n🔹 弹性间距设置:")
+        for span in elastic_spans:
+            print(f"  - {span['FuncName']}:")
+            print(f"    优先间距: {span['PriorSpan']}mm")
+            print(f"    最小间距: {span['MinSpan']}mm")
+            print(f"    最大间距: {span['MaxSpan']}mm")
+    
+    # 打印功能房间设置
+    func_rooms = web_data.get('FuncRooms', [])
+    if func_rooms:
+        print("\n🔹 功能房间设置:")
+        for room in func_rooms:
+            print(f"  - {room['FuncName']}:")
+            print(f"    包含: {', '.join(room['RoomNames'])}")
+            
+    # 显示楼层信息
+    for floor in design_data.get("Floor", []):
         print(f"\n📊 楼层: {floor['Name']}")
         print(f"  层高: {floor['LevelHeight']}mm")
         
+        if 'Construction' not in floor or not floor['Construction']:
+            continue
+            
         # 打印房间信息
-        rooms = floor["Construction"]["Room"]
+        rooms = floor["Construction"].get("Room", [])
         print(f"\n📊 房间信息 (共{len(rooms)}个):")
         for room in rooms:
             print(f"  - {room['Name']:<10} (面积: {room['Area']}㎡, 类型: {room['NameType']})")
@@ -78,11 +205,19 @@ def run_pipeline(input_file: str = None, num_x: int = 3, num_y: int = 3):
         print(f"\n📊 门的信息 (共{len(doors)}个):")
         for door in doors:
             print(f"  - {door['Name']:<10} (类型: {door.get('DoorType', '普通')}, 尺寸: {door['Size']['Width']}×{door['Size']['Height']}mm)")
+        
+        # 打印集水器信息
+        collectors = floor["Construction"].get("AssistCollector", [])
+        if collectors:
+            print(f"\n📊 集水器信息 (共{len(collectors)}个):")
+            for collector in collectors:
+                location = collector["Location"]
+                print(f"  - 位置: ({location['x']:.2f}, {location['y']:.2f}, {location['z']:.2f})")
     
     print("\n🔷 按任意键继续处理数据...")
     input()
     
-    processed_data, polygons = visualization_data.process_ar_design(json_path)
+    processed_data, polygons = visualization_data.process_ar_design(design_json_path)
     
     print("\n📊 提取的多边形信息:")
     print("\n✅ 原始图像绘制完成，按任意键继续...")
@@ -92,7 +227,7 @@ def run_pipeline(input_file: str = None, num_x: int = 3, num_y: int = 3):
     # visualization_data.plot_comparison(processed_data, polygons, [])
 
     for key, points in polygons.items():
-        print(f"\n📊 当前处理楼层: {data['Floor'][0]['Name']}")
+        print(f"\n📊 当前处理楼层: {design_data['Floor'][0]['Name']}")
         if key.startswith("polygon"):
             points = [(x[0]/100, x[1]/100) for x in points]
             
@@ -118,8 +253,6 @@ def run_pipeline(input_file: str = None, num_x: int = 3, num_y: int = 3):
             
             print("🔷 正在加载布线模型...")
             import cactus
-            # 使用新的管道布局求解器
-            # import cactus_data, case8
             print("🔷 正在准备数据...")
             
             # 准备输入数据
@@ -131,7 +264,7 @@ def run_pipeline(input_file: str = None, num_x: int = 3, num_y: int = 3):
             
             # 保存中间数据
             intermediate_data = {
-                'floor_name': data['Floor'][0]['Name'],
+                'floor_name': design_data['Floor'][0]['Name'],
                 'seg_pts': seg_pts,
                 'regions': regions,  
                 'wall_path': wall_path
