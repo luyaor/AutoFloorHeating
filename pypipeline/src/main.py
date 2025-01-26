@@ -1,5 +1,6 @@
 import partition
 import os
+from cactus import CacRegion, CactusSolverDebug, arr
 import visualization_data
 import json
 from pathlib import Path
@@ -26,7 +27,7 @@ def select_input_file():
     for fname in available_files:
         print(f"  @{fname}")
     
-    default_file = "ARDesign-min.json"
+    default_file = "ARDesign02.json"
     
     while True:
         choice = input(f"\n🔷 请选择输入文件 [@{default_file}]: ").strip()
@@ -131,8 +132,8 @@ def run_pipeline(input_file: str = None, num_x: int = 3, num_y: int = 3):
             # 保存中间数据
             intermediate_data = {
                 'floor_name': data['Floor'][0]['Name'],
-                'segmentation_points': [{'x': x, 'y': y} for x, y in seg_pts],
-                'regions': regions,  # 直接存储原始数据
+                'seg_pts': seg_pts,
+                'regions': regions,  
                 'wall_path': wall_path
             }
             
@@ -144,20 +145,32 @@ def run_pipeline(input_file: str = None, num_x: int = 3, num_y: int = 3):
                 json.dump(intermediate_data, f, indent=2, ensure_ascii=False)
             
             print(f"\n💾 中间数据已保存至: {output_file}")
-            
+
+            loaded_params = load_solver_params(output_file)
+            print(loaded_params)
+            seg_pts = loaded_params['seg_pts']
+            regions = loaded_params['regions']
+            wall_path = loaded_params['wall_path']
             
             print("🔷 开始计算管道布线方案...")
             solver = cactus.CactusSolver(glb_h=1000, 
                                          glb_w=1000, 
                                          cmap={-1: "black",8: "grey",1:"blue",2:"yellow",3:"red",4: "cyan"}, 
-                                         seg_pts=seg_pts, 
+                                         seg_pts=[arr(x[0] / 100 - 130, x[1] / 100) for x in seg_pts], 
                                          wall_pt_path=wall_path, 
-                                         cac_region_fake=regions, 
+                                         cac_region_fake=[CacRegion(x[0][::1], x[1]) for x in regions], 
                                          destination_pt=0, 
                                          suggested_m0_pipe_interval=100)
-            solver.solve()
+            solver.process(CactusSolverDebug(m1=False))
     
     print("\n✅ 管道布线完成!")
+
+
+def load_solver_params(json_file):
+    """从JSON文件加载求解器参数"""
+    with open(json_file, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    return data
 
 
 def main():
