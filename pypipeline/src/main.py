@@ -204,10 +204,11 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
     design_json_path = select_input_file("design")
     print(f"\n✅ 成功读取设计文件: {design_json_path}")
     
-    # 导出DXF文件
-    print("\n🔷 正在导出DXF文件...")
-    dxf_file = dxf_export.export_to_dxf(design_json_path)
-    print(f"✅ DXF文件已导出至: {dxf_file}")
+    if False:
+        # 导出DXF文件
+        print("\n🔷 正在导出DXF文件...")
+        dxf_file = dxf_export.export_to_dxf(design_json_path)
+        print(f"✅ DXF文件已导出至: {dxf_file}")
     
     # 选择输入数据文件
     input_json_path = select_input_file("input")
@@ -230,11 +231,34 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
     # data = visualization_data.load_json_data(design_json_path)
     # 遍历每个楼层, 绘制原始图像, 提取多边形信息, 执行分区, 执行管道布线
     for floor_data in design_data["Floor"]:
+        # 检查当前楼层是否有集水器
+        floor_name = floor_data['Name']
+        has_collector = False
+        collectors = []
+        
+        # 在input_data中查找当前楼层的集水器信息
+        for floor_info in input_data['AssistData']['Floor']:
+            if floor_info['Name'] == floor_name:
+                if ('Construction' in floor_info and 
+                    floor_info['Construction'] and 
+                    'AssistCollector' in floor_info['Construction'] and 
+                    floor_info['Construction']['AssistCollector']):
+                    has_collector = True
+                    collectors = floor_info['Construction']['AssistCollector']
+                break
+        
+        if not has_collector:
+            print(f"\n⚠️ 楼层 {floor_name} 没有集水器，跳过处理...")
+            continue
+            
+        print(f"\n📊 开始处理楼层: {floor_name}")
+        print(f"✅ 检测到 {len(collectors)} 个集水器，继续处理...")
+        
         processed_data, polygons = visualization_data.process_ar_design(floor_data)
         print("\n✅ 原始图像绘制完成，按任意键继续...")
         # 绘制原始数据
-        # input()
-        # visualization_data.plot_comparison(processed_data, polygons, [])
+        input()
+        visualization_data.plot_comparison(processed_data, polygons, [], collectors=collectors)
 
         print("\n📊 提取的多边形信息:")
         for key, points in polygons.items():
