@@ -1,12 +1,9 @@
-import partition
+from core import partition
 import os
-from cactus import CacRegion, CactusSolverDebug, arr
 import visualization_data
 import json
 from pathlib import Path
-import pickle
-import dxf_export  # 新增导入
-import argparse
+import dxf_export
 from pipeline_solver import solve_pipeline
 
 

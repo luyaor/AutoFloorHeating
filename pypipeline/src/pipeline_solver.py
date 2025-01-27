@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
-import cactus
-from cactus import CacRegion, CactusSolverDebug, arr
+from core import cactus
+from core.cactus import CacRegion, CactusSolverDebug, arr
 import os
 import traceback
 

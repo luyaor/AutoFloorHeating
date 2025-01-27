@@ -36,4 +36,4 @@ wheels/
 .DS_Store
 Thumbs.db
 
-data/ARDesign-min.dxf
+data/*.dxf
