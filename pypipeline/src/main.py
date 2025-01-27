@@ -1,10 +1,10 @@
 from core import partition
 import os
-import visualization_data
+from tools import visualization_data
 import json
 from pathlib import Path
-import dxf_export
-from pipeline_solver import solve_pipeline
+from tools import dxf_export
+from cactus_batch_solver import solve_pipeline
 
 
 def get_available_json_files(file_type="design"):
