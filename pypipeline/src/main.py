@@ -56,39 +56,14 @@ def select_input_file(file_type="design"):
         print("❌ 无效的选择，请重试")
 
 
-def run_pipeline(input_file: str = None, num_x: int = 3, num_y: int = 3):
+def display_input_info(design_data, input_data):
     """
-    运行管道布线的完整流程
+    显示输入数据的详细信息
     
     Args:
-        input_file: 输入JSON文件路径
-        num_x: 网格x方向划分数
-        num_y: 网格y方向划分数
+        design_data: 设计数据字典
+        input_data: 输入参数数据字典
     """
-    # 0. 处理输入数据
-    print("🔷 正在处理输入数据...")
-    
-    # 选择设计文件
-    design_json_path = select_input_file("design")
-    print(f"\n✅ 成功读取设计文件: {design_json_path}")
-    
-    # 导出DXF文件
-    print("\n🔷 正在导出DXF文件...")
-    dxf_file = dxf_export.export_to_dxf(design_json_path)
-    print(f"✅ DXF文件已导出至: {dxf_file}")
-    
-    # 选择输入数据文件
-    input_json_path = select_input_file("input")
-    print(f"\n✅ 成功读取输入数据文件: {input_json_path}")
-    
-    # 加载设计JSON数据显示详细信息
-    with open(design_json_path, 'r', encoding='utf-8') as f:
-        design_data = json.load(f)
-    
-    # 加载输入数据JSON
-    with open(input_json_path, 'r', encoding='utf-8') as f:
-        input_data = json.load(f)
-    
     print("\n📊 建筑信息:")
     print(f"  建筑名称: {design_data.get('WebParam', {}).get('Name', '未知')}")
     print(f"  建筑地址: {design_data.get('WebParam', {}).get('Address', '未知')}")
@@ -213,6 +188,43 @@ def run_pipeline(input_file: str = None, num_x: int = 3, num_y: int = 3):
             for collector in collectors:
                 location = collector["Location"]
                 print(f"  - 位置: ({location['x']:.2f}, {location['y']:.2f}, {location['z']:.2f})")
+
+
+def run_pipeline(num_x: int = 3, num_y: int = 3):
+    """
+    运行管道布线的完整流程
+    
+    Args:
+        input_file: 输入JSON文件路径
+        num_x: 网格x方向划分数
+        num_y: 网格y方向划分数
+    """
+    # 0. 处理输入数据
+    print("🔷 正在处理输入数据...")
+    
+    # 选择设计文件
+    design_json_path = select_input_file("design")
+    print(f"\n✅ 成功读取设计文件: {design_json_path}")
+    
+    # 导出DXF文件
+    print("\n🔷 正在导出DXF文件...")
+    dxf_file = dxf_export.export_to_dxf(design_json_path)
+    print(f"✅ DXF文件已导出至: {dxf_file}")
+    
+    # 选择输入数据文件
+    input_json_path = select_input_file("input")
+    print(f"\n✅ 成功读取输入数据文件: {input_json_path}")
+    
+    # 加载设计JSON数据显示详细信息
+    with open(design_json_path, 'r', encoding='utf-8') as f:
+        design_data = json.load(f)
+    
+    # 加载输入数据JSON
+    with open(input_json_path, 'r', encoding='utf-8') as f:
+        input_data = json.load(f)
+        
+    # 显示输入数据信息
+    display_input_info(design_data, input_data)
     
     print("\n🔷 按任意键继续处理数据...")
     input()
@@ -333,7 +345,7 @@ def main():
     print("🔷 管道布线系统")
     print('='*50)
     
-    run_pipeline(None)
+    run_pipeline(num_x=3, num_y=3)
 
 if __name__ == "__main__":
     main() 
