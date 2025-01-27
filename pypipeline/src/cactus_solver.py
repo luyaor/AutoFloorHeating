@@ -37,7 +37,7 @@ def solve_pipeline(intermediate_data_file: str):
         wall_pt_path=wall_path, 
         cac_region_fake=[CacRegion(x[0][::1], x[1]) for x in regions], 
         destination_pt=0, 
-        suggested_m0_pipe_interval=100
+        suggested_m0_pipe_interval=2.5
     )
     
     solver.process(CactusSolverDebug(m1=False))
