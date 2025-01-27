@@ -33,10 +33,12 @@ def solve_pipeline(intermediate_data_file: str):
         glb_h=1000, 
         glb_w=1000, 
         cmap={-1: "black", 8: "grey", 1:"blue", 2:"yellow", 3:"red", 4: "cyan"}, 
-        seg_pts=[arr(x[0] / 100 - 130, x[1] / 100) for x in seg_pts], 
+        # seg_pts=[arr(x[0] / 100 - 130, x[1] / 100) for x in seg_pts], 
+        # seg_pts=seg_pts, 
+        seg_pts=[arr(x[0], x[1]) for x in seg_pts],
         wall_pt_path=wall_path, 
         cac_region_fake=[CacRegion(x[0][::1], x[1]) for x in regions], 
-        destination_pt=0, 
+        destination_pt=11, 
         suggested_m0_pipe_interval=2.5
     )
     
