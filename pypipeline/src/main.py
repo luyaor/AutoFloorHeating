@@ -195,7 +195,6 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
     运行管道布线的完整流程
     
     Args:
-        input_file: 输入JSON文件路径
         num_x: 网格x方向划分数
         num_y: 网格y方向划分数
     """
