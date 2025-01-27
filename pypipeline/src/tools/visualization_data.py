@@ -509,7 +509,8 @@ def get_example_data() -> ARDesign:
 
 def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]], 
                    polygons: Dict[str, List[Tuple[float, float]]], 
-                   doors: List[Tuple[Tuple[float, float], Tuple[float, float]]]):
+                   doors: List[Tuple[Tuple[float, float], Tuple[float, float]]],
+                   collectors: List[dict] = None):
     """Plot original points and processed polygons side by side"""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
     
@@ -529,6 +530,27 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
             ax1.plot(points_array[:, 0], points_array[:, 1], 
                     'r-', alpha=0.7, linewidth=2)
     
+    # Plot collectors if provided
+    if collectors:
+        for idx, collector in enumerate(collectors):
+            if 'Borders' in collector:
+                # 绘制集水器边界
+                borders = collector['Borders']
+                x_coords = []
+                y_coords = []
+                for border in borders:
+                    start = border['StartPoint']
+                    end = border['EndPoint']
+                    x_coords.extend([start['x'], end['x']])
+                    y_coords.extend([start['y'], end['y']])
+                    
+                # 绘制边界线
+                ax1.plot(x_coords + [x_coords[0]], y_coords + [y_coords[0]], 
+                        'r-', linewidth=2, label=f'Collector {idx+1}')
+                # 填充集水器区域
+                ax1.fill(x_coords + [x_coords[0]], y_coords + [y_coords[0]], 
+                        color='red', alpha=0.2)
+    
     # Plot processed polygons
     ax2.set_title('Processed Polygons with Merged Rooms')
     colors = plt.cm.tab20(np.linspace(0, 1, len(polygons)))
@@ -539,6 +561,27 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
                     color=color, alpha=0.3, label=key)
             ax2.plot(points_array[:, 0], points_array[:, 1], 
                     color=color, linewidth=2)
+    
+    # Plot collectors in the second subplot as well
+    if collectors:
+        for idx, collector in enumerate(collectors):
+            if 'Borders' in collector:
+                # 绘制集水器边界
+                borders = collector['Borders']
+                x_coords = []
+                y_coords = []
+                for border in borders:
+                    start = border['StartPoint']
+                    end = border['EndPoint']
+                    x_coords.extend([start['x'], end['x']])
+                    y_coords.extend([start['y'], end['y']])
+                    
+                # 绘制边界线
+                ax2.plot(x_coords + [x_coords[0]], y_coords + [y_coords[0]], 
+                        'r-', linewidth=2, label=f'Collector {idx+1}')
+                # 填充集水器区域
+                ax2.fill(x_coords + [x_coords[0]], y_coords + [y_coords[0]], 
+                        color='red', alpha=0.2)
     
     # Set equal aspect ratio and grid for both subplots
     for ax in [ax1, ax2]:
