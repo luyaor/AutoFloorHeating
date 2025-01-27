@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 import pickle
 import dxf_export  # 新增导入
+import argparse
+from pipeline_solver import solve_pipeline
 
 
 def get_available_json_files(file_type="design"):
@@ -282,17 +284,10 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
 
                 # 2. 执行管道布线
                 print("\n🔷 开始执行管道布线...")
-
-                print("🔷 正在加载布线模型...")
-                import cactus
-                print("🔷 正在准备数据...")
-
+                
                 # 准备输入数据
                 seg_pts = [(x[0]/100, x[1]/100) for x in allp]  # 从原始数据转换并缩放
                 regions = [(r[0], r[1]) for r in new_region_info]  # 从原始数据转换
-
-                # 打印调试信息
-                print("\n🔍 Debug - First region data:", new_region_info[0] if new_region_info else None)
 
                 # 保存中间数据
                 intermediate_data = {
@@ -301,29 +296,14 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                     'regions': regions,  
                     'wall_path': wall_path
                 }
-
+                
                 output_file = output_dir / 'intermediate_data.json'
                 with open(output_file, 'w', encoding='utf-8') as f:
                     json.dump(intermediate_data, f, indent=2, ensure_ascii=False)
 
                 print(f"\n💾 中间数据已保存至: {output_file}")
-
-                loaded_params = load_solver_params(output_file)
-                print(loaded_params)
-                seg_pts = loaded_params['seg_pts']
-                regions = loaded_params['regions']
-                wall_path = loaded_params['wall_path']
-
-                print("🔷 开始计算管道布线方案...")
-                solver = cactus.CactusSolver(glb_h=1000, 
-                                             glb_w=1000, 
-                                             cmap={-1: "black",8: "grey",1:"blue",2:"yellow",3:"red",4: "cyan"}, 
-                                             seg_pts=[arr(x[0] / 100 - 130, x[1] / 100) for x in seg_pts], 
-                                             wall_pt_path=wall_path, 
-                                             cac_region_fake=[CacRegion(x[0][::1], x[1]) for x in regions], 
-                                             destination_pt=0, 
-                                             suggested_m0_pipe_interval=100)
-                solver.process(CactusSolverDebug(m1=False))
+                
+                solver = solve_pipeline(output_file)
     
         print("\n✅ 管道布线完成!")
 
