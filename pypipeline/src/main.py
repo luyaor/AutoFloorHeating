@@ -4,7 +4,7 @@ from tools import visualization_data
 import json
 from pathlib import Path
 from tools import dxf_export
-from cactus_batch_solver import solve_pipeline
+from cactus_solver import solve_pipeline
 
 
 def get_available_json_files(file_type="design"):
