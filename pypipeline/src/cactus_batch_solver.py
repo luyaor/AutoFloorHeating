@@ -46,6 +46,10 @@ def solve_pipeline(intermediate_data_file: str):
     return solver 
 
 if __name__ == "__main__":
+    print("\n🔷 Starting case data conversion...")
+    from tools.case_converter import convert_all_cases
+    convert_all_cases()
+    print("\n✅ All cases converted successfully!") 
     cases_dir = "output/cases"
     results = []
     
