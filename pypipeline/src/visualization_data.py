@@ -271,63 +271,62 @@ def merge_room_with_doors(room_points: List[Tuple[float, float]],
     
     return unique_points
 
-def process_ar_design(file_path: str) -> Dict[str, List[Tuple[float, float]]]:
+def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, float]]]:
     """Process AR design data from a file path and return points in the format similar to test_data.py"""
-    # Load and convert JSON data to ARDesign
-    data = load_json_data(file_path)
+    # # Load and convert JSON data to ARDesign
+    # data = load_json_data(file_path)
     
-    floors = []
-    for floor_data in data["Floor"]:
-        # Convert rooms
-        rooms = []
-        for room_data in floor_data["Construction"]["Room"]:
-            room = Room(
-                Name=room_data["Name"],
-                Boundary=[convert_json_line(line) for line in room_data["Boundary"]],
-                Area=float(room_data["Area"]),
-                Category=room_data["Category"],
-                Position=room_data["Position"]
+    # Convert rooms
+    rooms = []
+    for room_data in design_floor_data["Construction"]["Room"]:
+        room = Room(
+            Name=room_data["Name"],
+            Boundary=[convert_json_line(line) for line in room_data["Boundary"]],
+            Area=float(room_data["Area"]),
+            Category=room_data["Category"],
+            Position=room_data["Position"]
+        )
+        rooms.append(room)
+    
+    # Convert walls
+    walls = []
+    
+    # Convert doors
+    doors = []
+    door_data_list = design_floor_data["Construction"].get("DoorAndWindow", [])
+    for door_data in door_data_list:
+        if door_data.get("Type") == "门":  # Only process door type
+            door = Door(
+                Location=convert_json_point(door_data["Location"]),
+                Size=Size(
+                    Width=float(door_data["Size"]["Width"]),
+                    Height=float(door_data["Size"]["Height"]),
+                    Thickness=float(door_data.get("Size", {}).get("Thickness", 0.0))
+                ),
+                FlipFaceNormal=convert_json_point(door_data["FlipFaceNormal"]),
+                BaseLine=convert_json_line(door_data["BaseLine"]),
+                Name=door_data.get("Name", ""),
+                DoorType=door_data.get("DoorType", "")
             )
-            rooms.append(room)
-        
-        # Convert walls
-        walls = []
-        
-        # Convert doors
-        doors = []
-        door_data_list = floor_data["Construction"].get("DoorAndWindow", [])
-        for door_data in door_data_list:
-            if door_data.get("Type") == "门":  # Only process door type
-                door = Door(
-                    Location=convert_json_point(door_data["Location"]),
-                    Size=Size(
-                        Width=float(door_data["Size"]["Width"]),
-                        Height=float(door_data["Size"]["Height"]),
-                        Thickness=float(door_data.get("Size", {}).get("Thickness", 0.0))
-                    ),
-                    FlipFaceNormal=convert_json_point(door_data["FlipFaceNormal"]),
-                    BaseLine=convert_json_line(door_data["BaseLine"]),
-                    Name=door_data.get("Name", ""),
-                    DoorType=door_data.get("DoorType", "")
-                )
-                doors.append(door)
-        
-        # Create construction
-        construction = Construction(
-            Wall=walls,
-            Room=rooms,
-            Door=doors
-        )
-        
-        # Create floor
-        floor = Floor(
-            Name=floor_data["Name"],
-            Num=floor_data["Num"],
-            LevelHeight=float(floor_data["LevelHeight"]),
-            Construction=construction
-        )
-        floors.append(floor)
-        break
+            doors.append(door)
+    
+    # Create construction
+    construction = Construction(
+        Wall=walls,
+        Room=rooms,
+        Door=doors
+    )
+    
+    # Create floor
+    floor = Floor(
+        Name=design_floor_data["Name"],
+        Num=design_floor_data["Num"],
+        LevelHeight=float(design_floor_data["LevelHeight"]),
+        Construction=construction
+    )
+    floors = []
+    floors.append(floor)
+    # break
     
     ar_design = ARDesign(Floor=floors)
     
