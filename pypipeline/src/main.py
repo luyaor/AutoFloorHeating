@@ -258,7 +258,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
         print("\n✅ 原始图像绘制完成，按任意键继续...")
         # 绘制原始数据
         input()
-        visualization_data.plot_comparison(processed_data, polygons, [], collectors=collectors)
+        visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
 
         print("\n📊 提取的多边形信息:")
         for key, points in polygons.items():
@@ -271,7 +271,30 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                     'points': points,
                     'num_x': num_x,
                     'num_y': num_y,
-                    'floor_name': floor_data['Name']
+                    'floor_name': floor_data['Name'],
+                    'collectors': [
+                        {
+                            'location': {
+                                'x': collector['Location']['x']/100,  # 转换为米
+                                'y': collector['Location']['y']/100,
+                                'z': collector['Location']['z']/100
+                            },
+                            'borders': [
+                                {
+                                    'start': {
+                                        'x': border['StartPoint']['x']/100,
+                                        'y': border['StartPoint']['y']/100
+                                    },
+                                    'end': {
+                                        'x': border['EndPoint']['x']/100,
+                                        'y': border['EndPoint']['y']/100
+                                    }
+                                }
+                                for border in collector.get('Borders', [])
+                            ] if 'Borders' in collector else []
+                        }
+                        for collector in collectors
+                    ]
                 }
 
                 output_dir = Path('output')
