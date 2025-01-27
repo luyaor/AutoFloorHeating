@@ -509,7 +509,6 @@ def get_example_data() -> ARDesign:
 
 def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]], 
                    polygons: Dict[str, List[Tuple[float, float]]], 
-                   doors: List[Tuple[Tuple[float, float], Tuple[float, float]]],
                    collectors: List[dict] = None):
     """Plot original points and processed polygons side by side"""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
