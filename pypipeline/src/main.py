@@ -1,10 +1,11 @@
+from cactus_solver import solve_pipeline
 from core import partition
-import os
-from tools import visualization_data
-import json
 from pathlib import Path
 from tools import dxf_export
-from cactus_solver import solve_pipeline
+from tools import visualization_data
+import convert_to_heating_design
+import json
+import os
 
 
 def get_available_json_files(file_type="design"):
@@ -255,14 +256,14 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
         print(f"✅ 检测到 {len(collectors)} 个集水器，继续处理...")
         
         processed_data, polygons = visualization_data.process_ar_design(floor_data)
-        print("\n✅ 原始图像绘制完成，按任意键继续...")
-        # 绘制原始数据
-        input()
-        visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
+        # print("\n✅ 原始图像绘制完成，按任意键继续...")
+        # # 绘制原始数据
+        # input()
+        # visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
 
         print("\n📊 提取的多边形信息:")
         for key, points in polygons.items():
-            print(f"\n📊 当前处理楼层: {design_data['Floor'][0]['Name']}")
+            print(f"\n📊 当前处理楼层: {floor_data['Name']}")
             if key.startswith("polygon"):
                 points = [(x[0]/100, x[1]/100) for x in points]
 
@@ -347,9 +348,20 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
 
                 print(f"\n💾 中间数据已保存至: {output_file}")
                 
-                solver = solve_pipeline(output_file)
-    
+                output_file = output_dir / 'cases/case8_intermediate.json'
+                pipe_pt_seq = solve_pipeline(output_file)
+                # print(pipe_pt_seq)
+                out_file = output_dir / "HeatingDesign_output.json"
+                design_data = convert_to_heating_design.convert_pipe_pt_seq_to_heating_design(pipe_pt_seq, 
+                                                        level_name=floor_data['Name'],
+                                                        level_no=floor_data['Num'],
+                                                        level_desc=floor_data['Name'],
+                                                        # house_name=floor_data['Construction']['HouseType']['HouseTypeName'],
+                                                        curvity=100)
+                convert_to_heating_design.save_design_to_json(design_data, out_file)
+                print(f"转换后的地暖设计数据已保存到：{out_file}")
         print("\n✅ 管道布线完成!")
+        break
 
 
 def load_solver_params(json_file):
