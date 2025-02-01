@@ -42,10 +42,10 @@ def solve_pipeline(intermediate_data_file: str):
         suggested_m0_pipe_interval=2.5
     )
     
-    solver.process(CactusSolverDebug(m1=False))
+    pipe_pt_seq = solver.process(CactusSolverDebug(m1=False))
     print("✅ 管道布线计算完成!")
     
-    return solver 
+    return pipe_pt_seq
 
 if __name__ == "__main__":
     print("\n🔷 Starting case data conversion...")
