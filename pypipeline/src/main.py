@@ -353,11 +353,12 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                 # print(pipe_pt_seq)
                 out_file = output_dir / "HeatingDesign_output.json"
                 design_data = convert_to_heating_design.convert_pipe_pt_seq_to_heating_design(pipe_pt_seq, 
-                                                        level_name=floor_data['Name'],
-                                                        level_no=floor_data['Num'],
-                                                        level_desc=floor_data['Name'],
-                                                        # house_name=floor_data['Construction']['HouseType']['HouseTypeName'],
-                                                        curvity=100)
+                                                        level_name="1F",
+                                                        level_no=1,
+                                                        level_desc="首层",
+                                                        house_name="c1c37dc1a40f4302b6552a23cd1fd557",
+                                                        curvity=100,
+                                                        input_data=input_data)
                 convert_to_heating_design.save_design_to_json(design_data, out_file)
                 print(f"转换后的地暖设计数据已保存到：{out_file}")
         print("\n✅ 管道布线完成!")

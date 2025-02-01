@@ -58,50 +58,21 @@ def convert_pipe_pt_seq_to_heating_design(pipe_pt_seq,
                                           level_no=1, 
                                           level_desc="首层", 
                                           house_name="house_XYZ", 
-                                          curvity=100):
+                                          curvity=100,
+                                          input_data=None):
     """
-    将 pipe_pt_seq（List[List[np.ndarray]]）转换为符合文档要求的地暖设计输出格式：
+    将 pipe_pt_seq 数据转换为符合输出要求的地暖设计数据。
     
-    输出格式：
-    {
-      "Heating": {
-          "HeatingCoil": [
-              {
-                  "LevelName": <string>,
-                  "LevelNo": <int>,
-                  "LevelDesc": <string>,
-                  "HouseName": <string>,
-                  "Expansions": [List<JLine>],
-                  "CollectorCoils": [
-                      {
-                          "CollectorName": <string>,
-                          "Loops": <int>,
-                          "CoilLoops": [
-                              {
-                                  "Length": <float>,
-                                  "Areas": [List],
-                                  "Path": [List<JLine>],
-                                  "Curvity": <int>
-                              },
-                              ... (每个回路)
-                          ],
-                          "Deliverys": [List<List<JLine>>]
-                      }
-                  ]
-              }
-          ],
-          "Risers": []
-      }
-    }
+    新增 input_data 参数，用于从 input json 数据中提取额外信息，
+    例如伸缩缝（Expansions）或其它参数。
     """
     coil_loops = []
-    # 对于每条路径，计算长度并转换为 Path（JLine 列表）
     for route in pipe_pt_seq:
         loop_length = compute_loop_length(route)
         jline_path = convert_route_to_path(route)
         coil_loop = {
             "Length": loop_length,
-            "Areas": [],       # 如果需要，可以按照其它逻辑计算区域，暂置空列表
+            "Areas": [],       # 可从 input_data 中进一步填充
             "Path": jline_path,
             "Curvity": curvity
         }
@@ -111,15 +82,21 @@ def convert_pipe_pt_seq_to_heating_design(pipe_pt_seq,
         "CollectorName": "Collector_1",
         "Loops": len(pipe_pt_seq),
         "CoilLoops": coil_loops,
-        "Deliverys": []  # 暂置为空列表
+        "Deliverys": []  # 如果 input_data 中有输配管信息，可赋值
     }
+    
+    # 从 input_data 中获取伸缩缝（Expansions）的数据（字段名根据实际情况确定）
+    expansions = []
+    if input_data is not None:
+        # 假设 input_data 中有一个键 "ExpansionsData" 存放伸缩缝信息
+        expansions = input_data.get("ExpansionsData", [])
     
     heating_coil = {
         "LevelName": level_name,
         "LevelNo": level_no,
         "LevelDesc": level_desc,
         "HouseName": house_name,
-        "Expansions": [],  # 如果有伸缩缝数据，可以填入
+        "Expansions": expansions,  # 这里就不再为空列表
         "CollectorCoils": [collector_coil]
     }
     
