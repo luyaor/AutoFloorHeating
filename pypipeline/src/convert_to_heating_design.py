@@ -28,28 +28,39 @@ def create_jline(pt1, pt2, curve_type=0):
 
 def compute_loop_length(route):
     """
-    计算一条路径（回路）的总长度，路径为 numpy 数组列表
+    计算一条路径（回路）的总长度
+    
+    参数:
+        route: 路径点序列，每个点的坐标单位为米
+        
+    返回:
+        float: 路径总长度，单位为米
     """
     length = 0.0
     for i in range(len(route) - 1):
         x1, y1 = route[i]
         x2, y2 = route[i+1]
+        # 计算两点之间的欧几里得距离
         distance = math.hypot(x2 - x1, y2 - y1)
+        # 由于输入坐标已经是米为单位，所以这里不需要额外转换
         length += distance
-    return length
+    return round(length, 2)  # 保留2位小数
 
 def convert_route_to_path(route):
     """
     将一条路径（回路）中的连续点对转换为 JLine 列表
 
     参数:
-        route: List[np.ndarray] 每个 numpy 数组为 (2,)
+        route: List[np.ndarray] 每个点的坐标单位为米
     返回:
-        List[JLine]，每个 JLine 为字典形式
+        List[JLine]，每个 JLine 为字典形式，坐标单位为毫米
     """
     lines = []
     for i in range(len(route) - 1):
-        line = create_jline(route[i], route[i+1], curve_type=0)
+        # 转换为毫米单位，因为输出要求是毫米
+        pt1 = route[i] * 1000  # 米转毫米
+        pt2 = route[i+1] * 1000  # 米转毫米
+        line = create_jline(pt1, pt2, curve_type=0)
         lines.append(line)
     return lines
 
@@ -59,17 +70,22 @@ def convert_pipe_pt_seq_to_heating_design(pipe_pt_seq,
                                           level_desc="首层", 
                                           house_name="house_XYZ", 
                                           curvity=100,
-                                          input_data=None):
+                                          input_data=None,
+                                          input_scale=0.01):  # 新增参数，用于将输入单位转换为米, 默认假设输入单位为厘米
     """
     将 pipe_pt_seq 数据转换为符合输出要求的地暖设计数据。
     
-    新增 input_data 参数，用于从 input json 数据中提取额外信息，
-    例如伸缩缝（Expansions）或其它参数。
+    参数:
+        pipe_pt_seq: 管道点序列，每个点的单位依据 input_scale 转换到米
+        input_scale: 输入数据的缩放比例，将输入坐标转换为米。默认值0.01（即输入单位为厘米）
+        其它参数同前
     """
     coil_loops = []
     for route in pipe_pt_seq:
-        loop_length = compute_loop_length(route)
-        jline_path = convert_route_to_path(route)
+        # 将每个点转换为米
+        route_m = [np.array([pt[0] * input_scale, pt[1] * input_scale]) for pt in route]
+        loop_length = compute_loop_length(route_m)
+        jline_path = convert_route_to_path(route_m)
         coil_loop = {
             "Length": loop_length,
             "Areas": [],       # 可从 input_data 中进一步填充
@@ -100,14 +116,8 @@ def convert_pipe_pt_seq_to_heating_design(pipe_pt_seq,
         "CollectorCoils": [collector_coil]
     }
     
-    design_data = {
-        "Heating": {
-            "HeatingCoil": [heating_coil],
-            "Risers": []
-        }
-    }
-    
-    return design_data
+    # 直接返回 heating_coil 对象，不需要额外的 Heating 包装
+    return heating_coil
 
 def save_design_to_json(design_data, out_file):
     """

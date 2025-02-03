@@ -136,12 +136,12 @@ def display_input_info(design_data, input_data):
     pipe_spans = web_data.get('PipeSpanSet', [])
     if pipe_spans:
         print("\n🔹 管道间距设置:")
-        for span in pipe_spans[:3]:  # 只显示前3个示例
+        for span in pipe_spans:  # 只显示前3个示例
             print(f"  - {span['LevelDesc']}-{span['FuncName']}-{','.join(span['Directions'])}:")
             print(f"    外墙数: {span['ExterWalls']}")
             print(f"    管距: {span['PipeSpan']}mm")
-        if len(pipe_spans) > 3:
-            print(f"    ... 等共{len(pipe_spans)}条设置")
+        # if len(pipe_spans) > 3:
+        #     print(f"    ... 等共{len(pipe_spans)}条设置")
     
     # 打印弹性间距设置
     elastic_spans = web_data.get('ElasticSpanSet', [])
@@ -361,7 +361,48 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                                                         input_data=input_data)
                 convert_to_heating_design.save_design_to_json(design_data, out_file)
                 print(f"转换后的地暖设计数据已保存到：{out_file}")
+                
+                # 打印地暖设计数据详情
+                print("\n📊 地暖设计数据详情 (HeatingCoil):")
+                print(f"  楼层名称(LevelName): {design_data['LevelName']}")
+                print(f"  楼号(LevelNo): {design_data['LevelNo']}")
+                print(f"  楼层描述(LevelDesc): {design_data['LevelDesc']}")
+                print(f"  户型编号(HouseName): {design_data['HouseName']}")
+                
+                # 打印伸缩缝信息
+                expansions = design_data['Expansions']
+                print(f"\n🔹 伸缩缝集合 (Expansions): {len(expansions)}条")
+                
+                # 打印分集水器回路信息
+                collector_coils = design_data['CollectorCoils']
+                print(f"\n🔹 分集水器回路集合 (CollectorCoils): {len(collector_coils)}个")
+                for i, collector in enumerate(collector_coils, 1):
+                    print(f"\n  分集水器 {i}:")
+                    print(f"    - 编号(CollectorName): {collector['CollectorName']}")
+                    print(f"    - 回路数量(Loops): {collector['Loops']}")
+                    
+                    # 打印户型盘管信息
+                    coil_loops = collector['CoilLoops']
+                    print(f"    - 户型盘管(CoilLoops): {len(coil_loops)}条")
+                    for j, loop in enumerate(coil_loops, 1):
+                        print(f"\n      回路 {j}:")
+                        print(f"        - 总长度(Length): {loop['Length']:.2f}m")
+                        print(f"        - 曲率(Curvity): {loop['Curvity']}")
+                        
+                        # 打印回路区域信息
+                        areas = loop['Areas']
+                        print(f"        - 回路区域(Areas): {len(areas)}个")
+                        
+                        # 打印回路路由信息
+                        path = loop['Path']
+                        print(f"        - 路由点数(Path): {len(path)}个")
+                    
+                    # 打印入户管道信息
+                    deliverys = collector['Deliverys']
+                    print(f"    - 入户管道(Deliverys): {len(deliverys)}条")
+                
         print("\n✅ 管道布线完成!")
+
         break
 
 
