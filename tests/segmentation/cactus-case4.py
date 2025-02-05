@@ -46,15 +46,18 @@ GLB_W = 300
 GLOBAL_MAT = np.zeros((GLB_H + 1, GLB_W + 1), dtype=int)
 
 # [数字颜色对应关系]
-CMAP = {-1: "black", 0: "grey", 1: "blue", 2: "yellow", 3: "red", 4: "cyan"}
+CMAP = {-1: "black", 0: "grey", 1: "blue", 2: "yellow", 3: "red", 4: "cyan", 5: "pink", 6: "brown"}
 
-for i in range(5, 50):
-    CMAP[i] = CMAP[i % 5]
+for i in range(7, 50):
+    CMAP[i] = CMAP[i % 6 + 1]
 
 # WALL_PT_PATH= [0, 1, 2, 3, 4, 5, 6]
 # SEG_PTS= [(120.0, 10.0), (120.0, 105.0), (120.0, 200.0), (10.0, 200.0), (10.0, 105.0), (10.0, 100.0), (10.0, 10.0)]
 # CAC_REGIONS_FAKE= [([0, 1, 4, 5, 6], 0), ([1, 2, 3, 4], 1)]
-from cactus_data.case0 import *
+
+from cactus_data.case_p3 import *
+case_id = 'p3'
+
 
 SEG_PTS = [np.array(x) for x in SEG_PTS]
 
@@ -63,9 +66,50 @@ CAC_REGIONS_FAKE = [CacRegion(x[0][::1], x[1]) for x in CAC_REGIONS_FAKE]
 
 
 # 分水器所在区域编号
-DESTINATION_PT = 0
+DESTINATION_PT = 0 
 
-SUGGESTED_M0_PIPE_INTERVAL = 2.5
+
+
+if case_id == 7:
+    DESTINATION_PT = 35
+elif case_id == 8:
+    DESTINATION_PT = 11
+elif case_id == 'p3':
+    DESTINATION_PT = 16
+
+
+SUGGESTED_M0_PIPE_INTERVAL = 1.5
+
+# #-------------------------------------
+# used_points = set()
+# for r in CAC_REGIONS_FAKE:
+#     used_points.update(r.ccw_pts_id)
+    
+# unused_points = set(range(len(SEG_PTS))) - used_points
+# if unused_points:
+#     print(f"Warning: Points {unused_points} are not used in any region")
+
+# def clean_unused_points():
+#     used_points = set()
+#     for r in CAC_REGIONS_FAKE:
+#         used_points.update(r.ccw_pts_id)
+    
+#     # 只保留被使用的点
+#     new_seg_pts = []
+#     old_to_new = {}
+#     for i, pt in enumerate(SEG_PTS):
+#         if i in used_points:
+#             old_to_new[i] = len(new_seg_pts)
+#             new_seg_pts.append(pt)
+    
+#     # 更新区域中的点索引
+#     for r in CAC_REGIONS_FAKE:
+#         r.ccw_pts_id = [old_to_new[i] for i in r.ccw_pts_id]
+    
+#     return new_seg_pts
+# SEG_PTS = clean_unused_points()
+# #-------------------------------------
+
 
 
 # In[ ]:
@@ -1568,7 +1612,6 @@ def test_g3_all_color():
     plt.show()
 
 test_g3_all_color()
-
 
 # In[ ]:
 
