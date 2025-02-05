@@ -84,25 +84,6 @@ def compute_signed_area(points):
         area += (x1 * y2 - x2 * y1)
     return area/2
 
-def remove_collinear(points, tol=1e-7):
-    """
-    去除连续共线的点。points 为顺序排列的不重复点序列。
-    """
-    return points
-    # if len(points) < 3:
-    #     return points[:]
-    # filtered = []
-    # n = len(points)
-    # for i in range(n):
-    #     prev = points[i - 1]
-    #     curr = points[i]
-    #     next = points[(i + 1) % n]
-    #     # 计算三角形面积的两倍（不除以 2），判断是否共线
-    #     area2 = abs((curr[0] - prev[0]) * (next[1] - prev[1]) - (next[0] - prev[0]) * (curr[1] - prev[1]))
-    #     if area2 > tol:
-    #         filtered.append(curr)
-    # return filtered
-
 def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
     # -------------------- Step 1: 网格切分 --------------------
     polygon = Polygon(polygon_coords)
@@ -209,7 +190,6 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
             break
 
     final_polygons = [data['geometry'] for _, data in G.nodes(data=True)]
-    # print("最终分区数：", len(final_polygons))
 
     # -------------------- Step 4: 构造全局点列表和区域信息 --------------------
     # 1. 收集所有多边形的外部边界点，去除重复和共线点
@@ -219,8 +199,7 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
         # 判断顶点顺序，若是逆时针则反转为顺时针
         if compute_signed_area(pts) > 0:
             pts = list(reversed(pts))
-        # 过滤掉共线的冗余点
-        pts = remove_collinear(pts)
+
         all_points.extend(pts)
     
     # 2. 创建一个字典来存储唯一的点，并为每个点分配一个唯一的索引
@@ -243,8 +222,7 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
         # 判断顶点顺序，若是逆时针则反转为顺时针
         if compute_signed_area(pts) > 0:
             pts = list(reversed(pts))
-        # 过滤掉共线的冗余点
-        pts = remove_collinear(pts)
+        
         region_idx = []
         for pt in pts:
             # rounded_pt = (round(pt[0], 7), round(pt[1], 7))
@@ -257,71 +235,7 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
                 print(f"警告：点 {pt} 未在 unique_points 中找到。")
         region_info.append(region_idx)
 
-    def angle_sort_key(pt, centroid):
-        """
-        根据相对于重心的角度进行排序，确保顺时针排列。
-        """
-        x, y = pt
-        cx, cy = centroid
-        return math.atan2(y - cy, x - cx)
-    
-    def ensure_clockwise_order(polygon_points):
-        """
-        确保多边形顶点按顺时针方向排列。
-        如果是逆时针排列，则反转顶点顺序。
-        """
-        # 计算多边形的面积，面积为负则表示逆时针排列
-        polygon = Polygon(polygon_points)
-        if polygon.area < 0:
-            # 逆时针，反转顺序
-            return polygon_points[::-1]
-        return polygon_points
-
-    def update_shared_points(region_info, global_points, final_polygons):
-        """
-        检查共享点并将其添加到相关区域的边界上，按顺时针方向正确插入。
-        """
-        for i, region in enumerate(region_info):
-            for pt_idx in region:
-                pt = global_points[pt_idx]
-                point_geom = Point(pt)  # 使用 Shapely 创建一个点对象
-                
-                for j, other_region in enumerate(region_info):
-                    if i != j:
-                        # 获取另一个区域的边界
-                        other_polygon = final_polygons[j]
-                        if other_polygon.boundary.intersects(point_geom):
-                            if pt_idx not in other_region:
-                                # 确保点按正确位置插入
-                                inserted = False
-                                for k in range(len(other_region)):
-                                    pt1_idx = other_region[k]
-                                    pt2_idx = other_region[(k + 1) % len(other_region)]
-                                    pt1 = global_points[pt1_idx]
-                                    pt2 = global_points[pt2_idx]
-                                    line = LineString([pt1, pt2])
-
-                                    # 如果点在某条边上，则插入到这两个点之间
-                                    if line.intersects(point_geom):
-                                        other_region.insert(k + 1, pt_idx)
-                                        inserted = True
-                                        break
-                                if not inserted:
-                                    # 如果点不在任何边上，直接附加到末尾（作为兜底处理）
-                                    other_region.append(pt_idx)
-                                
-                                # 确保区域最终顺时针排序
-                                region_points = [global_points[idx] for idx in other_region]
-                                region_points = ensure_clockwise_order(region_points)
-                                other_region[:] = [global_points.index(pt) for pt in region_points]
-        return region_info  
-
-    # 更新区域信息后，确保共享的点按顺序添加
-    region_info = update_shared_points(region_info, global_points, final_polygons)
-
     return final_polygons, nat_lines, global_points, region_info
-
-
 
 
 def work(nid, num_x = 1, num_y = 2):
@@ -338,9 +252,6 @@ def work(nid, num_x = 1, num_y = 2):
     # print("\n区域信息（区域边界点索引，均按顺时针排列）：")
     # for i, region in enumerate(region_info):
     #     print(f"Region {i+1}: {region}")
-
-    # print(global_points)
-    # print(region_info)
 
     def dis(x,y):
         return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
@@ -373,8 +284,6 @@ def work(nid, num_x = 1, num_y = 2):
         cnt = cnt + 1
         new_region_info.append((r[::-1], cnt))
 
-
-
     print("WALL_PT_PATH=", [i for i in range(num_of_nodes)])
     # print("SEG_WALL_PT_NUM=", num_of_nodes)
     print("SEG_PTS=", allp)
@@ -389,7 +298,3 @@ if __name__ == "__main__":
     work(6, 2, 3)
     # for i in [0,1,2,3,5]:
     #     work(i)
-
-
-
-
