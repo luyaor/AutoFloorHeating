@@ -2,6 +2,7 @@ import math
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
+from scipy.spatial import ConvexHull
 from shapely.geometry import Polygon, LineString, MultiPoint, Point
 from shapely.ops import split, unary_union
 
@@ -72,9 +73,6 @@ def plot_polygons(polygons, nat_lines=None, title="Polygons", global_points=None
     ax.legend(loc='upper right')
     plt.show()
 
-def points_equal(p1, p2, tol=1e-7):
-    return abs(p1[0]-p2[0]) < tol and abs(p1[1]-p2[1]) < tol
-
 def compute_signed_area(points):
     area = 0
     n = len(points)
@@ -83,6 +81,111 @@ def compute_signed_area(points):
         x2, y2 = points[(i+1)%n]
         area += (x1 * y2 - x2 * y1)
     return area/2
+
+# def largest_inscribed_rect(poly):
+#     minx, miny, maxx, maxy = poly.bounds
+#     best_rect = None
+#     max_area = 0
+
+#     # 按行扫描，分割为小块
+#     for y1 in np.linspace(miny, maxy, num=20):
+#         for y2 in np.linspace(y1, maxy, num=20):
+#             for x1 in np.linspace(minx, maxx, num=20):
+#                 for x2 in np.linspace(x1, maxx, num=20):
+#                     rect = Polygon([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
+#                     # 检查矩形是否完全包含在多边形内
+#                     if poly.contains(rect):
+#                         area = rect.area
+#                         if area > max_area:
+#                             max_area = area
+#                             best_rect = rect
+
+#     return best_rect, max_area
+
+def largest_inscribed_rect(poly):
+    minx, miny, maxx, maxy = poly.bounds
+    best_rect = None
+    max_area = 0
+
+    # 获取多边形的外边界（线段），并按x坐标排序
+    exterior = poly.exterior.coords
+    x_coords = [p[0] for p in exterior]
+    y_coords = [p[1] for p in exterior]
+    
+    # 扫描线法：遍历所有可能的上下边界 y1, y2
+    for y1 in np.unique(y_coords):  # 只遍历多边形的y坐标（减少不必要的搜索）
+        for y2 in np.unique(y_coords):
+            if y1 >= y2:  # 确保 y1 < y2
+                continue
+
+            # 对于每个y值，找到外边界线上所有交点的x坐标
+            valid_xs = []
+            for i in range(len(exterior) - 1):
+                x1, y1_exterior = exterior[i]
+                x2, y2_exterior = exterior[i + 1]
+                
+                # 判断线段是否与当前y1, y2范围相交
+                if (y1_exterior <= y1 <= y2_exterior or y2_exterior <= y1 <= y1_exterior):
+                    if y1_exterior == y2_exterior:  # 水平线段，跳过
+                        continue
+                    # 计算线段与水平线的交点
+                    try:
+                        intersect_x = x1 + (y1 - y1_exterior) * (x2 - x1) / (y2_exterior - y1_exterior)
+                        valid_xs.append(intersect_x)
+                    except ZeroDivisionError:
+                        # 如果出现除零错误，忽略该线段
+                        continue
+
+            valid_xs = sorted(valid_xs)  # 排序x坐标
+
+            if len(valid_xs) < 2:
+                continue  # 如果 x 坐标数量小于 2，跳过
+            
+            # 遍历有效的 x 坐标对，生成矩形并检查其是否在多边形内
+            for i in range(len(valid_xs)):
+                for j in range(i+1, len(valid_xs)):
+                    x1, x2 = valid_xs[i], valid_xs[j]
+                    rect = Polygon([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
+
+                    # 检查矩形是否有效
+                    if not rect.is_valid:
+                        continue  # 跳过无效的矩形
+                    
+                    # 检查矩形是否在多边形内
+                    if poly.contains(rect):
+                        area = rect.area
+                        if area > max_area:
+                            max_area = area
+                            best_rect = rect
+
+    return best_rect, max_area
+
+# 对多边形进行切割，分离出“多余部分”
+def cut_extra_parts(poly):
+    # 获取一个内接的最大内接矩形作为核心区域
+    core, core_area = largest_inscribed_rect(poly)
+    
+    # 如果没有找到合适的矩形或者矩形占比太小，直接返回原始多边形
+    if core_area == 0 or core_area < poly.area * 0.1:  # 设定一个阈值，避免小矩形无效切割
+        return [poly]
+    
+    # 计算差集 poly - core，得到外部区域
+    remainder = poly.difference(core)
+    
+    # 确保切割后的结果不为空
+    if remainder.is_empty:
+        return [core]  # 如果差集为空，返回核心区域
+    
+    # 返回核心区域和多余部分
+    pieces = [core]
+    
+    if remainder.geom_type == 'Polygon':
+        pieces.append(remainder)
+    elif remainder.geom_type == 'MultiPolygon':
+        for p in remainder.geoms:
+            pieces.append(p)
+    
+    return pieces
 
 def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
     # -------------------- Step 1: 网格切分 --------------------
@@ -191,6 +294,15 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
 
     final_polygons = [data['geometry'] for _, data in G.nodes(data=True)]
 
+    # -------------------- 对每个区域进行“内接矩形切割” --------------------
+    refined_polygons = []
+    for poly in final_polygons:
+        # 对每个区域计算最大内接矩形，并将多余部分（核心之外）切割出来
+        pieces = cut_extra_parts(poly)
+        refined_polygons.extend(pieces)
+    final_polygons = refined_polygons
+    # -------------------------------------------------------------------------
+
     # -------------------- Step 4: 构造全局点列表和区域信息 --------------------
     # 1. 收集所有多边形的外部边界点，去除重复和共线点
     all_points = []
@@ -291,10 +403,8 @@ def work(nid, num_x = 1, num_y = 2):
     print("")
     
     plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
-    
-
 
 if __name__ == "__main__":
-    work(6, 2, 3)
+    work(3, 3, 3)
     # for i in [0,1,2,3,5]:
     #     work(i)
