@@ -269,10 +269,14 @@ def process_single_floor(floor_data, input_data, num_x, num_y, output_dir):
             
             # 执行分区
             print("\n🔷 开始执行空间分区...")
+            with open(partition_input_file, 'r', encoding='utf-8') as f:
+                partition_input = json.load(f)
             final_polygons, nat_lines, allp, new_region_info, wall_path = partition.partition_work(
                 partition_input['points'], 
                 num_x=partition_input['num_x'], 
-                num_y=partition_input['num_y']
+                num_y=partition_input['num_y'],
+                floor_name=partition_input['floor_name'],
+                collectors=partition_input['collectors']
             )
             
             # 准备管道布线输入数据
