@@ -1,4 +1,5 @@
 import math
+import random
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -247,9 +248,11 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
     # -------------------- Step 3: 循环合并面积较小的分区 --------------------
     merge_count = 0
     while True:
-        nodes_sorted = sorted(G.nodes, key=lambda n: G.nodes[n]['area'])
+        # nodes_sorted = sorted(G.nodes, key=lambda n: G.nodes[n]['area'])
+        nodes_list = list(G.nodes)
+        random.shuffle(nodes_list)
         merged_flag = False
-        for node_id in nodes_sorted:
+        for node_id in nodes_list:
             if node_id not in G:
                 continue
             area = G.nodes[node_id]['area']
@@ -381,66 +384,69 @@ def work(nid, num_x = 1, num_y = 2):
     # 获取最接近的5个比例
     closest_ratios = get_closest_ratios(target_aspect_ratio, possible_ratios)
 
+    shuffle_times = 3
+
     # 对于每个比例，运行算法
     for num_x, num_y in closest_ratios:
         print(f"Running for {num_x}x{num_y}")
-        final_polygons, nat_lines, global_points, region_info = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
+        for _ in range(shuffle_times):
+            final_polygons, nat_lines, global_points, region_info = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
 
-        def dis(x,y):
-            return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
+            def dis(x,y):
+                return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
 
-        allp = [x for x in polygon_coords]
-        for p in global_points:
-            l = len(allp)
-            for i in range(l):
-                if (dis(allp[i], p) > 1e-9) and (dis(p, allp[(i + 1) % l]) > 1e-9) and \
-                (abs(dis(allp[i], p) + dis(p, allp[(i + 1) % l]) - dis(allp[i], allp[(i + 1) % l])) < 1e-9):
-                    allp = allp[:i + 1] + [p] + allp[i + 1:]
-                    break
-        allp = allp[::-1]
-        num_of_nodes = len(allp)
+            allp = [x for x in polygon_coords]
+            for p in global_points:
+                l = len(allp)
+                for i in range(l):
+                    if (dis(allp[i], p) > 1e-9) and (dis(p, allp[(i + 1) % l]) > 1e-9) and \
+                    (abs(dis(allp[i], p) + dis(p, allp[(i + 1) % l]) - dis(allp[i], allp[(i + 1) % l])) < 1e-9):
+                        allp = allp[:i + 1] + [p] + allp[i + 1:]
+                        break
+            allp = allp[::-1]
+            num_of_nodes = len(allp)
 
-        ind = []
-        for p in global_points:
-            if p not in allp:
-                allp.append(p)
-            ind.append(allp.index(p))
+            ind = []
+            for p in global_points:
+                if p not in allp:
+                    allp.append(p)
+                ind.append(allp.index(p))
 
-        # for x in polygon_coords:
-        #     if x not in global_points:
-        #         print("error=", x)
+            # for x in polygon_coords:
+            #     if x not in global_points:
+            #         print("error=", x)
 
-        # new_region_info = []
-        # cnt = -1
-        # for r in region_info:
-        #     r = [ind[x] for x in r]
-        #     cnt = cnt + 1
-        #     new_region_info.append((r[::-1], cnt))
+            # new_region_info = []
+            # cnt = -1
+            # for r in region_info:
+            #     r = [ind[x] for x in r]
+            #     cnt = cnt + 1
+            #     new_region_info.append((r[::-1], cnt))
 
-        new_region_info = []
-        cnt = -1
-        threshold_area = 200
-        for r in region_info:
-            r = [ind[x] for x in r]
-            cnt = cnt + 1
+            new_region_info = []
+            cnt = -1
+            threshold_area = 200
+            for r in region_info:
+                r = [ind[x] for x in r]
+                cnt = cnt + 1
+                
+                # 获取区域的面积
+                poly = final_polygons[cnt]  # 根据cnt索引找到对应的区域
+                area = poly.area
+                
+                # 如果区域面积小于阈值，将颜色值设为-1，否则使用cnt
+                color_value = -1 if area < threshold_area else cnt
+                
+                new_region_info.append((r[::-1], color_value))  # 用color_value代替cnt
+
+
+            print("WALL_PT_PATH=", [i for i in range(num_of_nodes)])
+            # print("SEG_WALL_PT_NUM=", num_of_nodes)
+            print("SEG_PTS=", allp)
+            print("CAC_REGIONS_FAKE=", new_region_info)
+            print("")
             
-            # 获取区域的面积
-            poly = final_polygons[cnt]  # 根据cnt索引找到对应的区域
-            area = poly.area
-            
-            # 如果区域面积小于阈值，将颜色值设为-1，否则使用cnt
-            color_value = -1 if area < threshold_area else cnt
-            
-            new_region_info.append((r[::-1], color_value))  # 用color_value代替cnt
-
-
-        print("WALL_PT_PATH=", [i for i in range(num_of_nodes)])
-        # print("SEG_WALL_PT_NUM=", num_of_nodes)
-        print("SEG_PTS=", allp)
-        print("CAC_REGIONS_FAKE=", new_region_info)
-        print("")
-        
-        plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
+            plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
 
 if __name__ == "__main__":
     work(2)
