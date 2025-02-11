@@ -273,9 +273,9 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
                         best_merged_poly = merged_poly
                 if best_neighbor_id is not None and best_merged_poly is not None:
                     new_node_id = max(G.nodes) + 1
-                    G.add_node(new_node_id, geometry=best_merged_poly,
-                               area=best_merged_poly.area,
-                               bounds=best_merged_poly.bounds)
+                    G.add_node( new_node_id, geometry=best_merged_poly,
+                                area=best_merged_poly.area,
+                                bounds=best_merged_poly.bounds)
                     all_adj = set(G.neighbors(node_id)) | set(G.neighbors(best_neighbor_id))
                     all_adj.discard(node_id)
                     all_adj.discard(best_neighbor_id)
@@ -357,13 +357,6 @@ def work(nid, num_x = 1, num_y = 2):
         polygon_coords = [(x[0]/100, x[1]/100) for x in polygon_coords]
 
     final_polygons, nat_lines, global_points, region_info = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
-    
-    # print("全局点列表（按索引排列）：")
-    # for i, pt in enumerate(global_points):
-    #     print(f"{i}: {pt}")
-    # print("\n区域信息（区域边界点索引，均按顺时针排列）：")
-    # for i, region in enumerate(region_info):
-    #     print(f"Region {i+1}: {region}")
 
     def dis(x,y):
         return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
@@ -389,12 +382,29 @@ def work(nid, num_x = 1, num_y = 2):
     #     if x not in global_points:
     #         print("error=", x)
 
+    # new_region_info = []
+    # cnt = -1
+    # for r in region_info:
+    #     r = [ind[x] for x in r]
+    #     cnt = cnt + 1
+    #     new_region_info.append((r[::-1], cnt))
+
     new_region_info = []
     cnt = -1
+    threshold_area = 200
     for r in region_info:
         r = [ind[x] for x in r]
         cnt = cnt + 1
-        new_region_info.append((r[::-1], cnt))
+        
+        # 获取区域的面积
+        poly = final_polygons[cnt]  # 根据cnt索引找到对应的区域
+        area = poly.area
+        
+        # 如果区域面积小于阈值，将颜色值设为-1，否则使用cnt
+        color_value = -1 if area < threshold_area else cnt
+        
+        new_region_info.append((r[::-1], color_value))  # 用color_value代替cnt
+
 
     print("WALL_PT_PATH=", [i for i in range(num_of_nodes)])
     # print("SEG_WALL_PT_NUM=", num_of_nodes)
