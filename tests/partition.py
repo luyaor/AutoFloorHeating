@@ -9,6 +9,8 @@ from shapely.ops import split, unary_union
 
 from partition_data import *
 
+random.seed(1234)
+
 def get_natural_segmentation_lines(polygon):
     nat_lines = []
     coords = list(polygon.exterior.coords)
@@ -243,7 +245,14 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
         area_ratio = area / bound_area * 10
         ar = aspect_ratio(poly)
         penalty = (ar - 3) * 5 if ar > 3 else 0
-        return area_ratio - penalty
+
+        edge_num = len(poly.exterior.coords)
+
+        score = area_ratio - penalty
+        score = score - edge_num / 3
+
+        return score
+
 
     # -------------------- Step 3: 循环合并面积较小的分区 --------------------
     merge_count = 0
@@ -369,7 +378,7 @@ def get_closest_ratios(target_aspect_ratio, possible_ratios):
     distances.sort()
     return [(num_x, num_y) for _, num_x, num_y in distances[:5]]
 
-def work(nid, num_x = 1, num_y = 2):
+def work(nid):
     polygon_coords = SEG_PTS[nid]
     
     if nid != 5:
