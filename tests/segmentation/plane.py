@@ -376,10 +376,10 @@ def inner_recursive_v2(
         logger.info("Can't satisfy start_must_be_convex")
         return None
 
-    debug = 240
-    while len(outer) >= 3 and debug > 0:
+    debug_cnt = 240
+    while len(outer) >= 3 and debug_cnt > 0:
         # print("------")
-        debug -= 1
+        debug_cnt -= 1
         # if len(res) >= 18:
         # print("ok")
 
@@ -471,7 +471,7 @@ def inner_recursive_v2(
         indices.append(idx_new)
         res.append((pt_new, dir_new))
         # logger.info(f"normal case {idx_new}")
-    if debug == 0:
+    if debug_cnt == 0:
         logger.error("Inner debug limit reached, YOU MUST CHECK HERE!")
     logger.warning(f"len(res) = {len(res)}")
 
@@ -498,7 +498,7 @@ def is_counter_clockwise(points: List[Point]) -> bool:
 
 
 def poly_edge_pipe_width_v1(
-    poly: Polygon, edge_pipe_num: List[float], sug_w: float, verbose=False
+    poly: Polygon, edge_pipe_num: List[float], sug_w: float, debug=False
 ) -> List[float]:
     """
     返回输入顺序第 i 条边上所有管道的宽度
@@ -519,17 +519,17 @@ def poly_edge_pipe_width_v1(
     def seg_dir(seg: Seg):
         return normalized(seg[1] - seg[0])
 
-    print("------") if verbose else None
+    print("------") if debug else None
     for i in range(n):
         # edge i, poly[i] -> poly[i + 1]
-        print(poly[i], poly[(i + 1) % n]) if verbose else None
+        print(poly[i], poly[(i + 1) % n]) if debug else None
         if edge_pipe_num[i] == 0:
             ans[i] = 0
             continue
         # i 为凸点
         # 临时方案配合 fallback. 见 [pin] 241227.1.
-        print("---") if verbose else None
-        print(ans[i]) if verbose else None
+        print("---") if debug else None
+        print(ans[i]) if debug else None
         if pt0_convex(poly[(i - 1 + n) % n], poly[i], poly[(i + 1) % n], ccw=True):
             ans[i] = min(
                 ans[i],
@@ -537,7 +537,7 @@ def poly_edge_pipe_width_v1(
                 / (edge_pipe_num[i] + edge_pipe_num[(i - 1 + n) % n]),
             )
 
-        print(ans[i]) if verbose else None
+        print(ans[i]) if debug else None
         # i + 1 为凸点
         if pt0_convex(poly[i], poly[(i + 1) % n], poly[(i + 2) % n], ccw=True):
             ans[i] = min(
@@ -546,11 +546,11 @@ def poly_edge_pipe_width_v1(
                 / (edge_pipe_num[i] + edge_pipe_num[(i + 1) % n]),
             )
 
-        print(ans[i]) if verbose else None
+        print(ans[i]) if debug else None
         # expand 后退需求
         ans[i] = min(ans[i], seg_norm(ith_edge(i)) / edge_pipe_num[i])
 
-        print(ans[i]) if verbose else None
+        print(ans[i]) if debug else None
 
         for j in range(n):
 
@@ -567,7 +567,7 @@ def poly_edge_pipe_width_v1(
                     / (edge_pipe_num[i] + edge_pipe_num[j]),
                 )
 
-        print(ans[i]) if verbose else None
+        print(ans[i]) if debug else None
     return ans
 
 
