@@ -1,0 +1,3607 @@
+{
+    "Floor": [
+        {
+            "Name": "-1",
+            "Num": "-1",
+            "AllFloor": "-1",
+            "LevelHeight": 3750.0,
+            "LevelElevation": -3750.0,
+            "Construction": {
+                "Grid": [
+                    {
+                        "GridTextNote": "A",
+                        "StartPoint": {
+                            "x": -6099.9999992982484,
+                            "y": 0.0,
+                            "z": 0.0
+                        },
+                        "EndPoint": {
+                            "x": 35122.075449345633,
+                            "y": 0.0,
+                            "z": 0.0
+                        },
+                        "EP1Visible": 1,
+                        "EP2Visible": 1,
+                        "IsSub": 0
+                    }
+                ],
+                "Elevation": [
+                    {
+                        "DimentionText": "h-1.650",
+                        "DimentionLine": {
+                            "StartPoint": {
+                                "x": 15125.950163846894,
+                                "y": 11534.69526257534,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 17025.950163846894,
+                                "y": 11534.69526257534,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        "TriangleLines": [
+                            {
+                                "StartPoint": {
+                                    "x": 15425.950163846894,
+                                    "y": 11234.69526257534,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 15125.950163846894,
+                                    "y": 11534.69526257534,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 15425.950163846894,
+                                    "y": 11234.69526257534,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 15725.950163846894,
+                                    "y": 11534.69526257534,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            }
+                        ],
+                        "TrianglePt": {
+                            "x": 15425.950163846894,
+                            "y": 11234.69526257534,
+                            "z": 0.0
+                        },
+                        "TextLocation": {
+                            "x": 15745.950163846894,
+                            "y": 11639.69526257534,
+                            "z": 0.0
+                        },
+                        "DimDirection": {
+                            "x": 1.0,
+                            "y": 0.0,
+                            "z": 0.0
+                        },
+                        "ElementId": 0,
+                        "TextType": "房间标高",
+                        "Id": "2c2fadde01de41c890927ac1379bf278",
+                        "DescribeText": "",
+                        "IsUnknownElevation": false
+                    }
+                ],
+                "Wall": [
+                    {
+                        "WallName": "27eb5013ad7144159d71b34a7c152db5",
+                        "Category": "普通墙",
+                        "Type": "外墙",
+                        "MaterialType": "默认",
+                        "HasUpWall": true,
+                        "IsParapetWall": false,
+                        "IsEdgeGutterWall": false,
+                        "Normal": {
+                            "x": 1.2805685433574344E-10,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "Curve": {
+                            "StartPoint": {
+                                "x": 25850.0,
+                                "y": 9475.0,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 17650.0,
+                                "y": 9475.0,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        "SeparationJCurve": null,
+                        "SeparationThickness": 0.0,
+                        "FirstLine": {
+                            "StartPoint": {
+                                "x": 25850.003284010396,
+                                "y": 9349.9771051774733,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 17650.003284207662,
+                                "y": 9349.977106226841,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        "SecondLine": {
+                            "StartPoint": {
+                                "x": 25850.00328404241,
+                                "y": 9599.9771051774733,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 17650.003284239676,
+                                "y": 9599.977106226841,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        "Height": 3890.0,
+                        "Thickness": 250.0,
+                        "RoomBoundary": 0,
+                        "BottomHeight": -190.0,
+                        "ElevationType": 0,
+                        "Material": null,
+                        "ElementId": -1,
+                        "IsHafFloor": false,
+                        "JKType": "0",
+                        "FloorNum": "",
+                        "FloorName": ""
+                    }
+                ],
+                "DoorAndWindow": [
+                    {
+                        "Guid": "05edab8750314eeabb3ca891a4a17173",
+                        "FamilyName": "",
+                        "Name": "m000",
+                        "Type": "门",
+                        "DoorType": 7,
+                        "HostWall": "d5a7d0898e21430884c2a4ade573e744",
+                        "Location": {
+                            "x": 16150.005498734827,
+                            "y": 10249.977106092556,
+                            "z": 0.0
+                        },
+                        "BottomHeight": 0.0,
+                        "TopHeight": 0.0,
+                        "Size": {
+                            "Height": 2100.0,
+                            "Width": 1100.0,
+                            "Thickness": 0.0
+                        },
+                        "FlipFaceNormal": {
+                            "x": 1.2796717143754988E-10,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "FlipHandNormal": {
+                            "x": 0.99999999999999989,
+                            "y": -1.2800458873914697E-10,
+                            "z": 0.0
+                        },
+                        "IsVisible": 0,
+                        "IsMirror": 0,
+                        "NumberSign": "",
+                        "VisibleElevationPlan": 0,
+                        "LevelOffset": 0.0,
+                        "BaseLine": {
+                            "StartPoint": {
+                                "x": 16700.005498734827,
+                                "y": 10249.977106022154,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 15600.005498734827,
+                                "y": 10249.977106162958,
+                                "z": 0.0
+                            },
+                            "CurveType": 0
+                        },
+                        "IsFire": false,
+                        "Style": {
+                            "StyleId": 0,
+                            "StyleName": "推拉门1",
+                            "SSMHeight": 0.0,
+                            "SSMWidth": 0.0,
+                            "SSMBottomHeight": 0.0,
+                            "Vertices": [
+                                {
+                                    "x": 0.0,
+                                    "y": 0.0,
+                                    "z": 0.0
+                                },
+                                {
+                                    "x": 1100.0,
+                                    "y": 0.0,
+                                    "z": 0.0
+                                },
+                                {
+                                    "x": 1100.0,
+                                    "y": 2100.0,
+                                    "z": 0.0
+                                },
+                                {
+                                    "x": 0.0,
+                                    "y": 2100.0,
+                                    "z": 0.0
+                                }
+                            ],
+                            "Cells": [
+                                {
+                                    "Vertices": [
+                                        {
+                                            "x": 50.0,
+                                            "y": 50.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 525.0,
+                                            "y": 50.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 525.0,
+                                            "y": 2050.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 50.0,
+                                            "y": 2050.0,
+                                            "z": 0.0
+                                        }
+                                    ],
+                                    "IsErased": false,
+                                    "Parameters": {
+                                        "开启扇": 5
+                                    }
+                                },
+                                {
+                                    "Vertices": [
+                                        {
+                                            "x": 575.0,
+                                            "y": 50.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 1050.0,
+                                            "y": 50.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 1050.0,
+                                            "y": 2050.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 575.0,
+                                            "y": 2050.0,
+                                            "z": 0.0
+                                        }
+                                    ],
+                                    "IsErased": false,
+                                    "Parameters": {
+                                        "开启扇": 6
+                                    }
+                                }
+                            ],
+                            "Views": [
+                                {
+                                    "Verticals": [
+                                        {
+                                            "x": 0.0,
+                                            "y": 0.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 1100.0,
+                                            "y": 0.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 1100.0,
+                                            "y": 2100.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 0.0,
+                                            "y": 2100.0,
+                                            "z": 0.0
+                                        }
+                                    ],
+                                    "Cells": [
+                                        {
+                                            "Vertices": [
+                                                {
+                                                    "x": 50.0,
+                                                    "y": 50.0,
+                                                    "z": 0.0
+                                                },
+                                                {
+                                                    "x": 525.0,
+                                                    "y": 50.0,
+                                                    "z": 0.0
+                                                },
+                                                {
+                                                    "x": 525.0,
+                                                    "y": 2050.0,
+                                                    "z": 0.0
+                                                },
+                                                {
+                                                    "x": 50.0,
+                                                    "y": 2050.0,
+                                                    "z": 0.0
+                                                }
+                                            ],
+                                            "IsErased": false,
+                                            "Parameters": {
+                                                "开启扇": 5
+                                            }
+                                        },
+                                        {
+                                            "Vertices": [
+                                                {
+                                                    "x": 575.0,
+                                                    "y": 50.0,
+                                                    "z": 0.0
+                                                },
+                                                {
+                                                    "x": 1050.0,
+                                                    "y": 50.0,
+                                                    "z": 0.0
+                                                },
+                                                {
+                                                    "x": 1050.0,
+                                                    "y": 2050.0,
+                                                    "z": 0.0
+                                                },
+                                                {
+                                                    "x": 575.0,
+                                                    "y": 2050.0,
+                                                    "z": 0.0
+                                                }
+                                            ],
+                                            "IsErased": false,
+                                            "Parameters": {
+                                                "开启扇": 6
+                                            }
+                                        }
+                                    ],
+                                    "BorderLines": []
+                                }
+                            ],
+                            "WindowsMaterial": "钢",
+                            "GlassMaterial": "",
+                            "GlassConfig": {},
+                            "OtherConfig": {
+                                "otherconfig5": "0"
+                            }
+                        },
+                        "TwoSideDepths": [],
+                        "GroupNo": "",
+                        "Items": [],
+                        "IsSpecialShap": false
+                    }
+                ],
+                "Room": [
+                    {
+                        "Guid": "1a5b5fb7f119407b856b9cb3780545b1",
+                        "MapGuid": "",
+                        "Category": "2",
+                        "Position": "1",
+                        "BlCreateRoom": 1,
+                        "NewJBoundary": null,
+                        "Boundary": [
+                            {
+                                "StartPoint": {
+                                    "x": 25700.003282490128,
+                                    "y": 5749.9771058757324,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 27450.003283327911,
+                                    "y": 5749.9771058757324,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 27450.003283327911,
+                                    "y": 5749.9771058757324,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 27450.003283327911,
+                                    "y": 149.97728892584564,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 27450.003283327911,
+                                    "y": 149.97728892584564,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 13800.003964442294,
+                                    "y": 149.98506661707506,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 13800.003964442294,
+                                    "y": 149.98506661707506,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 13799.999094886589,
+                                    "y": 6899.9888534716883,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 13799.999094886589,
+                                    "y": 6899.9888534716883,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 13499.991827476188,
+                                    "y": 6899.9879832869628,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 13499.991827476188,
+                                    "y": 6899.9879832869628,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 13499.991355523409,
+                                    "y": 12549.977105408681,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 13499.991355523409,
+                                    "y": 12549.977105408681,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 14850.003214887052,
+                                    "y": 12549.977105235906,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 14850.003214887052,
+                                    "y": 12549.977105235906,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 14850.001572381007,
+                                    "y": 10149.977106006147,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 14850.001572381007,
+                                    "y": 10149.977106006147,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 17550.003284237639,
+                                    "y": 10149.977106006147,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 17550.003284237639,
+                                    "y": 10149.977106006147,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 17550.0032840278,
+                                    "y": 9349.9771062396321,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 17550.0032840278,
+                                    "y": 9349.9771062396321,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 25700.003283968079,
+                                    "y": 9349.9771051966745,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 25700.003283968079,
+                                    "y": 9349.9771051966745,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 25700.003282490128,
+                                    "y": 5749.9771058757324,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            }
+                        ],
+                        "Name": "结构空腔",
+                        "Names": [
+                            "结构空腔"
+                        ],
+                        "NameType": "架空区域",
+                        "DoorIds": [
+                            "05edab8750314eeabb3ca891a4a17173",
+                            "a382eb74341c426c9af782ce6d74a520"
+                        ],
+                        "DoorNums": [
+                            "m000",
+                            "m002"
+                        ],
+                        "WindowIds": [],
+                        "DoorAndWindowIds": [],
+                        "DoorWayIds": [],
+                        "JCWGuidNames": [],
+                        "JCWGuidNs": [],
+                        "FloorDrainPoints": [],
+                        "ShowArea": 0.0,
+                        "AnnotationPoint": {
+                            "x": 18130.575986677548,
+                            "y": 4982.9772647966165,
+                            "z": 0.0
+                        },
+                        "LevelOffset": 0.0,
+                        "LevelOffsetType": 0,
+                        "ArchThickness": 90.0,
+                        "STOffSet": 90.0,
+                        "LightArea": 0.0,
+                        "AirArea": 0.0,
+                        "Area": 126.5,
+                        "RoomElementId": 0,
+                        "SectionSymbolName": "",
+                        "WallNames": [
+                            "d924fe916ef544a58abd56d862a5a844",
+                            "27eb5013ad7144159d71b34a7c152db5",
+                            "d02d712d35284dcfaea56244ffef515f",
+                            "a7a29ade30064b4e875bac739280ddc9",
+                            "d5a7d0898e21430884c2a4ade573e744",
+                            "124c4712f61947698e7022360fa15fc9",
+                            "ee0598127eb14940850722891373ba8f",
+                            "211e54b1a8624f4c8fe6c3b139be859a",
+                            "7ce9ca58445d431bb932408c1a1d1937",
+                            "cd9855ef120c4da8986ff7fb37c57b9a",
+                            "371d1a9317e74582ac5c7c8baeb22012",
+                            "e52543cd78464cbdb23b5e8b91859bd0",
+                            "f17ce0cdbe864caab827176c268e7803"
+                        ],
+                        "IsOpen": false,
+                        "RoomNumber": null,
+                        "Number": 0,
+                        "SubAreas": [],
+                        "InsideRooms": []
+                    }
+                ],
+                "Elevators": [
+                    {
+                        "Guid": "3fda2f33b9f34a13a16be9912ec504b0",
+                        "Elevator": [
+                            {
+                                "StartPoint": {
+                                    "x": 16950.00157276995,
+                                    "y": 10549.999894116183,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 15350.00157276995,
+                                    "y": 11949.99989411272,
+                                    "z": 0.0
+                                },
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 16950.00157276995,
+                                    "y": 11949.99989411272,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 15350.00157276995,
+                                    "y": 10549.999894116183,
+                                    "z": 0.0
+                                },
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 15350.00157276995,
+                                    "y": 11949.99989411272,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 16950.00157276995,
+                                    "y": 11949.99989411272,
+                                    "z": 0.0
+                                },
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 15350.00157276995,
+                                    "y": 10549.999894116183,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 15350.00157276995,
+                                    "y": 11949.99989411272,
+                                    "z": 0.0
+                                },
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 16950.00157276995,
+                                    "y": 10549.999894116183,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 15350.00157276995,
+                                    "y": 10549.999894116183,
+                                    "z": 0.0
+                                },
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 16950.00157276995,
+                                    "y": 11949.99989411272,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 16950.00157276995,
+                                    "y": 10549.999894116183,
+                                    "z": 0.0
+                                },
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 15600.00157276995,
+                                    "y": 12349.999894116183,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 16700.00157276995,
+                                    "y": 12349.999894116183,
+                                    "z": 0.0
+                                },
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 15600.00157276995,
+                                    "y": 12149.999894116183,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 15600.00157276995,
+                                    "y": 12349.999894116183,
+                                    "z": 0.0
+                                },
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 16700.00157276995,
+                                    "y": 12349.999894116183,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 16700.00157276995,
+                                    "y": 12149.999894116183,
+                                    "z": 0.0
+                                },
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 16700.00157276995,
+                                    "y": 12149.999894116183,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 15600.00157276995,
+                                    "y": 12149.999894116183,
+                                    "z": 0.0
+                                },
+                                "CurveType": 0
+                            }
+                        ]
+                    }
+                ],
+                "SlabHole": [
+                    {
+                        "Name": "客梯",
+                        "JLocation": {
+                            "x": 10950.0,
+                            "y": 11450.0,
+                            "z": 0.0
+                        },
+                        "Profiles": [
+                            {
+                                "StartPoint": {
+                                    "x": 12050.0,
+                                    "y": 10350.0,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 12050.0,
+                                    "y": 12550.0,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 12050.0,
+                                    "y": 12550.0,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 9850.0,
+                                    "y": 12550.0,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 9850.0,
+                                    "y": 12550.0,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 9850.0,
+                                    "y": 10350.0,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 9850.0,
+                                    "y": 10350.0,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 12050.0,
+                                    "y": 10350.0,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            }
+                        ]
+                    }
+                ],
+                "ModelingWall": [
+                    {
+                        "WallName": "27eb5013ad7144159d71b34a7c152db5",
+                        "Category": "普通墙",
+                        "Type": "外墙",
+                        "MaterialType": "默认",
+                        "HasUpWall": true,
+                        "IsParapetWall": false,
+                        "IsEdgeGutterWall": false,
+                        "Normal": {
+                            "x": 1.2805685433574344E-10,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "Curve": {
+                            "StartPoint": {
+                                "x": 25850.0,
+                                "y": 9475.0,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 17650.0,
+                                "y": 9475.0,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        "SeparationJCurve": null,
+                        "SeparationThickness": 0.0,
+                        "FirstLine": {
+                            "StartPoint": {
+                                "x": 25850.003284010396,
+                                "y": 9349.9771051774733,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 17650.003284207662,
+                                "y": 9349.977106226841,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        "SecondLine": {
+                            "StartPoint": {
+                                "x": 25850.00328404241,
+                                "y": 9599.9771051774733,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 17650.003284239676,
+                                "y": 9599.977106226841,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        "Height": 3890.0,
+                        "Thickness": 250.0,
+                        "RoomBoundary": 0,
+                        "BottomHeight": -190.0,
+                        "ElevationType": 0,
+                        "Material": null,
+                        "ElementId": -1,
+                        "IsHafFloor": false,
+                        "JKType": "0",
+                        "FloorNum": "",
+                        "FloorName": ""
+                    }
+                ],
+                "Door": [
+                    {
+                        "Guid": "05edab8750314eeabb3ca891a4a17173",
+                        "FamilyName": "推拉门-一行二列11212",
+                        "NumberLocation": null,
+                        "Name": "m000",
+                        "DoorType": "7",
+                        "Type": "门",
+                        "HostWall": "d5a7d0898e21430884c2a4ade573e744",
+                        "Location": {
+                            "x": 16150.005498734827,
+                            "y": 10249.977106092556,
+                            "z": 0.0
+                        },
+                        "BottomHeight": 0.0,
+                        "TopHeight": 0.0,
+                        "Size": {
+                            "Height": 2100.0,
+                            "Width": 1100.0,
+                            "Thickness": 0.0
+                        },
+                        "FlipFaceNormal": {
+                            "x": 1.2796717143754988E-10,
+                            "y": 1.0,
+                            "z": 0.0
+                        },
+                        "FlipHandNormal": {
+                            "x": 1.0,
+                            "y": -1.28004588739147E-10,
+                            "z": 0.0
+                        },
+                        "IsVisible": 0,
+                        "IsMirror": 0,
+                        "IsHighWindow": false,
+                        "NumberSign": "",
+                        "VisibleElevationPlan": 0,
+                        "VisibleElevationPlan2": 0,
+                        "LevelOffset": 0.0,
+                        "BaseLine": {
+                            "StartPoint": {
+                                "x": 16700.005498734827,
+                                "y": 10249.977106022154,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 15600.005498734827,
+                                "y": 10249.977106162958,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        "IsFire": false,
+                        "IsSpecialShap": false,
+                        "Style": {
+                            "StyleId": 0,
+                            "StyleName": "推拉门1",
+                            "Height": 0.0,
+                            "Width": 0.0,
+                            "BottomHeight": 0.0,
+                            "Vertices": [
+                                {
+                                    "x": 0.0,
+                                    "y": 0.0,
+                                    "z": 0.0
+                                },
+                                {
+                                    "x": 1100.0,
+                                    "y": 0.0,
+                                    "z": 0.0
+                                },
+                                {
+                                    "x": 1100.0,
+                                    "y": 2100.0,
+                                    "z": 0.0
+                                },
+                                {
+                                    "x": 0.0,
+                                    "y": 2100.0,
+                                    "z": 0.0
+                                }
+                            ],
+                            "Cells": [
+                                {
+                                    "Vertices": [
+                                        {
+                                            "x": 50.0,
+                                            "y": 50.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 525.0,
+                                            "y": 50.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 525.0,
+                                            "y": 2050.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 50.0,
+                                            "y": 2050.0,
+                                            "z": 0.0
+                                        }
+                                    ],
+                                    "Parameters": {
+                                        "开启扇": 5
+                                    }
+                                },
+                                {
+                                    "Vertices": [
+                                        {
+                                            "x": 575.0,
+                                            "y": 50.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 1050.0,
+                                            "y": 50.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 1050.0,
+                                            "y": 2050.0,
+                                            "z": 0.0
+                                        },
+                                        {
+                                            "x": 575.0,
+                                            "y": 2050.0,
+                                            "z": 0.0
+                                        }
+                                    ],
+                                    "Parameters": {
+                                        "开启扇": 6
+                                    }
+                                }
+                            ],
+                            "WindowsMaterial": "钢",
+                            "GlassMaterial": "",
+                            "GlassConfig": {},
+                            "OtherConfig": {
+                                "otherconfig5": "0"
+                            }
+                        },
+                        "TwoSideDepths": [],
+                        "Number": "MD1121",
+                        "NumberForModeling": "",
+                        "Parameters": null,
+                        "IsHaveShutter": 0,
+                        "Sizes": [],
+                        "ElementId": 0,
+                        "Material": {
+                            "WindowFrameMaterial": null,
+                            "GlassMaterial": null,
+                            "GlassNumber": null,
+                            "IsSafetyGlass": null
+                        },
+                        "MortarThickness": 0.0,
+                        "AirArea": null,
+                        "OpenDirection": null,
+                        "FamilyType": null,
+                        "SectionSymbolName": "",
+                        "WindowFrame": [],
+                        "WindowGlassModel": [],
+                        "IsHaveHole": 0,
+                        "IsDimension": true,
+                        "WindowBorderType": 1,
+                        "IsFireWindow": false,
+                        "FireClass": "",
+                        "DoorTypeForNum": "电梯门",
+                        "WindowType": "",
+                        "OpenInfo": null,
+                        "ShutterType": "",
+                        "GroupNo": "",
+                        "Items": [],
+                        "IsCross": true,
+                        "WindowWidthLine": {
+                            "StartPoint": null,
+                            "EndPoint": null,
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        "Elevation": 0.0
+                    }
+                ],
+                "Pipe": [],
+                "Drain": [],
+                "WeepHole": [],
+                "SpecialWall": {
+                    "RectWalls": [],
+                    "NonRectWalls": [],
+                    "STSlabs": null,
+                    "Insulations": []
+                },
+                "Decorate": [],
+                "ChangeCracks": [],
+                "ArchSlab": [
+                    {
+                        "FloorNum": null,
+                        "RoomName": "结构空腔",
+                        "Boundary": [
+                            {
+                                "StartPoint": {
+                                    "x": 25700.003282490128,
+                                    "y": 5749.9771058757324,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 27450.003283327911,
+                                    "y": 5749.9771058757324,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 27450.003283327911,
+                                    "y": 5749.9771058757324,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 27450.003283327911,
+                                    "y": 149.97728892584564,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 27450.003283327911,
+                                    "y": 149.97728892584564,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 13800.003964442294,
+                                    "y": 149.98506661707506,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 13800.003964442294,
+                                    "y": 149.98506661707506,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 13799.999094886589,
+                                    "y": 6899.9888534716883,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 13799.999094886589,
+                                    "y": 6899.9888534716883,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 13499.991827476188,
+                                    "y": 6899.9879832869628,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 13499.991827476188,
+                                    "y": 6899.9879832869628,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 13499.991355523409,
+                                    "y": 12549.977105408681,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 13499.991355523409,
+                                    "y": 12549.977105408681,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 14850.003214887052,
+                                    "y": 12549.977105235906,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 14850.003214887052,
+                                    "y": 12549.977105235906,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 14850.001572381007,
+                                    "y": 10149.977106006147,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 14850.001572381007,
+                                    "y": 10149.977106006147,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 17550.003284237639,
+                                    "y": 10149.977106006147,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 17550.003284237639,
+                                    "y": 10149.977106006147,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 17550.0032840278,
+                                    "y": 9349.9771062396321,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 17550.0032840278,
+                                    "y": 9349.9771062396321,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 25700.003283968079,
+                                    "y": 9349.9771051966745,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 25700.003283968079,
+                                    "y": 9349.9771051966745,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 25700.003282490128,
+                                    "y": 5749.9771058757324,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            }
+                        ],
+                        "Type": null,
+                        "Thickness": 90.0,
+                        "Location": {
+                            "x": 18130.575986677548,
+                            "y": 4982.9772647966165,
+                            "z": 0.0
+                        },
+                        "RoomGuid": "1a5b5fb7f119407b856b9cb3780545b1",
+                        "ID": "8bd35e1fda99472b9217a9f53c5cca4c",
+                        "Height": 0.0,
+                        "ElementId": "",
+                        "IsLowerPlate": 0,
+                        "Walls": null,
+                        "RoomIsHole": 0,
+                        "Guid": null,
+                        "MaterialType": "",
+                        "SlabName": null
+                    }
+                ],
+                "DormantWindow": [],
+                "HouseType": [],
+                "ElecWell": [],
+                "WeakElecWell": [],
+                "PlumbingWell": [],
+                "DistributionBox": [],
+                "RoomArea": [
+                    {
+                        "Guid": "1a5b5fb7f119407b856b9cb3780545b1",
+                        "MapGuid": "",
+                        "Category": "2",
+                        "Position": "1",
+                        "BlCreateRoom": 1,
+                        "NewJBoundary": null,
+                        "Boundary": [
+                            {
+                                "StartPoint": {
+                                    "x": 25700.003282490128,
+                                    "y": 5749.9771058757324,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 27450.003283327911,
+                                    "y": 5749.9771058757324,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 27450.003283327911,
+                                    "y": 5749.9771058757324,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 27450.003283327911,
+                                    "y": 149.97728892584564,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 27450.003283327911,
+                                    "y": 149.97728892584564,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 13800.003964442294,
+                                    "y": 149.98506661707506,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 13800.003964442294,
+                                    "y": 149.98506661707506,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 13799.999094886589,
+                                    "y": 6899.9888534716883,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 13799.999094886589,
+                                    "y": 6899.9888534716883,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 13499.991827476188,
+                                    "y": 6899.9879832869628,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 13499.991827476188,
+                                    "y": 6899.9879832869628,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 13499.991355523409,
+                                    "y": 12549.977105408681,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 13499.991355523409,
+                                    "y": 12549.977105408681,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 14850.003214887052,
+                                    "y": 12549.977105235906,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 14850.003214887052,
+                                    "y": 12549.977105235906,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 14850.001572381007,
+                                    "y": 10149.977106006147,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 14850.001572381007,
+                                    "y": 10149.977106006147,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 17550.003284237639,
+                                    "y": 10149.977106006147,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 17550.003284237639,
+                                    "y": 10149.977106006147,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 17550.0032840278,
+                                    "y": 9349.9771062396321,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 17550.0032840278,
+                                    "y": 9349.9771062396321,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 25700.003283968079,
+                                    "y": 9349.9771051966745,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 25700.003283968079,
+                                    "y": 9349.9771051966745,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 25700.003282490128,
+                                    "y": 5749.9771058757324,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            }
+                        ],
+                        "Name": "结构空腔",
+                        "Names": [
+                            "结构空腔"
+                        ],
+                        "NameType": "架空区域",
+                        "DoorIds": [
+                            "05edab8750314eeabb3ca891a4a17173",
+                            "a382eb74341c426c9af782ce6d74a520"
+                        ],
+                        "DoorNums": [
+                            "m000",
+                            "m002"
+                        ],
+                        "WindowIds": [],
+                        "DoorAndWindowIds": [],
+                        "DoorWayIds": [],
+                        "JCWGuidNames": [],
+                        "JCWGuidNs": [],
+                        "FloorDrainPoints": [],
+                        "ShowArea": 0.0,
+                        "AnnotationPoint": {
+                            "x": 18130.575986677548,
+                            "y": 4982.9772647966165,
+                            "z": 0.0
+                        },
+                        "LevelOffset": 0.0,
+                        "LevelOffsetType": 0,
+                        "ArchThickness": 90.0,
+                        "STOffSet": 90.0,
+                        "LightArea": 0.0,
+                        "AirArea": 0.0,
+                        "Area": 126.5,
+                        "RoomElementId": 0,
+                        "SectionSymbolName": "",
+                        "WallNames": [
+                            "d924fe916ef544a58abd56d862a5a844",
+                            "27eb5013ad7144159d71b34a7c152db5",
+                            "d02d712d35284dcfaea56244ffef515f",
+                            "a7a29ade30064b4e875bac739280ddc9",
+                            "d5a7d0898e21430884c2a4ade573e744",
+                            "124c4712f61947698e7022360fa15fc9",
+                            "ee0598127eb14940850722891373ba8f",
+                            "211e54b1a8624f4c8fe6c3b139be859a",
+                            "7ce9ca58445d431bb932408c1a1d1937",
+                            "cd9855ef120c4da8986ff7fb37c57b9a",
+                            "371d1a9317e74582ac5c7c8baeb22012",
+                            "e52543cd78464cbdb23b5e8b91859bd0",
+                            "f17ce0cdbe864caab827176c268e7803"
+                        ],
+                        "IsOpen": false,
+                        "RoomNumber": null,
+                        "Number": 0,
+                        "SubAreas": [],
+                        "InsideRooms": []
+                    }
+                ],
+                "WallHole": [],
+                "ToiletAndKitchenConditionHole": [
+                    {
+                        "AirConditionName": "1",
+                        "AirConditionHoles": []
+                    },
+                    {
+                        "AirConditionName": "2",
+                        "AirConditionHoles": []
+                    }
+                ],
+                "DrainageDitch": [],
+                "StepAndRampRailing": [],
+                "RegionBreak": []
+            },
+            "BasePoint": {
+                "x": 320325.88721292745,
+                "y": 49094.431014487454,
+                "z": 0.0
+            },
+            "RNum": "",
+            "DrawingFrameNo": "-1"
+        }
+    ],
+    "Level": [
+        {
+            "Name": "-1F",
+            "Num": "-1",
+            "Elevation": -3750.0,
+            "AbsElevation": 0.0,
+            "LevelHeight": 3750.0,
+            "LineWidth": 1,
+            "EP1Visible": 1,
+            "EP2Visible": 1,
+            "Type": "上标头",
+            "Sign": "上标高标头",
+            "Pattern": "中心线",
+            "LevelOffSet": 90.0,
+            "ElementId": -1,
+            "OffSet": []
+        }
+    ],
+    "Stairs": [
+        {
+            "FloorNum": "2",
+            "StairUnitModels": [
+                {
+                    "StairId": "",
+                    "RunId": "",
+                    "FloorId": "",
+                    "FloorNum": "2",
+                    "StairName": "1#楼梯间",
+                    "StairCount": 13,
+                    "LowLevel": 2900.0,
+                    "HighLevel": 4994.4444444444443,
+                    "STLowLevel": 30.0,
+                    "STHighLevel": 30.0,
+                    "StairWidth": 260.0,
+                    "StairLength": 1250.0,
+                    "PathLine": {
+                        "StartPoint": {
+                            "x": 12874.99835748988,
+                            "y": 10329.999851167522,
+                            "z": 0.0
+                        },
+                        "EndPoint": {
+                            "x": 12874.99835748988,
+                            "y": 13449.836320500268,
+                            "z": 0.0
+                        },
+                        "ColorIndex": 0,
+                        "CurveType": 0
+                    },
+                    "LowLineModel": {
+                        "StartPoint": {
+                            "x": 12249.99835748988,
+                            "y": 10329.999851167522,
+                            "z": 0.0
+                        },
+                        "EndPoint": {
+                            "x": 13499.99835748988,
+                            "y": 10329.999851167522,
+                            "z": 0.0
+                        },
+                        "ColorIndex": 0,
+                        "CurveType": 0
+                    },
+                    "HighLineModel": {
+                        "StartPoint": {
+                            "x": 12249.99835748988,
+                            "y": 13449.836320500268,
+                            "z": 0.0
+                        },
+                        "EndPoint": {
+                            "x": 13499.99835748988,
+                            "y": 13449.836320500268,
+                            "z": 0.0
+                        },
+                        "ColorIndex": 0,
+                        "CurveType": 0
+                    },
+                    "StepLines": [
+                        {
+                            "StartPoint": {
+                                "x": 12249.99835748988,
+                                "y": 10329.999851167522,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13499.99835748988,
+                                "y": 10329.999851167522,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.99835748988,
+                                "y": 10589.986223611917,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13499.99835748988,
+                                "y": 10589.986223611917,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.99835748988,
+                                "y": 10849.972596056314,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13499.99835748988,
+                                "y": 10849.972596056314,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.99835748988,
+                                "y": 11109.958968500709,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13499.99835748988,
+                                "y": 11109.958968500709,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.99835748988,
+                                "y": 11369.945340945103,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13499.99835748988,
+                                "y": 11369.945340945103,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.99835748988,
+                                "y": 11629.9317133895,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13499.99835748988,
+                                "y": 11629.9317133895,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.99835748988,
+                                "y": 11889.918085833895,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13499.99835748988,
+                                "y": 11889.918085833895,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.99835748988,
+                                "y": 12149.90445827829,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13499.99835748988,
+                                "y": 12149.90445827829,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.99835748988,
+                                "y": 12409.890830722687,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13499.99835748988,
+                                "y": 12409.890830722687,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.99835748988,
+                                "y": 12669.877203167081,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13499.99835748988,
+                                "y": 12669.877203167081,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.99835748988,
+                                "y": 12929.863575611478,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13499.99835748988,
+                                "y": 12929.863575611478,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.99835748988,
+                                "y": 13189.849948055873,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13499.99835748988,
+                                "y": 13189.849948055873,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.99835748988,
+                                "y": 13449.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13499.99835748988,
+                                "y": 13449.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        }
+                    ],
+                    "StairLines": [
+                        {
+                            "StartPoint": {
+                                "x": 12249.99835748988,
+                                "y": 10329.999851167522,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 12249.99835748988,
+                                "y": 13449.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 13499.99835748988,
+                                "y": 10329.999851167522,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13499.99835748988,
+                                "y": 13449.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        }
+                    ],
+                    "Floorloop": [
+                        {
+                            "StartPoint": {
+                                "x": 14849.993431510171,
+                                "y": 11369.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 14849.993431510171,
+                                "y": 14719.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 14849.993431510171,
+                                "y": 14719.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 12249.993431510171,
+                                "y": 14719.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.993431510171,
+                                "y": 14719.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 12249.993431510171,
+                                "y": 13449.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.993431510171,
+                                "y": 13449.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13599.993431510171,
+                                "y": 13449.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 13599.993431510171,
+                                "y": 13449.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13599.993431510171,
+                                "y": 11369.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 13599.993431510171,
+                                "y": 11369.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 14849.993431510171,
+                                "y": 11369.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        }
+                    ],
+                    "FloorLoopLow": [],
+                    "HoleBoundary": [],
+                    "SlabThickness": 0.0,
+                    "StairType": 1,
+                    "StairSection": 1
+                },
+                {
+                    "StairId": "",
+                    "RunId": "",
+                    "FloorId": "",
+                    "FloorNum": "2",
+                    "StairName": "1#楼梯间",
+                    "StairCount": 5,
+                    "LowLevel": 4994.4444444444443,
+                    "HighLevel": 5800.0,
+                    "STLowLevel": 30.0,
+                    "STHighLevel": 30.0,
+                    "StairWidth": 260.0,
+                    "StairLength": 1250.0,
+                    "PathLine": {
+                        "StartPoint": {
+                            "x": 14224.993431510171,
+                            "y": 11369.836320500268,
+                            "z": 0.0
+                        },
+                        "EndPoint": {
+                            "x": 14224.993431510171,
+                            "y": 10329.836320500268,
+                            "z": 0.0
+                        },
+                        "ColorIndex": 0,
+                        "CurveType": 0
+                    },
+                    "LowLineModel": {
+                        "StartPoint": {
+                            "x": 14849.993431510171,
+                            "y": 11369.836320500268,
+                            "z": 0.0
+                        },
+                        "EndPoint": {
+                            "x": 13599.993431510171,
+                            "y": 11369.836320500268,
+                            "z": 0.0
+                        },
+                        "ColorIndex": 0,
+                        "CurveType": 0
+                    },
+                    "HighLineModel": {
+                        "StartPoint": {
+                            "x": 14849.993431510171,
+                            "y": 10329.836320500268,
+                            "z": 0.0
+                        },
+                        "EndPoint": {
+                            "x": 13599.993431510171,
+                            "y": 10329.836320500268,
+                            "z": 0.0
+                        },
+                        "ColorIndex": 0,
+                        "CurveType": 0
+                    },
+                    "StepLines": [
+                        {
+                            "StartPoint": {
+                                "x": 14849.993431510171,
+                                "y": 11369.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13599.993431510171,
+                                "y": 11369.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 14849.993431510171,
+                                "y": 11109.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13599.993431510171,
+                                "y": 11109.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 14849.993431510171,
+                                "y": 10849.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13599.993431510171,
+                                "y": 10849.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 14849.993431510171,
+                                "y": 10589.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13599.993431510171,
+                                "y": 10589.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 14849.993431510171,
+                                "y": 10329.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13599.993431510171,
+                                "y": 10329.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        }
+                    ],
+                    "StairLines": [
+                        {
+                            "StartPoint": {
+                                "x": 14849.993431510171,
+                                "y": 11369.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 14849.993431510171,
+                                "y": 10329.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 13599.993431510171,
+                                "y": 11369.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13599.993431510171,
+                                "y": 10329.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        }
+                    ],
+                    "Floorloop": [],
+                    "FloorLoopLow": [
+                        {
+                            "StartPoint": {
+                                "x": 14849.993431510171,
+                                "y": 11369.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 14849.993431510171,
+                                "y": 14719.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 14849.993431510171,
+                                "y": 14719.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 12249.993431510171,
+                                "y": 14719.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.993431510171,
+                                "y": 14719.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 12249.993431510171,
+                                "y": 13449.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 12249.993431510171,
+                                "y": 13449.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13599.993431510171,
+                                "y": 13449.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 13599.993431510171,
+                                "y": 13449.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 13599.993431510171,
+                                "y": 11369.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        },
+                        {
+                            "StartPoint": {
+                                "x": 13599.993431510171,
+                                "y": 11369.836320500268,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 14849.993431510171,
+                                "y": 11369.836320500268,
+                                "z": 0.0
+                            },
+                            "ColorIndex": 0,
+                            "CurveType": 0
+                        }
+                    ],
+                    "HoleBoundary": [],
+                    "SlabThickness": 0.0,
+                    "StairType": 1,
+                    "StairSection": 0
+                }
+            ]
+        }
+    ],
+    "SectionInfos": [
+        {
+            "SectionSymbolName": "1",
+            "SectionSymbolType": "大剖切符号",
+            "SectionSymbolLine": {
+                "StartPoint": {
+                    "x": 12989.409508158686,
+                    "y": 29473.985861710127,
+                    "z": 0.0
+                },
+                "EndPoint": {
+                    "x": 12989.409508158686,
+                    "y": -8582.0436062939989,
+                    "z": 0.0
+                },
+                "ColorIndex": 0,
+                "CurveType": 0
+            },
+            "LevelRange": [],
+            "SectionRooms": null,
+            "SectionLength": 0.0,
+            "CircleLength": 0.0,
+            "SectionDirection": {
+                "x": -1.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "Direction": null,
+            "SectionFamilySymbol": null,
+            "Number": null,
+            "DrawingNumber": null,
+            "SectionLine": null,
+            "SectionView": null,
+            "SectionType": 0,
+            "WindowDrawingModel": null,
+            "DoorDrawingModel": null,
+            "VisibleElevationPlan": 0,
+            "SectionSymbol": 0
+        }
+    ],
+    "FrameInfo": {
+        "Scale": 100.0,
+        "Length": 84100.0,
+        "Width": 59400.0
+    },
+    "WebParam": {
+        "Constructunit": "",
+        "Address": "北京北京市中关村科技园区",
+        "Id": "1817",
+        "Name": "地暖测试样例图-02",
+        "ProjectName": "2.10.41112.1版本测试-综合部",
+        "EngineerId": "1100",
+        "GeneralInfo": {
+            "UseNature": null,
+            "FireCategory": "",
+            "FireLevel": "1",
+            "FireHeight": 0.0,
+            "DesignLevel": null,
+            "PlanHeight": 0.0,
+            "RoofingLevel": "I",
+            "ProjectNo": "2.10.41112.1",
+            "ZeroElevation": -0.45,
+            "ARZeroElevation": -0.3,
+            "BottomPtcThk": 0.0,
+            "WaterProofLevelUg": null,
+            "HangarClass": null,
+            "IsOpenHangar": "",
+            "ArFloorOn": "33",
+            "ArFloorUnder": "2",
+            "ArFloorRemark": ""
+        },
+        "Constructions": [
+            {
+                "num": 0,
+                "PositionName": "楼面3",
+                "StairType": "",
+                "MidPlatType": "N",
+                "FloorPlatType": "N",
+                "Position": "8",
+                "AtlasNo": "05J909",
+                "Type": null,
+                "PMName": "防滑地砖楼面",
+                "Details": [
+                    {
+                        "Id": null,
+                        "Content": "10厚铺地砖，干水泥擦缝",
+                        "Thickness": "10",
+                        "Material": "地砖",
+                        "ChilContent": null,
+                        "IsWaterProof": "0",
+                        "WaterProofLevel": "0"
+                    },
+                    {
+                        "Id": null,
+                        "Content": "20厚1:3干硬性水泥砂浆粘结层，表面撒水泥粉",
+                        "Thickness": "20",
+                        "Material": "砂浆",
+                        "ChilContent": null,
+                        "IsWaterProof": "0",
+                        "WaterProofLevel": "0"
+                    },
+                    {
+                        "Id": null,
+                        "Content": "水泥浆一道(内掺建筑胶)",
+                        "Thickness": "0",
+                        "Material": null,
+                        "ChilContent": null,
+                        "IsWaterProof": "0",
+                        "WaterProofLevel": "0"
+                    },
+                    {
+                        "Id": null,
+                        "Content": "现浇钢筋混凝土楼板",
+                        "Thickness": "0",
+                        "Material": null,
+                        "ChilContent": null,
+                        "IsWaterProof": "0",
+                        "WaterProofLevel": "0"
+                    }
+                ],
+                "Thickness": "0.03",
+                "Load": "30",
+                "arThk": "0.03",
+                "Scops": [
+                    "1#楼梯",
+                    "2#楼梯",
+                    "3#楼梯",
+                    "楼梯一",
+                    "楼梯二",
+                    "楼梯三",
+                    "1#楼梯间",
+                    "2#楼梯间",
+                    "3#楼梯间",
+                    "楼梯平台",
+                    "楼梯间"
+                ],
+                "Remark": "",
+                "FloorNo": "-1~19",
+                "Gh": "0",
+                "H": null,
+                "lh": "0",
+                "IsAllFloor": null,
+                "BIsAllFloor": false
+            }
+        ],
+        "ReferAtlas": {
+            "PipeThroughFloorAtlas": "",
+            "PaintAtlas": ""
+        },
+        "DWParam": {
+            "GeneralDoorHeight": 2100.0,
+            "EntranceDoorHeight": 2100.0,
+            "KitchenDoorHeight": 2400.0,
+            "BalconyDoorHeight": 2400.0,
+            "TubeWellDoorHeight": 1800.0,
+            "UnderFoyerDoorHeight": 2100.0,
+            "TubeWellThresholdHeight": 200.0,
+            "FireDoorMaterial": "钢制",
+            "FireWindowMaterial": "钢制",
+            "FireShutterMaterial": "无机纤维复合防火卷帘",
+            "WindowMaterial": "断桥铝合金",
+            "WindowThickness": 200.0,
+            "DoorWindowInformations": null
+        },
+        "HoleParam": {
+            "Mode_WSJ_TQK": "1",
+            "DisByMode_WSJ_TQK": 2500.0,
+            "DN_WSJ_TQK": 100.0,
+            "Mode_WSJ_PQD": "2",
+            "DisByMode_WSJ_PQD": 100.0,
+            "DN_WSJ_PQD": 1.0,
+            "Atlas_WSJ_PQD": "16J916-1",
+            "Model_WSJ_PQD": "",
+            "Size_WSJ_PQD": "",
+            "Mode_CF_PQG": null,
+            "DisByMode_CF_PQG": 0.0,
+            "DN_CF_PQG": 0.0,
+            "Atlas_CF_PQD": null,
+            "Model_CF_PQD": null,
+            "Size_CF_PQD": null,
+            "SizeExt_CF_YD": "1",
+            "DN_CF_YD": 200.0,
+            "DisToWall_KT_GUI": 200.0,
+            "DisToFloor_KT_GUI": 200.0,
+            "DN_KT_GUI": 80.0,
+            "DisToWall_KT_GUA": 200.0,
+            "Mode_KT_GUA": "2",
+            "DisByMode_KT_GUA": 200.0,
+            "DN_KT_GUA": 80.0
+        },
+        "ApronWaterParam": {
+            "ApronWaterWidth": 800.0,
+            "ApronWaterStyle": "暗散水(带沟)",
+            "ApronWaterDirection": "1"
+        },
+        "StairParam": {
+            "IsFootgrip": false,
+            "AtlasFootgrip": "",
+            "RangeUsed": "",
+            "AtlasRailing": "",
+            "AtlasStep": "",
+            "RangeUsed_AccStair": "",
+            "AtlasRailing_AccStair": "",
+            "AtlasStep_AccStair": ""
+        },
+        "ElevatorParam": [],
+        "NonMotorizedGarage": {
+            "DoorHeight": 2100.0,
+            "OneLaneWidth": 0.0,
+            "TwoLaneWidth": 0.0,
+            "ElecBicycleParking": 0,
+            "BicycleParking": 0
+        },
+        "ProjArIndexs": {
+            "ProjArIndexStairs": [
+                {
+                    "NodeDsiplayType": 1,
+                    "NodeInfo": null,
+                    "PlaneType": 2,
+                    "FigureClass": "楼梯踏步防滑条",
+                    "Name": "楼梯踏步防滑条",
+                    "IsIndex": true,
+                    "Atlas": "12J926",
+                    "Page": "F9",
+                    "SerialNumber": "1",
+                    "IsInstructions": true
+                },
+                {
+                    "NodeDsiplayType": 1,
+                    "NodeInfo": null,
+                    "PlaneType": 2,
+                    "FigureClass": "楼梯防护栏杆",
+                    "Name": "楼梯防护栏杆",
+                    "IsIndex": true,
+                    "Atlas": "06J403",
+                    "Page": "24",
+                    "SerialNumber": "A13",
+                    "IsInstructions": true
+                }
+            ],
+            "ProjArIndexWalls": [
+                {
+                    "NodeDsiplayType": 2,
+                    "NodeInfo": null,
+                    "PlaneType": 4,
+                    "FigureClass": "防雨百叶",
+                    "Name": "防雨百叶",
+                    "IsIndex": true,
+                    "Atlas": "05J624-1",
+                    "Page": "19",
+                    "SerialNumber": "-",
+                    "IsInstructions": true
+                },
+                {
+                    "NodeDsiplayType": 2,
+                    "NodeInfo": null,
+                    "PlaneType": 4,
+                    "FigureClass": "窗上口",
+                    "Name": "窗上口",
+                    "IsIndex": true,
+                    "Atlas": "10J121",
+                    "Page": "D-6",
+                    "SerialNumber": "1",
+                    "IsInstructions": true
+                },
+                {
+                    "NodeDsiplayType": 2,
+                    "NodeInfo": null,
+                    "PlaneType": 4,
+                    "FigureClass": "窗下口",
+                    "Name": "窗下口",
+                    "IsIndex": true,
+                    "Atlas": "10J121",
+                    "Page": "D-6",
+                    "SerialNumber": "2",
+                    "IsInstructions": true
+                }
+            ],
+            "ProjArIndexPlanes": [
+                {
+                    "PlaneDsiplayType": 0,
+                    "PlaneInfo": "屋脊",
+                    "PlaneType": 1,
+                    "FigureClass": "屋脊",
+                    "Name": "屋脊",
+                    "IsIndex": true,
+                    "Atlas": "21J925-2",
+                    "Page": "3-8",
+                    "SerialNumber": "4",
+                    "IsInstructions": true
+                },
+                {
+                    "PlaneDsiplayType": 0,
+                    "PlaneInfo": "天沟",
+                    "PlaneType": 1,
+                    "FigureClass": "天沟",
+                    "Name": "天沟",
+                    "IsIndex": true,
+                    "Atlas": "21J925-2",
+                    "Page": "3-6",
+                    "SerialNumber": "1",
+                    "IsInstructions": true
+                }
+            ],
+            "ProjArIndexDoorAndWindows": [
+                {
+                    "IsDoor": false,
+                    "PlaneType": 3,
+                    "FigureClass": "防火门",
+                    "Name": "防火门窗",
+                    "IsIndex": true,
+                    "Atlas": "12J609",
+                    "Page": "-",
+                    "SerialNumber": "-",
+                    "IsInstructions": true
+                },
+                {
+                    "IsDoor": false,
+                    "PlaneType": 3,
+                    "FigureClass": "普通门窗",
+                    "Name": "普通门窗",
+                    "IsIndex": true,
+                    "Atlas": "16J607",
+                    "Page": "-",
+                    "SerialNumber": "-",
+                    "IsInstructions": true
+                }
+            ],
+            "ProjArIndexComs": [],
+            "ProjArIndexWCs": [
+                {
+                    "NodeDsiplayType": 1,
+                    "NodeInfo": null,
+                    "PlaneType": 0,
+                    "FigureClass": "卫生间隔板",
+                    "Name": "卫生间隔板",
+                    "IsIndex": true,
+                    "Atlas": "16J914-1",
+                    "Page": "XT10",
+                    "SerialNumber": "-",
+                    "IsInstructions": true
+                },
+                {
+                    "NodeDsiplayType": 1,
+                    "NodeInfo": null,
+                    "PlaneType": 0,
+                    "FigureClass": "蹲便器",
+                    "Name": "蹲便器",
+                    "IsIndex": true,
+                    "Atlas": "16J914-1",
+                    "Page": "XT18",
+                    "SerialNumber": "-",
+                    "IsInstructions": true
+                }
+            ]
+        },
+        "PlotTime": "2024-11",
+        "PlotStage": "2",
+        "NorthAngle": "",
+        "Climatepart": "夏热冬冷地区",
+        "Province": "北京",
+        "City": "北京市",
+        "RoomTypes": [],
+        "STOffsetDirction": "1",
+        "STTpye": "宿办",
+        "MGTpye": "封闭",
+        "Guadcbwhd": "200"
+    },
+    "ARUniformStanDards": {
+        "CompanyUnifiedStandarsConfig": {
+            "InternalDimensionConfig": {
+                "IsDimension_inHouse": true
+            },
+            "Rail_balconyConfig": {
+                "Style": "",
+                "Location": ""
+            },
+            "Rail_protectWinConfig": {
+                "Style": "",
+                "Location": ""
+            },
+            "DoorAndWinStyleConfig": {
+                "Style_Elevation": "两框（开启三线）",
+                "WindowFrameWidth": "50-50",
+                "GlassSymbolStyle": {
+                    "IsHasGlassSymbol_FixedWin": true,
+                    "IsHasGlassSymbol_OpenWin": false
+                },
+                "WinOpenLineStyle": "开启扇样式一"
+            },
+            "MaterialFillingConfig": {
+                "Concrete": {
+                    "Type": "结构钢筋砼墙体、梁",
+                    "PlaneStyle": "SOLID",
+                    "HouseTypeStyle": "钢筋混凝土",
+                    "StairSectionStyle": "钢筋混凝土",
+                    "WallSectionStyle": "钢筋混凝土"
+                },
+                "ARWall": {
+                    "Type": "建筑墙体",
+                    "PlaneStyle": "",
+                    "HouseTypeStyle": "加气混凝土",
+                    "StairSectionStyle": "加气混凝土",
+                    "WallSectionStyle": "加气混凝土"
+                },
+                "STColumn": {
+                    "Type": "结构柱",
+                    "PlaneStyle": "SOLID",
+                    "HouseTypeStyle": "钢筋混凝土",
+                    "StairSectionStyle": "钢筋混凝土",
+                    "WallSectionStyle": ""
+                },
+                "ConstructionColumn": {
+                    "Type": "构造柱",
+                    "PlaneStyle": "SOLID",
+                    "HouseTypeStyle": "钢筋混凝土",
+                    "StairSectionStyle": "钢筋混凝土",
+                    "WallSectionStyle": ""
+                },
+                "Shade": {
+                    "Type": "阴影遮挡填充",
+                    "PlaneStyle": "",
+                    "HouseTypeStyle": "沙地",
+                    "StairSectionStyle": "沙地",
+                    "WallSectionStyle": "沙地"
+                },
+                "Mortar": {
+                    "Type": "砂浆类",
+                    "PlaneStyle": "砂浆",
+                    "HouseTypeStyle": "砂浆",
+                    "StairSectionStyle": "砂浆",
+                    "WallSectionStyle": "砂浆"
+                },
+                "PolystyreneBoard": {
+                    "Type": "苯板类",
+                    "PlaneStyle": "多孔材料",
+                    "HouseTypeStyle": "多孔材料",
+                    "StairSectionStyle": "多孔材料",
+                    "WallSectionStyle": "多孔材料"
+                },
+                "RockWool": {
+                    "Type": "岩棉类",
+                    "PlaneStyle": "HONEY",
+                    "HouseTypeStyle": "HONEY",
+                    "StairSectionStyle": "HONEY",
+                    "WallSectionStyle": "HONEY"
+                },
+                "LowerPlate_1": {
+                    "Type": "降板图案填充一",
+                    "PlaneStyle": "沙地",
+                    "HouseTypeStyle": "沙地",
+                    "StairSectionStyle": "沙地",
+                    "WallSectionStyle": "沙地"
+                },
+                "LowerPlate_2": {
+                    "Type": "降板图案填充二",
+                    "PlaneStyle": "普通砖",
+                    "HouseTypeStyle": "普通砖",
+                    "StairSectionStyle": "普通砖",
+                    "WallSectionStyle": "普通砖"
+                },
+                "LowerPlate_3": {
+                    "Type": "降板图案填充三",
+                    "PlaneStyle": "多孔材料",
+                    "HouseTypeStyle": "多孔材料",
+                    "StairSectionStyle": "多孔材料",
+                    "WallSectionStyle": "多孔材料"
+                },
+                "LowerPlate_Material": {
+                    "Type": "降板材料填充",
+                    "PlaneStyle": "",
+                    "HouseTypeStyle": "加气混凝土",
+                    "StairSectionStyle": "加气混凝土",
+                    "WallSectionStyle": "加气混凝土"
+                }
+            },
+            "FlueHoleConfig": {
+                "FlueHoleSymbol": "样式一"
+            },
+            "InsulationConfig": {
+                "InsulationStyle": "保温线表达样式二"
+            },
+            "SteelLadderConfig": {
+                "SteelLadderStyle": "钢爬梯表达样式二"
+            },
+            "SplashBlockConfig": {
+                "SplashBlockStyle": "水簸箕样式一"
+            },
+            "PlaneElementsStyleConfig": {
+                "RainPip": {
+                    "Type": "雨水管",
+                    "DimensionDrawing": 0,
+                    "IndexNumbel": "雨水立管",
+                    "LegendStyle": "雨水管样式一"
+                },
+                "CondensatePip": {
+                    "Type": "冷凝水管",
+                    "DimensionDrawing": 0,
+                    "IndexNumbel": "NL",
+                    "LegendStyle": "冷凝水管样式一"
+                },
+                "SewagePip_balcony": {
+                    "Type": "污水管（阳台）",
+                    "DimensionDrawing": 0,
+                    "IndexNumbel": "WL1",
+                    "LegendStyle": "污水管（阳台）样式一"
+                },
+                "SewagePip_kitAndtoi": {
+                    "Type": "污水管（厨房、卫生间）",
+                    "DimensionDrawing": 3,
+                    "IndexNumbel": "WL2",
+                    "LegendStyle": "污水管（厨房、卫生间）样式一"
+                },
+                "WastePip": {
+                    "Type": "废水管",
+                    "DimensionDrawing": 3,
+                    "IndexNumbel": "FL",
+                    "LegendStyle": "废水管样式一"
+                },
+                "FireStandPip": {
+                    "Type": "消防立管",
+                    "DimensionDrawing": 3,
+                    "IndexNumbel": "XL",
+                    "LegendStyle": "消防立管样式一"
+                },
+                "FireHydrant": {
+                    "Type": "消火栓",
+                    "DimensionDrawing": 1,
+                    "IndexNumbel": "SD",
+                    "LegendStyle": "消火栓样式一"
+                },
+                "Drain_1": {
+                    "Type": "地漏（卫生间、空调板、阳台雨水）",
+                    "DimensionDrawing": 0,
+                    "IndexNumbel": "DL1",
+                    "LegendStyle": "地漏（卫生间、空调板）样式一"
+                },
+                "Drain_2": {
+                    "Type": "地漏（洗衣机）",
+                    "DimensionDrawing": 0,
+                    "IndexNumbel": "DL2",
+                    "LegendStyle": "地漏（洗衣机）样式一"
+                },
+                "ElectricalBoxHigh_V": {
+                    "Type": "强电箱",
+                    "DimensionDrawing": 0,
+                    "IndexNumbel": "QD",
+                    "LegendStyle": "强电箱样式一"
+                },
+                "ElectricalBoxLow_V": {
+                    "Type": "弱电箱",
+                    "DimensionDrawing": 0,
+                    "IndexNumbel": "RD",
+                    "LegendStyle": "弱电箱样式一"
+                },
+                "VideoPhone": {
+                    "Type": "视频对讲机",
+                    "DimensionDrawing": 2,
+                    "IndexNumbel": "SP",
+                    "LegendStyle": "视频对讲机样式一"
+                },
+                "RainStrainer_Roof": {
+                    "Type": "屋面雨水斗",
+                    "DimensionDrawing": 2,
+                    "IndexNumbel": "YD",
+                    "LegendStyle": "屋面雨水斗样式一"
+                },
+                "RainStrainer_Side": {
+                    "Type": "侧排雨水斗",
+                    "DimensionDrawing": 2,
+                    "IndexNumbel": "CYD",
+                    "LegendStyle": "侧排雨水斗样式一"
+                },
+                "OverflowPipe": {
+                    "Type": "溢流管",
+                    "DimensionDrawing": 2,
+                    "IndexNumbel": "YLG",
+                    "LegendStyle": "溢流管样式一"
+                },
+                "AirConditionHole_Low": {
+                    "Type": "低位空调预留洞",
+                    "DimensionDrawing": 0,
+                    "IndexNumbel": "K2",
+                    "LegendStyle": "留洞样式一"
+                },
+                "AirConditionHole_High": {
+                    "Type": "高位空调预留洞",
+                    "DimensionDrawing": 0,
+                    "IndexNumbel": "K1",
+                    "LegendStyle": "留洞样式一"
+                },
+                "AirConditionHole_Symbol": {
+                    "Type": "空调预留洞内外高差符号",
+                    "DimensionDrawing": 0,
+                    "IndexNumbel": "，",
+                    "LegendStyle": ""
+                },
+                "ToiletHole": {
+                    "Type": "卫生间排气洞",
+                    "DimensionDrawing": 0,
+                    "IndexNumbel": "T2",
+                    "LegendStyle": "留洞样式一"
+                },
+                "KitchenHole": {
+                    "Type": "厨房排气洞",
+                    "DimensionDrawing": 0,
+                    "IndexNumbel": "T1",
+                    "LegendStyle": "留洞样式一"
+                }
+            },
+            "AirConditionerBracketConfig": {
+                "FloorHeightSyle": "层高处支架样式一",
+                "HafFloorHeightSyle": "半层高处支架样式一"
+            },
+            "LevelStyleConfig": {
+                "PlaneLevelStyle": "标高样式一",
+                "EleLevelStyle": "标高样式一"
+            }
+        },
+        "ProjectUnifiedStandarsConfig": {
+            "DoubleAirConditionPanelConfig": {
+                "TwoHouse": "混凝土板",
+                "OneHouse": "钢架"
+            },
+            "WaterDispersalConfig": {
+                "Width": 1000.0,
+                "Style": "散水二"
+            },
+            "ConcreteWallConfig": {
+                "IsAll": false
+            },
+            "WaterProofStyleConfig": {
+                "UndergroundFirstFloor": {
+                    "Position": "首层地下防水上翻高度",
+                    "OnHeight": 500.0,
+                    "LineWidth": 0
+                },
+                "WaterRoom": {
+                    "Position": "有水房间防水上翻高度",
+                    "OnHeight": 300.0,
+                    "LineWidth": 0
+                }
+            },
+            "SlopeStyleConfig": {
+                "Toilet": {
+                    "Position": "卫生间",
+                    "SlopeValue": "1%"
+                },
+                "Shower": {
+                    "Position": "淋浴间",
+                    "SlopeValue": "1%"
+                },
+                "Lanai": {
+                    "Position": "外廊",
+                    "SlopeValue": "1%"
+                },
+                "Balcony": {
+                    "Position": "阳台",
+                    "SlopeValue": "1%"
+                },
+                "Aircondition": {
+                    "Position": "设备平台（空调位）",
+                    "SlopeValue": "1%"
+                },
+                "OutsideWindowSill": {
+                    "Position": "外窗窗台",
+                    "SlopeValue": "5%"
+                },
+                "Parapet": {
+                    "Position": "矮墙（女儿墙顶）",
+                    "SlopeValue": "5%"
+                },
+                "Roof": {
+                    "Position": "屋面",
+                    "SlopeValue": "3%"
+                },
+                "Canopy": {
+                    "Position": "雨棚",
+                    "SlopeValue": "1%"
+                },
+                "GarageRoof": {
+                    "Position": "车库顶板",
+                    "SlopeValue": "2%"
+                },
+                "WaterWell": {
+                    "Position": "水暖井",
+                    "SlopeValue": "1%"
+                },
+                "WaistLine": {
+                    "Position": "腰线顶部",
+                    "SlopeValue": "5%"
+                }
+            },
+            "WallSectionGridConfig": {
+                "IsTrueNum": false,
+                "ReplaceSymbol": "*"
+            },
+            "RoofFlueConfig": {
+                "IsDrawing": true,
+                "Height": 2200.0
+            },
+            "DoorSillConfig": {
+                "UnderGroundWaterRoom": 200.0,
+                "UnderGroundEleRoom": 200.0,
+                "EquipmentWell": 200.0,
+                "OutRoof": 450.0,
+                "HeatRoom": 100.0,
+                "WaterPumpRoom": 100.0,
+                "ElevatorRoom": 200.0
+            },
+            "RefugeIsFireWinConfig": true,
+            "TianZhengElementTypeConfig": {
+                "RoomName": {
+                    "Position": "房间名称",
+                    "TextStyle": "TH-STYLE3",
+                    "TextHeight": 3.5,
+                    "Scale_Plane": 70.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                },
+                "Area": {
+                    "Position": "面积",
+                    "TextStyle": "TH-STYLE3",
+                    "TextHeight": 3.5,
+                    "Scale_Plane": 100.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": "使用面积、采光、通风"
+                },
+                "Level": {
+                    "Position": "标高标注",
+                    "TextStyle": "TH-STYLE3",
+                    "TextHeight": 3.5,
+                    "Scale_Plane": 70.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                },
+                "DoorAndWinNumber": {
+                    "Position": "门窗编号",
+                    "TextStyle": "TH-STYLE3",
+                    "TextHeight": 3.0,
+                    "Scale_Plane": 100.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                },
+                "Index": {
+                    "Position": "索引表达",
+                    "TextStyle": "_TCH_DIM",
+                    "TextHeight": 3.5,
+                    "Scale_Plane": 80.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                },
+                "Index2": {
+                    "Position": "引注表达",
+                    "TextStyle": "_TCH_DIM",
+                    "TextHeight": 3.5,
+                    "Scale_Plane": 80.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                },
+                "Arrow": {
+                    "Position": "箭头引注",
+                    "TextStyle": "_TCH_DIM",
+                    "TextHeight": 3.5,
+                    "Scale_Plane": 80.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                },
+                "HouseNumber": {
+                    "Position": "户型编号",
+                    "TextStyle": "TH-STYLE1",
+                    "TextHeight": 3.5,
+                    "Scale_Plane": 100.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                },
+                "PlaneName": {
+                    "Position": "图名",
+                    "TextStyle": "TH-STYLE2",
+                    "TextHeight": 7.0,
+                    "Scale_Plane": 100.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                },
+                "PlaneScaleText": {
+                    "Position": "图名的比例文字",
+                    "TextStyle": "TH-STYLE2",
+                    "TextHeight": 5.0,
+                    "Scale_Plane": 100.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                },
+                "WallSectionPlaneName": {
+                    "Position": "墙身图名",
+                    "TextStyle": "TH-STYLE3",
+                    "TextHeight": 8.0,
+                    "Scale_Plane": 100.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                },
+                "WallSectionPlaneScale": {
+                    "Position": "墙身图名比例",
+                    "TextStyle": "TH-STYLE3",
+                    "TextHeight": 5.0,
+                    "Scale_Plane": 100.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                },
+                "SectionLineName": {
+                    "Position": "剖切文字",
+                    "TextStyle": "TH-STYLE1",
+                    "TextHeight": 5.0,
+                    "Scale_Plane": 100.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                },
+                "Compass": {
+                    "Position": "指北针文字",
+                    "TextStyle": "_TCH_DIM",
+                    "TextHeight": 5.0,
+                    "Scale_Plane": 100.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                },
+                "ThreeDimitions": {
+                    "Position": "三道尺寸线",
+                    "TextStyle": "_TCH_DIM",
+                    "TextHeight": 3.5,
+                    "Scale_Plane": 100.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                },
+                "InternalDimitions": {
+                    "Position": "内部尺寸标注",
+                    "TextStyle": "TH-STYLE3",
+                    "TextHeight": 3.5,
+                    "Scale_Plane": 80.0,
+                    "Scale_ElevationAndSection": 100.0,
+                    "Scale_HouseType": 50.0,
+                    "Scale_Core": 50.0,
+                    "Scale_StairSection": 50.0,
+                    "Scale_WallSection": 20.0,
+                    "Note": null
+                }
+            },
+            "ARInsulationConfig": {
+                "Style": "外保温",
+                "Materials": "砂浆类",
+                "Thickness": 0.0
+            }
+        }
+    },
+    "Grid": [
+        {
+            "GridTextNote": "A",
+            "StartPoint": {
+                "x": -6099.9999992982484,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "EndPoint": {
+                "x": 35122.075449345633,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "EP1Visible": 1,
+            "EP2Visible": 1,
+            "IsSub": 0,
+            "BottomLevel": "-1F",
+            "TopLevel": "20F",
+            "Type": "5mm 编号",
+            "Sign": "符号_轴网标头 : 5mm编号",
+            "TerminalPattern": "轴网线",
+            "TerminalWidth": 1,
+            "CenterSection": {
+                "Type": "连续",
+                "LineWidth": 1,
+                "Pattern": "轴网线",
+                "TerminalLength": 25
+            },
+            "ShowFloorNames": [
+                "-1",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15",
+                "16",
+                "17",
+                "18",
+                "19",
+                "20"
+            ],
+            "ElementId": -1,
+            "Coordinate": "",
+            "Mode": 1,
+            "CurveArray": []
+        }
+    ],
+    "StandardInfo": [
+        {
+            "AllFloorNums": "5,6,7,8,9,10,11,12,13,14,15,16,17",
+            "Num": "5~17"
+        }
+    ],
+    "STSlabs": [
+        {
+            "FloorNum": "-1",
+            "RoomName": "结构空腔",
+            "Boundary": [
+                {
+                    "StartPoint": {
+                        "x": 25700.0,
+                        "y": 5750.0,
+                        "z": 0.0
+                    },
+                    "EndPoint": {
+                        "x": 27450.0,
+                        "y": 5750.0,
+                        "z": 0.0
+                    },
+                    "ColorIndex": 0,
+                    "CurveType": 0
+                },
+                {
+                    "StartPoint": {
+                        "x": 27450.0,
+                        "y": 5750.0,
+                        "z": 0.0
+                    },
+                    "EndPoint": {
+                        "x": 27450.0,
+                        "y": 150.0,
+                        "z": 0.0
+                    },
+                    "ColorIndex": 0,
+                    "CurveType": 0
+                },
+                {
+                    "StartPoint": {
+                        "x": 27450.0,
+                        "y": 150.0,
+                        "z": 0.0
+                    },
+                    "EndPoint": {
+                        "x": 13800.0,
+                        "y": 150.0,
+                        "z": 0.0
+                    },
+                    "ColorIndex": 0,
+                    "CurveType": 0
+                },
+                {
+                    "StartPoint": {
+                        "x": 13800.0,
+                        "y": 150.0,
+                        "z": 0.0
+                    },
+                    "EndPoint": {
+                        "x": 13800.0,
+                        "y": 6900.0,
+                        "z": 0.0
+                    },
+                    "ColorIndex": 0,
+                    "CurveType": 0
+                },
+                {
+                    "StartPoint": {
+                        "x": 13800.0,
+                        "y": 6900.0,
+                        "z": 0.0
+                    },
+                    "EndPoint": {
+                        "x": 13500.0,
+                        "y": 6900.0,
+                        "z": 0.0
+                    },
+                    "ColorIndex": 0,
+                    "CurveType": 0
+                },
+                {
+                    "StartPoint": {
+                        "x": 13500.0,
+                        "y": 6900.0,
+                        "z": 0.0
+                    },
+                    "EndPoint": {
+                        "x": 13500.0,
+                        "y": 12550.0,
+                        "z": 0.0
+                    },
+                    "ColorIndex": 0,
+                    "CurveType": 0
+                },
+                {
+                    "StartPoint": {
+                        "x": 13500.0,
+                        "y": 12550.0,
+                        "z": 0.0
+                    },
+                    "EndPoint": {
+                        "x": 14850.0,
+                        "y": 12550.0,
+                        "z": 0.0
+                    },
+                    "ColorIndex": 0,
+                    "CurveType": 0
+                },
+                {
+                    "StartPoint": {
+                        "x": 14850.0,
+                        "y": 12550.0,
+                        "z": 0.0
+                    },
+                    "EndPoint": {
+                        "x": 14850.0,
+                        "y": 10150.0,
+                        "z": 0.0
+                    },
+                    "ColorIndex": 0,
+                    "CurveType": 0
+                },
+                {
+                    "StartPoint": {
+                        "x": 14850.0,
+                        "y": 10150.0,
+                        "z": 0.0
+                    },
+                    "EndPoint": {
+                        "x": 17550.0,
+                        "y": 10150.0,
+                        "z": 0.0
+                    },
+                    "ColorIndex": 0,
+                    "CurveType": 0
+                },
+                {
+                    "StartPoint": {
+                        "x": 17550.0,
+                        "y": 10150.0,
+                        "z": 0.0
+                    },
+                    "EndPoint": {
+                        "x": 17550.0,
+                        "y": 9350.0,
+                        "z": 0.0
+                    },
+                    "ColorIndex": 0,
+                    "CurveType": 0
+                },
+                {
+                    "StartPoint": {
+                        "x": 17550.0,
+                        "y": 9350.0,
+                        "z": 0.0
+                    },
+                    "EndPoint": {
+                        "x": 25700.0,
+                        "y": 9350.0,
+                        "z": 0.0
+                    },
+                    "ColorIndex": 0,
+                    "CurveType": 0
+                },
+                {
+                    "StartPoint": {
+                        "x": 25700.0,
+                        "y": 9350.0,
+                        "z": 0.0
+                    },
+                    "EndPoint": {
+                        "x": 25700.0,
+                        "y": 5750.0,
+                        "z": 0.0
+                    },
+                    "ColorIndex": 0,
+                    "CurveType": 0
+                }
+            ],
+            "Type": null,
+            "Thickness": 100.0,
+            "Location": {
+                "x": 19992.0,
+                "y": 4927.0,
+                "z": 0.0
+            },
+            "RoomGuid": "1a5b5fb7f119407b856b9cb3780545b1",
+            "ID": "40d605ac66374fa48fbeea42ab8cdebe",
+            "Height": -90.0,
+            "ElementId": "",
+            "IsLowerPlate": 0,
+            "Walls": null,
+            "RoomIsHole": 0,
+            "Guid": null,
+            "MaterialType": "",
+            "SlabName": null
+        }
+    ],
+    "ARHeight": 58900.0,
+    "FloorType": [
+        {
+            "FloorNum": "20",
+            "Type": "屋面层平面图"
+        }
+    ],
+    "FloorNumber": 19,
+    "FireCompartment": [],
+    "ARGeneralInfo": {
+        "Company": "",
+        "BuildingName": "2.10.41112.1版本测试-综合部地暖测试样例图-02",
+        "Address": "北京北京市中关村科技园区",
+        "Area": 0.0,
+        "Floors": "19",
+        "Height": 58900.0,
+        "Intensity": null,
+        "SeismicDegree": 0,
+        "STType": null,
+        "PlotTime": "2024-11",
+        "FrameInfo": {
+            "Scale": 100.0,
+            "Length": 84100.0,
+            "Width": 59400.0
+        },
+        "FireInfos": [],
+        "ArFloorOn": "33",
+        "ArFloorUnder": "2",
+        "ArFloorRemark": "",
+        "Climatepart": "夏热冬冷地区",
+        "Province": "北京",
+        "City": "北京市",
+        "IsOpenJK": false,
+        "FireLevel": "一级",
+        "RoofingLevel": "I",
+        "Type": "宿办",
+        "MGTpye": ""
+    },
+    "MetaWall": {
+        "RectWalls": [],
+        "NonRectWalls": [],
+        "STSlabs": null,
+        "Insulations": []
+    },
+    "AccessHole": [],
+    "Shaft": [],
+    "ARArea": {
+        "TotalArea": 1759.8880237097098,
+        "FloorArea": [
+            {
+                "FloorNum": "-1",
+                "LevelHeight": 3750.0,
+                "FloorArea": 0.0,
+                "JBoundarys": [],
+                "OneFloorJKDoorAreas": [],
+                "AreaBoundaryModels": []
+            },
+            {
+                "FloorNum": "1",
+                "LevelHeight": 2900.0,
+                "FloorArea": 313.67748396502083,
+                "JBoundarys": [],
+                "OneFloorJKDoorAreas": [],
+                "AreaBoundaryModels": [
+                    {
+                        "JBoundary": [
+                            {
+                                "StartPoint": {
+                                    "x": -100.0,
+                                    "y": 2300.0,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": -100.0,
+                                    "y": 6900.0,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": -100.0,
+                                    "y": 6900.0,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 1650.0,
+                                    "y": 6900.0,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 1650.0,
+                                    "y": 6900.0,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 1650.0,
+                                    "y": 9600.0,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            }
+                        ],
+                        "Area": 306.23748396502083
+                    },
+                    {
+                        "JBoundary": [
+                            {
+                                "StartPoint": {
+                                    "x": 13700.0,
+                                    "y": 2300.0,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 13700.0,
+                                    "y": 700.0,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            },
+                            {
+                                "StartPoint": {
+                                    "x": 13700.0,
+                                    "y": 700.0,
+                                    "z": 0.0
+                                },
+                                "EndPoint": {
+                                    "x": 16600.0,
+                                    "y": 700.0,
+                                    "z": 0.0
+                                },
+                                "ColorIndex": 0,
+                                "CurveType": 0
+                            }
+                        ],
+                        "Area": 2.319999999999999
+                    }
+                ]
+            }
+        ]
+    },
+    "WaterDustpan": [
+        {
+            "RainPipelocations": [],
+            "Num": "19",
+            "WaterDustpans": [
+                {
+                    "Location": {
+                        "x": 17650.116924062429,
+                        "y": 10550.017336669844,
+                        "z": 0.0
+                    },
+                    "Line": {
+                        "StartPoint": {
+                            "x": 17650.116924062429,
+                            "y": 10550.017336669844,
+                            "z": 0.0
+                        },
+                        "EndPoint": {
+                            "x": 17650.0,
+                            "y": 10250.0,
+                            "z": 0.0
+                        },
+                        "ColorIndex": 0,
+                        "CurveType": 0
+                    }
+                },
+                {
+                    "Location": {
+                        "x": 9449.9893904731725,
+                        "y": 10549.999892130727,
+                        "z": 0.0
+                    },
+                    "Line": {
+                        "StartPoint": {
+                            "x": 9449.9893904731725,
+                            "y": 10549.999892130727,
+                            "z": 0.0
+                        },
+                        "EndPoint": {
+                            "x": 9750.0,
+                            "y": 10549.999892130727,
+                            "z": 0.0
+                        },
+                        "ColorIndex": 0,
+                        "CurveType": 0
+                    }
+                }
+            ]
+        }
+    ],
+    "Ditchs": [],
+    "Pit": [
+        {
+            "Number": "",
+            "Name": "b9912192869c4cedb5777a6bf849ff22",
+            "PitCategory": "1",
+            "BaseLevelElevation": -3750.0,
+            "Point": {
+                "x": 9850.0032149158069,
+                "y": 12549.977105875849,
+                "z": 0.0
+            },
+            "Center": {
+                "x": 10950.00246224657,
+                "y": 11449.97710624657,
+                "z": 0.0
+            },
+            "Length": 2200.000000292086,
+            "Width": 2199.9999989774656,
+            "Heigh": 1650.0
+        },
+        {
+            "Number": "",
+            "Name": "fef91ce70df94b71b881dc13a58565b5",
+            "PitCategory": "1",
+            "BaseLevelElevation": -3750.0,
+            "Point": {
+                "x": 15050.003214887169,
+                "y": 12549.97710521031,
+                "z": 0.0
+            },
+            "Center": {
+                "x": 16150.00246201246,
+                "y": 11449.977105581031,
+                "z": 0.0
+            },
+            "Length": 2199.9999998811404,
+            "Width": 2199.9999989775674,
+            "Heigh": 1650.0
+        }
+    ]
+}
