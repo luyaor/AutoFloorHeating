@@ -42,13 +42,13 @@ def split_polygon_by_multiline(polygon, lines):
     for line in lines:
         new_pieces = []
         for piece in pieces:
-            if piece.intersects(line):
-                try:
+            try:
+                if piece.intersects(line):
                     splitted = split(piece, line)
                     new_pieces.extend(list(splitted.geoms))
-                except Exception as e:
+                else:
                     new_pieces.append(piece)
-            else:
+            except Exception as e:
                 new_pieces.append(piece)
         pieces = new_pieces
     return pieces
@@ -154,12 +154,15 @@ def largest_inscribed_rect(poly):
                     if not rect.is_valid:
                         continue  # 跳过无效的矩形
                     
-                    # 检查矩形是否在多边形内
-                    if poly.contains(rect):
-                        area = rect.area
-                        if area > max_area:
-                            max_area = area
-                            best_rect = rect
+                    try:
+                        # 检查矩形是否在多边形内
+                        if poly.contains(rect):
+                            area = rect.area
+                            if area > max_area:
+                                max_area = area
+                                best_rect = rect
+                    except Exception as e:
+                        continue
 
     return best_rect, max_area
 
@@ -292,10 +295,13 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
                     all_adj.discard(node_id)
                     all_adj.discard(best_neighbor_id)
                     for adj_id in all_adj:
-                        if best_merged_poly.touches(G.nodes[adj_id]['geometry']):
-                            inter = best_merged_poly.intersection(G.nodes[adj_id]['geometry'])
-                            if inter.length > 1e-7:
-                                G.add_edge(new_node_id, adj_id)
+                        try:
+                            if best_merged_poly.touches(G.nodes[adj_id]['geometry']):
+                                inter = best_merged_poly.intersection(G.nodes[adj_id]['geometry'])
+                                if inter.length > 1e-7:
+                                    G.add_edge(new_node_id, adj_id)
+                        except Exception as e:
+                            continue
                     G.remove_node(node_id)
                     G.remove_node(best_neighbor_id)
                     merge_count += 1
@@ -358,8 +364,12 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
                 # 这应该不会发生，因为所有点都已经在 unique_points 中
                 print(f"警告：点 {pt} 未在 unique_points 中找到。")
         region_info.append(region_idx)
+    
+    total_score = 0
+    for poly in final_polygons:
+        total_score += shape_score(poly)  # 累加得分
 
-    return final_polygons, nat_lines, global_points, region_info
+    return final_polygons, nat_lines, global_points, region_info, total_score
 
 def bounding_box_aspect_ratio(polygon):
     minx, miny, maxx, maxy = polygon.bounds
@@ -379,10 +389,6 @@ def get_closest_ratios(target_aspect_ratio, possible_ratios):
     return [(num_x, num_y) for _, num_x, num_y in distances[:5]]
 
 def partition_work(polygon_coords, num_x = 1, num_y = 2):
-    # polygon_coords = SEG_PTS[nid]
-
-    # if nid != 5:
-    #     polygon_coords = [(x[0]/100, x[1]/100) for x in polygon_coords]
 
     polygon = Polygon(polygon_coords)
     target_aspect_ratio = bounding_box_aspect_ratio(polygon)
@@ -395,11 +401,17 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
 
     shuffle_times = 3
 
+    best_polygon = None  # 用来保存得分最高的多边形
+    best_wall_path = None  # 用来保存得分最高的墙体路径
+    best_region_info = None  # 用来保存最佳区域信息
+    best_global_points = None  # 用来保存最佳全局点列表
+    best_score = -float('inf')  # 初始化得分为负无穷
+
     # 对于每个比例，运行算法
     for num_x, num_y in closest_ratios:
         print(f"Running for {num_x}x{num_y}")
         for _ in range(shuffle_times):
-            final_polygons, nat_lines, global_points, region_info = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
+            final_polygons, nat_lines, global_points, region_info, score = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
 
             def dis(x,y):
                 return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
@@ -454,8 +466,19 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
             print("SEG_PTS=", allp)
             print("CAC_REGIONS_FAKE=", new_region_info)
             print("")
+
+            # 更新得分最高的多边形
+            if score > best_score:
+                best_score = score
+                best_global_points = allp
+                best_polygon = final_polygons
+                best_wall_path = [i for i in range(num_of_nodes)]
+                best_region_info = new_region_info
             
             plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
+        
+    return best_polygon, best_global_points, best_region_info, best_wall_path
+
 
 if __name__ == "__main__":
     work(2)
