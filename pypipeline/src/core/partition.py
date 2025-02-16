@@ -7,7 +7,7 @@ from scipy.spatial import ConvexHull
 from shapely.geometry import Polygon, LineString, MultiPoint, Point
 from shapely.ops import split, unary_union
 
-from partition_data import *
+from data.test_data import *
 
 random.seed(1234)
 
@@ -378,11 +378,11 @@ def get_closest_ratios(target_aspect_ratio, possible_ratios):
     distances.sort()
     return [(num_x, num_y) for _, num_x, num_y in distances[:5]]
 
-def work(nid):
-    polygon_coords = SEG_PTS[nid]
-    
-    if nid != 5:
-        polygon_coords = [(x[0]/100, x[1]/100) for x in polygon_coords]
+def partition_work(polygon_coords, num_x = 1, num_y = 2):
+    # polygon_coords = SEG_PTS[nid]
+
+    # if nid != 5:
+    #     polygon_coords = [(x[0]/100, x[1]/100) for x in polygon_coords]
 
     polygon = Polygon(polygon_coords)
     target_aspect_ratio = bounding_box_aspect_ratio(polygon)
