@@ -311,7 +311,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
 
                 partition_input = load_partition_input(partition_input_file)
 
-                final_polygons, nat_lines, allp, new_region_info, wall_path = partition.partition_work(partition_input['points'], 
+                final_polygons, allp, new_region_info, wall_path = partition.partition_work(partition_input['points'], 
                                                                                                       num_x=partition_input['num_x'], 
                                                                                                       num_y=partition_input['num_y'])
 
