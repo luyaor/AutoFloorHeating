@@ -1249,6 +1249,10 @@ class CactusSolver:
                     no_del_cycle = copy.deepcopy(cycle)
                     for _ in range(len(cycle)):
                         pts_xy = [node_pos[x] for x in no_del_cycle]
+
+                        # print(f"pts = {pts_xy}")
+                        # print(f"w_sug = {w_sug}")
+
                         ret = inner_recursive_v2_api(
                             pts_xy,
                             w_sug,
@@ -1546,7 +1550,7 @@ class CactusSolver:
 
         # [m1]
         pipe_pt_seq = []
-        for s in g2_start_nodes:
+        for s in g2_start_nodes[:1]:
             n, e, p, i = CactusSolver.g3_tarjan_for_a_color(
                 s,
                 g2_node_set_s3,
@@ -1564,6 +1568,14 @@ class CactusSolver:
             )
             pts = [x[0] for x in seq]
             pipe_pt_seq.append(pts)
+            print("---")
+            for pt in pts:
+                print(pt)
+            # get min & max of e[0] and e[1]
+            print(f"min: {min(pts, key=lambda x: x[0])}")
+            print(f"max: {max(pts, key=lambda x: x[0])}")
+            print(f"min: {min(pts, key=lambda x: x[1])}")
+            print(f"max: {max(pts, key=lambda x: x[1])}")
 
         if debug.m1:
             plt.figure(figsize=(20, 10))
@@ -1582,56 +1594,144 @@ class CactusSolver:
 
 
 if __name__ == "__main__":
-    seg_pts = [
-        [13800, 150],
-        [14100, 150],
-        [17550, 150],
-        [21000, 150],
-        [25700, 150],
-        [27450, 150],
-        [27450, 5750],
-        [25700, 5750],
-        [25700, 9350],
-        [21000, 9350],
-        [17550, 9350],
-        [17550, 10150],
-        [14850, 10150],
-        [14850, 12550],
-        [13500, 12550],
-        [13500, 10150],
-        [13500, 6900],
-        [13800, 6900],
-        [13800, 5750],  # 18
-        [13800, 1150],  # 19
-        [17550, 5750],
-        [21000, 5750],
-        [14100, 1150],  # 22
+    WALL_PT_PATH = [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
     ]
-    seg_pts = [arr(x[0] / 100 - 130, x[1] / 100) for x in seg_pts]
+    SEG_PTS = [
+        (274.5, 1.4997999999999998),
+        (257.0, 1.4998128205128203),
+        (204.74995, 1.499851098937729),
+        (169.00009999999997, 1.4998772893040293),
+        (154.0001, 1.4998882783150183),
+        (148.5, 1.4998923076923076),
+        (138.0, 1.4999),
+        (138.0, 57.49979999999999),
+        (138.0, 63.4998),
+        (138.0, 68.9999),
+        (134.9999, 68.9999),
+        (134.9999, 93.4998),
+        (134.9999, 101.4998),
+        (134.9999, 104.9998),
+        (134.9999, 125.4998),
+        (138.0, 125.4998),
+        (148.5, 125.4998),
+        (148.5, 104.9998),
+        (148.5, 101.4998),
+        (154.0001, 101.4998),
+        (154.0001, 104.9998),
+        (169.00009999999997, 104.9998),
+        (169.00009999999997, 101.4998),
+        (175.5, 101.4998),
+        (175.5, 93.4998),
+        (204.74995, 93.4998),
+        (257.0, 93.4998),
+        (257.0, 68.9999),
+        (257.0, 63.4998),
+        (257.0, 57.49979999999999),
+        (274.5, 57.49979999999999),
+        (204.74995, 57.49979999999999),
+        (204.74995, 63.4998),
+        (204.74995, 68.9999),
+        (169.00009999999997, 93.4998),
+        (169.00009999999997, 68.9999),
+        (169.00009999999997, 63.4998),
+        (169.00009999999997, 57.49979999999999),
+        (154.0001, 57.49979999999999),
+        (148.5, 57.49979999999999),
+    ]
+    CAC_REGIONS_FAKE = [
+        ([28, 27, 26, 25, 33, 32, 31, 29], 1),
+        (
+            [
+                21,
+                20,
+                19,
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12,
+                11,
+                10,
+                9,
+                8,
+                7,
+                39,
+                38,
+                37,
+                36,
+                35,
+                34,
+                24,
+                23,
+                22,
+            ],
+            0,
+        ),
+        ([29, 31, 2, 1, 0, 30], 2),
+        ([6, 5, 4, 3, 2, 31, 32, 33, 25, 24, 34, 35, 36, 37, 38, 39, 7], 3),
+    ]
 
-    cac_regions_fake = [
-        ([0, 1, 22, 19], 0),
-        ([1, 2, 20, 18, 19, 22], 1),
-        ([18, 20, 10, 11, 12, 15, 16, 17], 1),
-        ([12, 13, 14, 15], 1),
-        ([2, 3, 21, 20], 2),
-        ([20, 21, 9, 10], 2),
-        ([3, 4, 7, 21], 3),
-        ([21, 7, 8, 9], 3),
-        ([4, 5, 6, 7], 4),
-    ]
-    cac_regions_fake = [CacRegion(x[0][::1], x[1]) for x in cac_regions_fake]
+    SEG_PTS = [arr(x[0], x[1]) for x in SEG_PTS]
+
+    CAC_REGIONS_FAKE = [CacRegion(x[0][::1], x[1]) for x in CAC_REGIONS_FAKE]
 
     solver = CactusSolver(
-        glb_h=150,
-        glb_w=150,
-        cmap={-1: "black", 0: "grey", 1: "blue", 2: "yellow", 3: "red", 4: "cyan"},
-        seg_pts=seg_pts,
-        wall_pt_path=list(range(20)),
-        cac_region_fake=cac_regions_fake,
-        destination_pt=0,
+        glb_h=400,
+        glb_w=400,
+        cmap={
+            -1: "black",
+            0: "grey",
+            1: "blue",
+            2: "yellow",
+            3: "red",
+            4: "cyan",
+            5: "green",
+            6: "purple",
+            7: "orange",
+            8: "pink",
+        },
+        seg_pts=SEG_PTS,
+        wall_pt_path=WALL_PT_PATH,
+        cac_region_fake=CAC_REGIONS_FAKE,
+        destination_pt=14,
         suggested_m0_pipe_interval=2.5,
     )
 
-    tmp = solver.process(CactusSolverDebug(m1=False))
-    print(tmp)
+    pipe_pt_seq = solver.process(
+        CactusSolverDebug(g2s1=True, g2s3=True, g3=True, m1=True)
+    )
+    for idx, pts in enumerate(pipe_pt_seq):
+        print(f"pipe {idx}: {pts}")
