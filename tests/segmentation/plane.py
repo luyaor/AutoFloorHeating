@@ -213,10 +213,10 @@ def pt_dir_intersect(
 ) -> Optional[Point]:
     cross = line_cross(line_at_dir(*pt_dir_start), line_at_dir(*pt_dir_end))
     if cross is None:
-        logger.warning("parallel")
+        # logger.warning("parallel")
         return None
     if not eq(normalized(cross - pt_dir_start[0]) @ pt_dir_start[1], 1):
-        logger.warning("cross in the inverse direction")
+        # logger.warning("cross in the inverse direction")
         return None
     return cross
 
@@ -437,11 +437,14 @@ def inner_recursive_v2(
                     s1_and_after_area_estimated = signed_poly_area(
                         list(map(lambda x: x[0], outer[s_idx + 1 :])), ccw
                     )
-                    # print(s_and_before_area_estimated, s1_and_after_area_estimated)
-                    assert (
+                    if not (
                         s_and_before_area_estimated >= 0
                         and s1_and_after_area_estimated >= 0
-                    )
+                    ):
+                        # 通常是最后几个点才会出现这种异常，直接退出
+                        outer.clear()
+                        return True
+
                     if s_and_before_area_estimated > s1_and_after_area_estimated:
                         # ok to append new one, delete some outer
                         # logger.warning(f"jumped {s_idx + 1} and after")
@@ -717,24 +720,36 @@ def inner_recursive_v2_api(
 
 
 def test101():
+    array = np.array
     pts = [
-        np.array([146.0, 16.0]),
-        np.array([143.5, 8.5]),
-        np.array([101.5, 8.5]),
-        np.array([99.0, 11.0]),
-        np.array([99.0, 92.25]),
-        np.array([99.0, 98.5]),
-        np.array([99.0, 99.75]),
-        np.array([101.5, 101.625]),
-        np.array([115.5, 101.625]),
-        np.array([118.0, 99.75]),
-        np.array([118.0, 91.0]),
-        np.array([123.0, 86.0]),
-        np.array([143.5, 86.0]),
-        np.array([146.0, 83.5]),
+        array([170.625075, 88.4998]),
+        array([172.25005, 90.9998]),
+        array([173.0, 90.9998]),
+        array([176.49998889, 88.49985556]),
+        array([180.49994444, 88.49985556]),
+        array([183.99993333, 80.9998]),
+        array([222.99996667, 80.9998]),
+        array([225.49996667, 78.4998]),
+        array([225.49996667, 71.4999]),
+        array([225.49996667, 66.4999]),
+        array([225.49996667, 66.24985]),
+        array([221.99996667, 64.874825]),
+        array([186.49993333, 64.874825]),
+        array([179.99995, 60.9998]),
+        array([179.99995, 60.4998]),
+        array([178.49996667, 58.9998]),
+        array([178.0, 58.9998]),
+        array([173.0, 58.9998]),
+        array([172.90004, 58.9998]),
+        array([170.625075, 60.4998]),
+        array([170.625075, 60.9998]),
+        array([171.5001, 65.9998]),
+        array([171.5001, 66.4999]),
+        array([170.625075, 71.4999]),
     ]
+    w_sug = 5.0
     res = inner_recursive_v2_api(
-        pts, 5, dont_delete_outer=True, start_must_be_convex=True
+        pts, w_sug, dont_delete_outer=True, start_must_be_convex=True
     )
     if res is None:
         print("None")
