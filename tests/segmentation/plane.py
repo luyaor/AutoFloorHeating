@@ -382,7 +382,7 @@ def inner_recursive_v2(
 
     debug_cnt = 240
     while len(outer) >= 3 and debug_cnt > 0:
-        if debug_cnt == 211:
+        if len(outer) == 55:
             _ = 1
         # print("------")
         debug_cnt -= 1
@@ -432,8 +432,10 @@ def inner_recursive_v2(
                     )
                 )
                 if (
-                    dis := seg1_from_seg2_signed_distance(seg_new, seg_s)
-                ) is not None and dis <= 1.1 * width:
+                    (dis := seg1_from_seg2_signed_distance(seg_new, seg_s)) is not None
+                    and dis >= 0
+                    and dis <= 1.1 * width
+                ):
                     # logger.info(f"{(s_idx, s_idx + 1)} is too close")
                     s_and_before_area_estimated = signed_poly_area(
                         [pt_new] + list(map(lambda x: x[0], outer[1 : s_idx + 1])), ccw
