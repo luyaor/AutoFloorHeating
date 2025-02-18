@@ -180,9 +180,9 @@ class CactusSolver:
 
         # [assert]
         for cac in self.cac_regions_fake:
-            assert is_counter_clockwise(
-                [self.seg_pts[x] for x in cac.ccw_pts_id]
-            ), cac.ccw_pts_id
+            assert is_counter_clockwise([self.seg_pts[x] for x in cac.ccw_pts_id]), (
+                cac.ccw_pts_id
+            )
         assert all(isinstance(x, np.ndarray) for x in self.seg_pts)
 
         # [fill]
@@ -1265,7 +1265,6 @@ class CactusSolver:
                         no_del_cycle = no_del_cycle[1:] + [no_del_cycle[0]]
                     raise ValueError("Can't find any circle without outer deletion.")
 
-                # inner_pts, indices = inner_recursive_v2_api(pts_xy, w_sug)
                 no_del_cycle, inner_pts, indices = fn()
                 # print(f"found cycle: {cycle}")
                 # print(f"pts (test it): {[node_pos[x] for x in no_del_cycle]}")
@@ -1360,7 +1359,7 @@ class CactusSolver:
         plt.figure(figsize=(20, 10))
         self.plot_matrix(self.global_mat, title="test")
 
-        for s in start_nodes:
+        for s in start_nodes[0:1]:
             n, e, p, i = CactusSolver.g3_tarjan_for_a_color(
                 s,
                 g2_node_set_s3,
@@ -1382,6 +1381,26 @@ class CactusSolver:
                     dfs_plot(v)
 
             dfs_plot(("outer", s))
+        array = np.array
+        li = [
+            array([218.49995, 15.24984103]),
+            array([218.49995, 38.7498]),
+            array([255.75, 38.7498]),
+            array([255.75, 20.24981374]),
+            array([223.49995, 20.24983736]),
+            array([223.49995, 33.7498]),
+            array([250.75, 33.7498]),
+            array([250.75, 25.2498174]),
+            array([228.49995, 25.2498337]),
+            array([228.49995, 28.7498]),
+            array([247.00000092, 30.24982015]),
+        ]
+        plt.scatter(
+            [x[1] for x in li],
+            [x[0] for x in li],
+            s=[0.5] * len(li),
+            color="red",
+        )
         plt.show()
 
     @staticmethod
@@ -1396,7 +1415,7 @@ class CactusSolver:
             """
             u is a g3 node
             """
-            nonlocal dest_pt
+            nonlocal dest_pt, g3_edge_dict, g3_node_pos, g3_edge_info
             sons = deepcopy(g3_edge_dict.get(u, []))
             u_is_root = u[0] == "outer" and u[1][1] == dest_pt
             if u_is_root:
@@ -1550,7 +1569,7 @@ class CactusSolver:
 
         # [m1]
         pipe_pt_seq = []
-        for s in g2_start_nodes[:1]:
+        for s in g2_start_nodes:
             n, e, p, i = CactusSolver.g3_tarjan_for_a_color(
                 s,
                 g2_node_set_s3,
@@ -1568,14 +1587,6 @@ class CactusSolver:
             )
             pts = [x[0] for x in seq]
             pipe_pt_seq.append(pts)
-            print("---")
-            for pt in pts:
-                print(pt)
-            # get min & max of e[0] and e[1]
-            print(f"min: {min(pts, key=lambda x: x[0])}")
-            print(f"max: {max(pts, key=lambda x: x[0])}")
-            print(f"min: {min(pts, key=lambda x: x[1])}")
-            print(f"max: {max(pts, key=lambda x: x[1])}")
 
         if debug.m1:
             plt.figure(figsize=(20, 10))
@@ -1731,7 +1742,9 @@ if __name__ == "__main__":
     )
 
     pipe_pt_seq = solver.process(
-        CactusSolverDebug(g2s1=True, g2s3=True, g3=True, m1=True)
+        CactusSolverDebug(
+            m1=True,
+        )
     )
     for idx, pts in enumerate(pipe_pt_seq):
         print(f"pipe {idx}: {pts}")

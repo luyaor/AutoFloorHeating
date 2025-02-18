@@ -32,6 +32,10 @@ def strictly_less(a: float, b: float) -> bool:
     return a < b - EPS
 
 
+def strictly_greater(a: float, b: float) -> bool:
+    return a > b + EPS
+
+
 def same_point(p: Point, q: Point) -> bool:
     return eq(p[0], q[0]) and eq(p[1], q[1])
 
@@ -378,6 +382,8 @@ def inner_recursive_v2(
 
     debug_cnt = 240
     while len(outer) >= 3 and debug_cnt > 0:
+        if debug_cnt == 211:
+            _ = 1
         # print("------")
         debug_cnt -= 1
         # if len(res) >= 18:
@@ -405,17 +411,15 @@ def inner_recursive_v2(
             outer = outer[1:]
             continue
 
-        # [线段太近, 充分不必要探测]：跳以后并忽略新点
-        # 检查未来所有线段（1->2 ..= -2->-1）平移后是否相交. 这里不查直线，只查线段
         # [预测删除 v2]
-        f"""
+        """
         未来某个线段 s -> s + 1 到新线段有向距离（定义见上方函数）{seg1_from_seg2_signed_distance}
         <= width 则选择跳过 s 及之前或 s + 1 及之后
         否则不用跳过，正常执行即可
         """
 
         def need_jump_and_jumped() -> bool:
-            nonlocal outer, res, indices
+            nonlocal outer, res, indices, seg_new
             for s_idx in range(1, len(outer) - 2):
                 # 传入函数的距离正方向是向左
                 # 如果 clockwise，实际需要的距离正方向是向右，传入函数之前反一下
@@ -432,7 +436,7 @@ def inner_recursive_v2(
                 ) is not None and dis <= 1.1 * width:
                     # logger.info(f"{(s_idx, s_idx + 1)} is too close")
                     s_and_before_area_estimated = signed_poly_area(
-                        [pt_new] + list(map(lambda x: x[0], outer[: s_idx + 1])), ccw
+                        [pt_new] + list(map(lambda x: x[0], outer[1 : s_idx + 1])), ccw
                     )
                     s1_and_after_area_estimated = signed_poly_area(
                         list(map(lambda x: x[0], outer[s_idx + 1 :])), ccw
@@ -440,6 +444,12 @@ def inner_recursive_v2(
                     if not (
                         s_and_before_area_estimated >= 0
                         and s1_and_after_area_estimated >= 0
+                        and strictly_greater(
+                            max(
+                                s_and_before_area_estimated, s1_and_after_area_estimated
+                            ),
+                            0,
+                        )
                     ):
                         # 通常是最后几个点才会出现这种异常，直接退出
                         outer.clear()
