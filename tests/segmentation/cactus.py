@@ -162,7 +162,7 @@ class CactusSolver:
         cmap,
         seg_pts,
         wall_pt_path,
-        cac_region_fake,
+        cac_region_fake: List[CacRegion],
         destination_pt,
         suggested_m0_pipe_interval,
     ):
@@ -180,10 +180,14 @@ class CactusSolver:
 
         # [assert]
         for cac in self.cac_regions_fake:
-            assert is_counter_clockwise(
-                [self.seg_pts[x] for x in cac.ccw_pts_id]
-            ), cac.ccw_pts_id
+            assert is_counter_clockwise([self.seg_pts[x] for x in cac.ccw_pts_id]), (
+                cac.ccw_pts_id
+            )
         assert all(isinstance(x, np.ndarray) for x in self.seg_pts)
+
+        assert all(region.color in self.cmap for region in self.cac_regions_fake), (
+            f"some region color not in cmap, max color is {max(region.color for region in self.cac_regions_fake)}",
+        )
 
         # [fill]
         blacks = self.fill_pts([self.seg_pts[i] for i in self.wall_pt_path], close=True)
@@ -1249,6 +1253,10 @@ class CactusSolver:
                     no_del_cycle = copy.deepcopy(cycle)
                     for _ in range(len(cycle)):
                         pts_xy = [node_pos[x] for x in no_del_cycle]
+
+                        # print(f"pts = {pts_xy}")
+                        # print(f"w_sug = {w_sug}")
+
                         ret = inner_recursive_v2_api(
                             pts_xy,
                             w_sug,
@@ -1259,9 +1267,10 @@ class CactusSolver:
                             inner_pts, indices = ret
                             return no_del_cycle, inner_pts, indices
                         no_del_cycle = no_del_cycle[1:] + [no_del_cycle[0]]
-                    raise ValueError("Can't find any circle without outer deletion.")
+                    raise ValueError(
+                        "Can't find any circle without outer deletion. Try to reduce the `w_sug`."
+                    )
 
-                # inner_pts, indices = inner_recursive_v2_api(pts_xy, w_sug)
                 no_del_cycle, inner_pts, indices = fn()
                 # print(f"found cycle: {cycle}")
                 # print(f"pts (test it): {[node_pos[x] for x in no_del_cycle]}")
@@ -1339,7 +1348,7 @@ class CactusSolver:
                 else:
                     logger.error(f"{node}")
                     raise ValueError(
-                        f"There are more than one start node in the same color {pipe_color[node[0]]}. Note dest_pt must be in a white region."
+                        f"There are more than one start node in the same color {pipe_color[node[0]]}. note: `dest_pt` must be in a white region."
                     )
         return res
 
@@ -1378,6 +1387,26 @@ class CactusSolver:
                     dfs_plot(v)
 
             dfs_plot(("outer", s))
+        array = np.array
+        li = [
+            array([218.49995, 15.24984103]),
+            array([218.49995, 38.7498]),
+            array([255.75, 38.7498]),
+            array([255.75, 20.24981374]),
+            array([223.49995, 20.24983736]),
+            array([223.49995, 33.7498]),
+            array([250.75, 33.7498]),
+            array([250.75, 25.2498174]),
+            array([228.49995, 25.2498337]),
+            array([228.49995, 28.7498]),
+            array([247.00000092, 30.24982015]),
+        ]
+        plt.scatter(
+            [x[1] for x in li],
+            [x[0] for x in li],
+            s=[0.5] * len(li),
+            color="red",
+        )
         plt.show()
 
     @staticmethod
@@ -1392,7 +1421,7 @@ class CactusSolver:
             """
             u is a g3 node
             """
-            nonlocal dest_pt
+            nonlocal dest_pt, g3_edge_dict, g3_node_pos, g3_edge_info
             sons = deepcopy(g3_edge_dict.get(u, []))
             u_is_root = u[0] == "outer" and u[1][1] == dest_pt
             if u_is_root:
@@ -1458,7 +1487,7 @@ class CactusSolver:
         dfs(start_g3_node, None, None, None, res_ref)
         return res_ref
 
-    def process(self, debug: CactusSolverDebug):
+    def process(self, debug: CactusSolverDebug) -> List[List[Point]]:
         if debug.show_wall:
             self.show_wall()
         if debug.show_regions_with_colors:
@@ -1545,7 +1574,7 @@ class CactusSolver:
             )
 
         # [m1]
-        pipe_pt_seq = []
+        pipe_pt_seq: List[List[Point]] = []
         for s in g2_start_nodes:
             n, e, p, i = CactusSolver.g3_tarjan_for_a_color(
                 s,
@@ -1581,57 +1610,59 @@ class CactusSolver:
         return pipe_pt_seq
 
 
-if __name__ == "__main__":
-    seg_pts = [
-        [13800, 150],
-        [14100, 150],
-        [17550, 150],
-        [21000, 150],
-        [25700, 150],
-        [27450, 150],
-        [27450, 5750],
-        [25700, 5750],
-        [25700, 9350],
-        [21000, 9350],
-        [17550, 9350],
-        [17550, 10150],
-        [14850, 10150],
-        [14850, 12550],
-        [13500, 12550],
-        [13500, 10150],
-        [13500, 6900],
-        [13800, 6900],
-        [13800, 5750],  # 18
-        [13800, 1150],  # 19
-        [17550, 5750],
-        [21000, 5750],
-        [14100, 1150],  # 22
-    ]
-    seg_pts = [arr(x[0] / 100 - 130, x[1] / 100) for x in seg_pts]
+def calc_pipe_length(li: List[Point]):
+    ret = 0.0
+    for i in range(1, len(li)):
+        ret += np.linalg.norm(li[i] - li[i - 1])
+    return ret
 
-    cac_regions_fake = [
-        ([0, 1, 22, 19], 0),
-        ([1, 2, 20, 18, 19, 22], 1),
-        ([18, 20, 10, 11, 12, 15, 16, 17], 1),
-        ([12, 13, 14, 15], 1),
-        ([2, 3, 21, 20], 2),
-        ([20, 21, 9, 10], 2),
-        ([3, 4, 7, 21], 3),
-        ([21, 7, 8, 9], 3),
-        ([4, 5, 6, 7], 4),
+
+if __name__ == "__main__":
+    WALL_PT_PATH= [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
+    SEG_PTS= [(1.0, 35.166666666666664), (1.0, 36.0), (1.0, 69.33333333333333), (1.0, 88.5), (40.0, 88.5), (40.0, 96.0), (96.5, 96.0), (96.5, 103.5), (120.5, 103.5), (120.5, 96.0), (120.5, 88.5), (145.5, 88.5), (148.5, 88.5), (148.5, 96.0), (148.5, 103.5), (177.5, 103.5), (177.5, 96.0), (250.0, 96.0), (275.0, 96.0), (275.0, 88.5), (280.0, 88.5), (280.0, 69.33333333333333), (280.0, 36.0), (290.0, 36.0), (290.0, 35.166666666666664), (290.0, 1.0), (280.0, 1.0), (275.0, 1.0), (250.0, 1.0), (177.5, 1.0), (148.5, 1.0), (145.5, 1.0), (120.5, 1.0), (96.5, 1.0), (40.0, 1.0), (1.0, 1.0), (280.0, 35.166666666666664), (275.0, 35.166666666666664), (177.5, 35.166666666666664), (177.5, 36.0), (177.5, 69.33333333333333), (275.0, 69.33333333333333), (177.5, 88.5), (40.0, 35.166666666666664), (96.5, 35.166666666666664), (120.5, 35.166666666666664), (40.0, 69.33333333333333), (40.0, 36.0), (120.5, 36.0), (120.5, 69.33333333333333)]
+    CAC_REGIONS_FAKE= [([41, 40, 39, 38, 37, 36, 22, 21], 4), ([23, 22, 36, 37, 38, 29, 28, 27, 26, 25, 24], 0), ([16, 42, 40, 41, 21, 20, 19, 18, 17], 2), ([32, 45, 44, 43, 34, 33], 3), ([34, 43, 47, 46, 4, 3, 2, 1, 0, 35], 1), ([32, 31, 30, 29, 38, 39, 40, 42, 16, 15, 14, 13, 12, 11, 10, 49, 48, 45], 5), ([8, 7, 6, 5, 4, 46, 47, 43, 44, 45, 48, 49, 10, 9], 6)]
+
+    DESTINATION_PT = 25
+
+    # [---]
+
+    SEG_PTS = [arr(x[0], x[1]) for x in SEG_PTS]
+
+    CAC_REGIONS_FAKE = [CacRegion(x[0][::1], x[1]) for x in CAC_REGIONS_FAKE]
+
+    cmap_0 = [
+        "blue",
+        "yellow",
+        "red",
+        "cyan",
+        "green",
+        "purple",
+        "orange",
+        "pink",
     ]
-    cac_regions_fake = [CacRegion(x[0][::1], x[1]) for x in cac_regions_fake]
+    cmap = {
+        -1: "black",
+        0: "grey",
+        **{(i + 1): cmap_0[i % len(cmap_0)] for i in range(100)},
+    }
 
     solver = CactusSolver(
-        glb_h=150,
-        glb_w=150,
-        cmap={-1: "black", 0: "grey", 1: "blue", 2: "yellow", 3: "red", 4: "cyan"},
-        seg_pts=seg_pts,
-        wall_pt_path=list(range(20)),
-        cac_region_fake=cac_regions_fake,
-        destination_pt=0,
-        suggested_m0_pipe_interval=2.5,
+        glb_h=400,
+        glb_w=400,
+        cmap=cmap,
+        seg_pts=SEG_PTS,
+        wall_pt_path=WALL_PT_PATH,
+        cac_region_fake=CAC_REGIONS_FAKE,
+        destination_pt=DESTINATION_PT,
+        suggested_m0_pipe_interval=1.0,
     )
 
-    tmp = solver.process(CactusSolverDebug(m1=False))
-    print(tmp)
+    pipe_pt_seq = solver.process(
+        CactusSolverDebug(
+            g3=True,
+            m1=True,
+        )
+    )
+    for idx, pts in enumerate(pipe_pt_seq):
+        print(f"pipe {idx} length: {calc_pipe_length(pts)} (m)")
+        # print(f"pipe {idx}: {pts}")
