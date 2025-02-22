@@ -1,12 +1,15 @@
 import math
+import random
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
+from scipy.spatial import ConvexHull
 from shapely.geometry import Polygon, LineString, MultiPoint, Point
 from shapely.ops import split, unary_union
+
 from data.test_data import *
 
-# from partition_data import *
+random.seed(1234)
 
 def get_natural_segmentation_lines(polygon):
     nat_lines = []
@@ -39,13 +42,13 @@ def split_polygon_by_multiline(polygon, lines):
     for line in lines:
         new_pieces = []
         for piece in pieces:
-            if piece.intersects(line):
-                try:
+            try:
+                if piece.intersects(line):
                     splitted = split(piece, line)
                     new_pieces.extend(list(splitted.geoms))
-                except Exception as e:
+                else:
                     new_pieces.append(piece)
-            else:
+            except Exception as e:
                 new_pieces.append(piece)
         pieces = new_pieces
     return pieces
@@ -73,9 +76,6 @@ def plot_polygons(polygons, nat_lines=None, title="Polygons", global_points=None
     ax.legend(loc='upper right')
     plt.show()
 
-def points_equal(p1, p2, tol=1e-7):
-    return abs(p1[0]-p2[0]) < tol and abs(p1[1]-p2[1]) < tol
-
 def compute_signed_area(points):
     area = 0
     n = len(points)
@@ -85,24 +85,113 @@ def compute_signed_area(points):
         area += (x1 * y2 - x2 * y1)
     return area/2
 
-def remove_collinear(points, tol=1e-7):
-    """
-    去除连续共线的点。points 为顺序排列的不重复点序列。
-    """
-    return points
-    # if len(points) < 3:
-    #     return points[:]
-    # filtered = []
-    # n = len(points)
-    # for i in range(n):
-    #     prev = points[i - 1]
-    #     curr = points[i]
-    #     next = points[(i + 1) % n]
-    #     # 计算三角形面积的两倍（不除以 2），判断是否共线
-    #     area2 = abs((curr[0] - prev[0]) * (next[1] - prev[1]) - (next[0] - prev[0]) * (curr[1] - prev[1]))
-    #     if area2 > tol:
-    #         filtered.append(curr)
-    # return filtered
+# def largest_inscribed_rect(poly):
+#     minx, miny, maxx, maxy = poly.bounds
+#     best_rect = None
+#     max_area = 0
+
+#     # 按行扫描，分割为小块
+#     for y1 in np.linspace(miny, maxy, num=20):
+#         for y2 in np.linspace(y1, maxy, num=20):
+#             for x1 in np.linspace(minx, maxx, num=20):
+#                 for x2 in np.linspace(x1, maxx, num=20):
+#                     rect = Polygon([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
+#                     # 检查矩形是否完全包含在多边形内
+#                     if poly.contains(rect):
+#                         area = rect.area
+#                         if area > max_area:
+#                             max_area = area
+#                             best_rect = rect
+
+#     return best_rect, max_area
+
+def largest_inscribed_rect(poly):
+    minx, miny, maxx, maxy = poly.bounds
+    best_rect = None
+    max_area = 0
+
+    # 获取多边形的外边界（线段），并按x坐标排序
+    exterior = poly.exterior.coords
+    x_coords = [p[0] for p in exterior]
+    y_coords = [p[1] for p in exterior]
+    
+    # 扫描线法：遍历所有可能的上下边界 y1, y2
+    for y1 in np.unique(y_coords):  # 只遍历多边形的y坐标（减少不必要的搜索）
+        for y2 in np.unique(y_coords):
+            if y1 >= y2:  # 确保 y1 < y2
+                continue
+
+            # 对于每个y值，找到外边界线上所有交点的x坐标
+            valid_xs = []
+            for i in range(len(exterior) - 1):
+                x1, y1_exterior = exterior[i]
+                x2, y2_exterior = exterior[i + 1]
+                
+                # 判断线段是否与当前y1, y2范围相交
+                if (y1_exterior <= y1 <= y2_exterior or y2_exterior <= y1 <= y1_exterior):
+                    if y1_exterior == y2_exterior:  # 水平线段，跳过
+                        continue
+                    # 计算线段与水平线的交点
+                    try:
+                        intersect_x = x1 + (y1 - y1_exterior) * (x2 - x1) / (y2_exterior - y1_exterior)
+                        valid_xs.append(intersect_x)
+                    except ZeroDivisionError:
+                        # 如果出现除零错误，忽略该线段
+                        continue
+
+            valid_xs = sorted(valid_xs)  # 排序x坐标
+
+            if len(valid_xs) < 2:
+                continue  # 如果 x 坐标数量小于 2，跳过
+            
+            # 遍历有效的 x 坐标对，生成矩形并检查其是否在多边形内
+            for i in range(len(valid_xs)):
+                for j in range(i+1, len(valid_xs)):
+                    x1, x2 = valid_xs[i], valid_xs[j]
+                    rect = Polygon([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
+
+                    # 检查矩形是否有效
+                    if not rect.is_valid:
+                        continue  # 跳过无效的矩形
+                    
+                    try:
+                        # 检查矩形是否在多边形内
+                        if poly.contains(rect):
+                            area = rect.area
+                            if area > max_area:
+                                max_area = area
+                                best_rect = rect
+                    except Exception as e:
+                        continue
+
+    return best_rect, max_area
+
+# 对多边形进行切割，分离出“多余部分”
+def cut_extra_parts(poly):
+    # 获取一个内接的最大内接矩形作为核心区域
+    core, core_area = largest_inscribed_rect(poly)
+    
+    # 如果没有找到合适的矩形或者矩形占比太小，直接返回原始多边形
+    if core_area == 0 or core_area < poly.area * 0.1:  # 设定一个阈值，避免小矩形无效切割
+        return [poly]
+    
+    # 计算差集 poly - core，得到外部区域
+    remainder = poly.difference(core)
+    
+    # 确保切割后的结果不为空
+    if remainder.is_empty:
+        return [core]  # 如果差集为空，返回核心区域
+    
+    # 返回核心区域和多余部分
+    pieces = [core]
+    
+    if remainder.geom_type == 'Polygon':
+        pieces.append(remainder)
+    elif remainder.geom_type == 'MultiPolygon':
+        for p in remainder.geoms:
+            pieces.append(p)
+    
+    return pieces
 
 def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
     # -------------------- Step 1: 网格切分 --------------------
@@ -159,14 +248,23 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
         area_ratio = area / bound_area * 10
         ar = aspect_ratio(poly)
         penalty = (ar - 3) * 5 if ar > 3 else 0
-        return area_ratio - penalty
+
+        edge_num = len(poly.exterior.coords)
+
+        score = area_ratio - penalty
+        score = score - edge_num / 3
+
+        return score
+
 
     # -------------------- Step 3: 循环合并面积较小的分区 --------------------
     merge_count = 0
     while True:
-        nodes_sorted = sorted(G.nodes, key=lambda n: G.nodes[n]['area'])
+        # nodes_sorted = sorted(G.nodes, key=lambda n: G.nodes[n]['area'])
+        nodes_list = list(G.nodes)
+        random.shuffle(nodes_list)
         merged_flag = False
-        for node_id in nodes_sorted:
+        for node_id in nodes_list:
             if node_id not in G:
                 continue
             area = G.nodes[node_id]['area']
@@ -190,17 +288,20 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
                         best_merged_poly = merged_poly
                 if best_neighbor_id is not None and best_merged_poly is not None:
                     new_node_id = max(G.nodes) + 1
-                    G.add_node(new_node_id, geometry=best_merged_poly,
-                               area=best_merged_poly.area,
-                               bounds=best_merged_poly.bounds)
+                    G.add_node( new_node_id, geometry=best_merged_poly,
+                                area=best_merged_poly.area,
+                                bounds=best_merged_poly.bounds)
                     all_adj = set(G.neighbors(node_id)) | set(G.neighbors(best_neighbor_id))
                     all_adj.discard(node_id)
                     all_adj.discard(best_neighbor_id)
                     for adj_id in all_adj:
-                        if best_merged_poly.touches(G.nodes[adj_id]['geometry']):
-                            inter = best_merged_poly.intersection(G.nodes[adj_id]['geometry'])
-                            if inter.length > 1e-7:
-                                G.add_edge(new_node_id, adj_id)
+                        try:
+                            if best_merged_poly.touches(G.nodes[adj_id]['geometry']):
+                                inter = best_merged_poly.intersection(G.nodes[adj_id]['geometry'])
+                                if inter.length > 1e-7:
+                                    G.add_edge(new_node_id, adj_id)
+                        except Exception as e:
+                            continue
                     G.remove_node(node_id)
                     G.remove_node(best_neighbor_id)
                     merge_count += 1
@@ -210,7 +311,15 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
             break
 
     final_polygons = [data['geometry'] for _, data in G.nodes(data=True)]
-    # print("最终分区数：", len(final_polygons))
+
+    # -------------------- 对每个区域进行“内接矩形切割” --------------------
+    refined_polygons = []
+    for poly in final_polygons:
+        # 对每个区域计算最大内接矩形，并将多余部分（核心之外）切割出来
+        pieces = cut_extra_parts(poly)
+        refined_polygons.extend(pieces)
+    final_polygons = refined_polygons
+    # -------------------------------------------------------------------------
 
     # -------------------- Step 4: 构造全局点列表和区域信息 --------------------
     # 1. 收集所有多边形的外部边界点，去除重复和共线点
@@ -220,8 +329,7 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
         # 判断顶点顺序，若是逆时针则反转为顺时针
         if compute_signed_area(pts) > 0:
             pts = list(reversed(pts))
-        # 过滤掉共线的冗余点
-        pts = remove_collinear(pts)
+
         all_points.extend(pts)
     
     # 2. 创建一个字典来存储唯一的点，并为每个点分配一个唯一的索引
@@ -230,7 +338,8 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
     index = 0
     for pt in all_points:
         # 四舍五入坐标以处理浮点精度问题
-        rounded_pt = (round(pt[0], 7), round(pt[1], 7))
+        # rounded_pt = (round(pt[0], 7), round(pt[1], 7))
+        rounded_pt = pt
         if rounded_pt not in unique_points:
             unique_points[rounded_pt] = index
             global_points.append(rounded_pt)
@@ -243,11 +352,11 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
         # 判断顶点顺序，若是逆时针则反转为顺时针
         if compute_signed_area(pts) > 0:
             pts = list(reversed(pts))
-        # 过滤掉共线的冗余点
-        pts = remove_collinear(pts)
+        
         region_idx = []
         for pt in pts:
-            rounded_pt = (round(pt[0], 7), round(pt[1], 7))
+            # rounded_pt = (round(pt[0], 7), round(pt[1], 7))
+            rounded_pt = pt
             idx = unique_points.get(rounded_pt)
             if idx is not None:
                 region_idx.append(idx)
@@ -255,145 +364,123 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
                 # 这应该不会发生，因为所有点都已经在 unique_points 中
                 print(f"警告：点 {pt} 未在 unique_points 中找到。")
         region_info.append(region_idx)
-
-    def angle_sort_key(pt, centroid):
-        """
-        根据相对于重心的角度进行排序，确保顺时针排列。
-        """
-        x, y = pt
-        cx, cy = centroid
-        return math.atan2(y - cy, x - cx)
     
-    def ensure_clockwise_order(polygon_points):
-        """
-        确保多边形顶点按顺时针方向排列。
-        如果是逆时针排列，则反转顶点顺序。
-        """
-        # 计算多边形的面积，面积为负则表示逆时针排列
-        polygon = Polygon(polygon_points)
-        if polygon.area < 0:
-            # 逆时针，反转顺序
-            return polygon_points[::-1]
-        return polygon_points
+    total_score = 0
+    for poly in final_polygons:
+        total_score += shape_score(poly)  # 累加得分
 
-    def update_shared_points(region_info, global_points, final_polygons):
-        """
-        检查共享点并将其添加到相关区域的边界上，按顺时针方向正确插入。
-        """
-        for i, region in enumerate(region_info):
-            for pt_idx in region:
-                pt = global_points[pt_idx]
-                point_geom = Point(pt)  # 使用 Shapely 创建一个点对象
-                
-                for j, other_region in enumerate(region_info):
-                    if i != j:
-                        # 获取另一个区域的边界
-                        other_polygon = final_polygons[j]
-                        if other_polygon.boundary.intersects(point_geom):
-                            if pt_idx not in other_region:
-                                # 确保点按正确位置插入
-                                inserted = False
-                                for k in range(len(other_region)):
-                                    pt1_idx = other_region[k]
-                                    pt2_idx = other_region[(k + 1) % len(other_region)]
-                                    pt1 = global_points[pt1_idx]
-                                    pt2 = global_points[pt2_idx]
-                                    line = LineString([pt1, pt2])
+    return final_polygons, nat_lines, global_points, region_info, total_score
 
-                                    # 如果点在某条边上，则插入到这两个点之间
-                                    if line.intersects(point_geom):
-                                        other_region.insert(k + 1, pt_idx)
-                                        inserted = True
-                                        break
-                                if not inserted:
-                                    # 如果点不在任何边上，直接附加到末尾（作为兜底处理）
-                                    other_region.append(pt_idx)
-                                
-                                # 确保区域最终顺时针排序
-                                region_points = [global_points[idx] for idx in other_region]
-                                region_points = ensure_clockwise_order(region_points)
-                                other_region[:] = [global_points.index(pt) for pt in region_points]
-        return region_info  
+def bounding_box_aspect_ratio(polygon):
+    minx, miny, maxx, maxy = polygon.bounds
+    width = maxx - minx
+    height = maxy - miny
+    return max(width / height, height / width)
 
-    # 更新区域信息后，确保共享的点按顺序添加
-    region_info = update_shared_points(region_info, global_points, final_polygons)
-
-    return final_polygons, nat_lines, global_points, region_info
-
-
-
-
-def work(nid, num_x = 1, num_y = 2):
-    polygon_coords = SEG_PTS[nid]
-    
-    if nid != 5:
-        polygon_coords = [(x[0]/100, x[1]/100) for x in polygon_coords]
-    
-    final_polygons, nat_lines, allp, new_region_info, wall_path = partition_work(polygon_coords, num_x=num_x, num_y=num_y)
-    # print("SEG_WALL_PT_NUM=", num_of_nodes)
-    print("SEG_PTS=", allp)
-    print("CAC_REGIONS_FAKE=", new_region_info)
-    print("WALL_PT_PATH=", wall_path)
-    print("")
-
-    plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
-
+def get_closest_ratios(target_aspect_ratio, possible_ratios):
+    # 计算每种比例的长宽比，并与目标长宽比进行比较
+    distances = []
+    for (num_x, num_y) in possible_ratios:
+        aspect_ratio = num_x / num_y
+        distance = abs(aspect_ratio - target_aspect_ratio)
+        distances.append((distance, num_x, num_y))
+    # 按照距离排序，选取最接近的 5 个
+    distances.sort()
+    return [(num_x, num_y) for _, num_x, num_y in distances[:5]]
 
 def partition_work(polygon_coords, num_x = 1, num_y = 2):
-    final_polygons, nat_lines, global_points, region_info = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
+
+    polygon = Polygon(polygon_coords)
+    target_aspect_ratio = bounding_box_aspect_ratio(polygon)
+
+    # 所有可能的比例
+    possible_ratios = [(x, y) for x in [2, 3, 4, 5, 6] for y in [2, 3, 4, 5, 6]]
     
-    # print("全局点列表（按索引排列）：")
-    # for i, pt in enumerate(global_points):
-    #     print(f"{i}: {pt}")
-    # print("\n区域信息（区域边界点索引，均按顺时针排列）：")
-    # for i, region in enumerate(region_info):
-    #     print(f"Region {i+1}: {region}")
+    # 获取最接近的5个比例
+    closest_ratios = get_closest_ratios(target_aspect_ratio, possible_ratios)
 
-    # print(global_points)
-    # print(region_info)
+    shuffle_times = 3
 
-    def dis(x,y):
-        return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
+    best_polygon = None  # 用来保存得分最高的多边形
+    best_wall_path = None  # 用来保存得分最高的墙体路径
+    best_region_info = None  # 用来保存最佳区域信息
+    best_global_points = None  # 用来保存最佳全局点列表
+    best_score = -float('inf')  # 初始化得分为负无穷
 
-    allp = [x for x in polygon_coords]
-    for p in global_points:
-        l = len(allp)
-        for i in range(l):
-            if (dis(allp[i], p) > 1e-9) and (dis(p, allp[(i + 1) % l]) > 1e-9) and \
-            (abs(dis(allp[i], p) + dis(p, allp[(i + 1) % l]) - dis(allp[i], allp[(i + 1) % l])) < 1e-9):
-                allp = allp[:i + 1] + [p] + allp[i + 1:]
-                break
-    allp = allp[::-1]
-    num_of_nodes = len(allp)
+    # 对于每个比例，运行算法
+    for num_x, num_y in closest_ratios:
+        print(f"Running for {num_x}x{num_y}")
+        for _ in range(shuffle_times):
+            final_polygons, nat_lines, global_points, region_info, score = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
 
-    ind = []
-    for p in global_points:
-        if p not in allp:
-            allp.append(p)
-        ind.append(allp.index(p))
+            def dis(x,y):
+                return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
 
-    # for x in polygon_coords:
-    #     if x not in global_points:
-    #         print("error=", x)
+            allp = [x for x in polygon_coords]
+            for p in global_points:
+                l = len(allp)
+                for i in range(l):
+                    if (dis(allp[i], p) > 1e-9) and (dis(p, allp[(i + 1) % l]) > 1e-9) and \
+                    (abs(dis(allp[i], p) + dis(p, allp[(i + 1) % l]) - dis(allp[i], allp[(i + 1) % l])) < 1e-9):
+                        allp = allp[:i + 1] + [p] + allp[i + 1:]
+                        break
+            allp = allp[::-1]
+            num_of_nodes = len(allp)
 
-    new_region_info = []
-    cnt = -1
-    for r in region_info:
-        r = [ind[x] for x in r]
-        cnt = cnt + 1
-        new_region_info.append((r[::-1], cnt % 5))
+            ind = []
+            for p in global_points:
+                if p not in allp:
+                    allp.append(p)
+                ind.append(allp.index(p))
+
+            # for x in polygon_coords:
+            #     if x not in global_points:
+            #         print("error=", x)
+
+            # new_region_info = []
+            # cnt = -1
+            # for r in region_info:
+            #     r = [ind[x] for x in r]
+            #     cnt = cnt + 1
+            #     new_region_info.append((r[::-1], cnt))
+
+            new_region_info = []
+            cnt = -1
+            threshold_area = 200
+            for r in region_info:
+                r = [ind[x] for x in r]
+                cnt = cnt + 1
+                
+                # 获取区域的面积
+                poly = final_polygons[cnt]  # 根据cnt索引找到对应的区域
+                area = poly.area
+                
+                # 如果区域面积小于阈值，将颜色值设为-1，否则使用cnt
+                color_value = -1 if area < threshold_area else cnt
+                
+                new_region_info.append((r[::-1], color_value))  # 用color_value代替cnt
 
 
-    wall_path = [i for i in range(num_of_nodes)]
-    return final_polygons, nat_lines, allp, new_region_info, wall_path
-    
+            print("WALL_PT_PATH=", [i for i in range(num_of_nodes)])
+            # print("SEG_WALL_PT_NUM=", num_of_nodes)
+            print("SEG_PTS=", allp)
+            print("CAC_REGIONS_FAKE=", new_region_info)
+            print("")
+
+            # 更新得分最高的多边形
+            if score > best_score:
+                best_score = score
+                best_global_points = allp
+                best_polygon = final_polygons
+                best_wall_path = [i for i in range(num_of_nodes)]
+                best_region_info = new_region_info
+            
+            plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
+        
+    return best_polygon, best_global_points, best_region_info, best_wall_path
 
 
 if __name__ == "__main__":
-    work(4)
+    work(2)
     # for i in [0,1,2,3,5]:
     #     work(i)
-
-
-
-
