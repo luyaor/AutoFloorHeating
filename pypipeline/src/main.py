@@ -136,12 +136,12 @@ def display_input_info(design_data, input_data):
     pipe_spans = web_data.get('PipeSpanSet', [])
     if pipe_spans:
         print("\n🔹 管道间距设置:")
-        for span in pipe_spans:  # 只显示前3个示例
+        for span in pipe_spans[:3]:  # 只显示前3个示例
             print(f"  - {span['LevelDesc']}-{span['FuncName']}-{','.join(span['Directions'])}:")
             print(f"    外墙数: {span['ExterWalls']}")
             print(f"    管距: {span['PipeSpan']}mm")
-        # if len(pipe_spans) > 3:
-        #     print(f"    ... 等共{len(pipe_spans)}条设置")
+        if len(pipe_spans) > 3:
+            print(f"    ... 等共{len(pipe_spans)}条设置")
     
     # 打印弹性间距设置
     elastic_spans = web_data.get('ElasticSpanSet', [])
@@ -190,13 +190,11 @@ def display_input_info(design_data, input_data):
                 print(f"  - 位置: ({location['x']:.2f}, {location['y']:.2f}, {location['z']:.2f})")
 
 
-def process_single_floor(floor_data, input_data, num_x, num_y, output_dir):
+def run_pipeline(num_x: int = 3, num_y: int = 3):
     """
-    处理单个楼层的管道布线
+    运行管道布线的完整流程
     
     Args:
-        floor_data: 当前楼层的设计数据
-        input_data: 输入参数数据
         num_x: 网格x方向划分数
         num_y: 网格y方向划分数
     """
@@ -313,7 +311,7 @@ def process_single_floor(floor_data, input_data, num_x, num_y, output_dir):
 
                 partition_input = load_partition_input(partition_input_file)
 
-                final_polygons, nat_lines, allp, new_region_info, wall_path = partition.partition_work(partition_input['points'], 
+                final_polygons, allp, new_region_info, wall_path = partition.partition_work(partition_input['points'], 
                                                                                                       num_x=partition_input['num_x'], 
                                                                                                       num_y=partition_input['num_y'])
 
