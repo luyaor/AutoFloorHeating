@@ -259,12 +259,15 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
         # print("\n✅ 原始图像绘制完成，按任意键继续...")
         # # 绘制原始数据
         # input()
-        visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
-        continue
+        # visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
+        # continue
 
         print("\n📊 提取的多边形信息:")
         for key, points in polygons.items():
             print(f"\n📊 当前处理楼层: {floor_data['Name']}")
+            print(f"🔷 当前处理多边编号: {key}")
+            # print(f"🔷 当前处理多边形点数: {len(points)}")
+            continue
             if key.startswith("polygon"):
                 points = [(x[0]/100, x[1]/100) for x in points]
 
@@ -363,7 +366,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                 convert_to_heating_design.save_design_to_json(design_data, out_file)
                 print(f"转换后的地暖设计数据已保存到：{out_file}")
         print("\n✅ 管道布线完成!")
-        break
+        # break
 
 
 def load_solver_params(json_file):
