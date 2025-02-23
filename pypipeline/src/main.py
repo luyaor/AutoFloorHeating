@@ -339,7 +339,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             output_dir.mkdir(exist_ok=True)
 
             # 1. 执行分区
-            seg_pts, regions, wall_path = area_partition(floor_data, points, num_x, num_y, collectors)
+            seg_pts, regions, wall_path = area_partition(key, floor_data, points, num_x, num_y, collectors)
 
 
             # 2. 执行管道布线
@@ -366,11 +366,11 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             except Exception as e:
                 print(f"\n❌ 管道布线失败: {e}")
                 continue
-            # print(pipe_pt_seq)
+            print(pipe_pt_seq)
             # 可视化管道布线结果
             from plot_pipe_data import plot_pipe_pt_seq
             plot_pipe_pt_seq(pipe_pt_seq)
-            continue
+            break
             out_file = output_dir / "HeatingDesign_output.json"
             design_data = convert_to_heating_design.convert_pipe_pt_seq_to_heating_design(pipe_pt_seq, 
                                                     level_name="1F",
