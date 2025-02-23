@@ -248,6 +248,8 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
     # 准备输入数据
     seg_pts = [(x[0]/100, x[1]/100) for x in allp]  # 从原始数据转换并缩放
     regions = [(r[0], r[1]) for r in new_region_info]  # 从原始数据转换
+    # Filter out regions where r[1] == -1
+    # regions = [(r[0], r[1]) for r in regions if r[1] != -1]
 
     return seg_pts, regions, wall_path
 
@@ -312,7 +314,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
         
         if not has_collector:
             print(f"\n⚠️ 楼层 {floor_name} 没有集水器，跳过处理...")
-            continue
+            # continue
             
         print(f"\n📊 开始处理楼层: {floor_name}")
         print(f"✅ 检测到 {len(collectors)} 个集水器，继续处理...")
@@ -340,6 +342,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
 
             # 1. 执行分区
             seg_pts, regions, wall_path = area_partition(key, floor_data, points, num_x, num_y, collectors)
+            print(f"🔷 分区结果: {regions}")
 
 
             # 2. 执行管道布线
@@ -360,11 +363,15 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
 
             print(f"\n💾 中间数据已保存至: {output_file}")
             
-            output_file = output_dir / 'cases/case8_intermediate.json'
+            # output_file = output_dir / 'cases/case8_intermediate.json'
+            # output_file = output_dir / '1_polygon_group_1_intermediate.json'
             try:
                 pipe_pt_seq = solve_pipeline(output_file)
             except Exception as e:
                 print(f"\n❌ 管道布线失败: {e}")
+                import traceback
+                print("\n🔴 错误堆栈信息:")
+                print(traceback.format_exc())
                 continue
             print(pipe_pt_seq)
             # 可视化管道布线结果
