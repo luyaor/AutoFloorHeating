@@ -311,7 +311,6 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             with open(partition_input_file, 'w', encoding='utf-8') as f:
                 json.dump(partition_input, f, indent=2, ensure_ascii=False)
             print(f"\n💾 分区输入数据已保存至: {partition_input_file}")
-            continue
 
             # 1. 执行分区
             print("\n🔷 开始执行空间分区...")
@@ -349,14 +348,15 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                 'wall_path': wall_path
             }
             
-            output_file = output_dir / 'intermediate_data.json'
+            output_file = output_dir / f'{floor_data["Name"]}_{key}_intermediate.json'
             with open(output_file, 'w', encoding='utf-8') as f:
                 json.dump(intermediate_data, f, indent=2, ensure_ascii=False)
 
             print(f"\n💾 中间数据已保存至: {output_file}")
             
-            output_file = output_dir / 'cases/case8_intermediate.json'
+            # output_file = output_dir / 'cases/case8_intermediate.json'
             pipe_pt_seq = solve_pipeline(output_file)
+            break
             # print(pipe_pt_seq)
             out_file = output_dir / "HeatingDesign_output.json"
             design_data = convert_to_heating_design.convert_pipe_pt_seq_to_heating_design(pipe_pt_seq, 
@@ -369,7 +369,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             convert_to_heating_design.save_design_to_json(design_data, out_file)
             print(f"转换后的地暖设计数据已保存到：{out_file}")
         print("\n✅ 管道布线完成!")
-        # break
+        break
 
 
 def load_solver_params(json_file):
