@@ -355,7 +355,11 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             print(f"\n💾 中间数据已保存至: {output_file}")
             
             # output_file = output_dir / 'cases/case8_intermediate.json'
-            pipe_pt_seq = solve_pipeline(output_file)
+            try:
+                pipe_pt_seq = solve_pipeline(output_file)
+            except Exception as e:
+                print(f"\n❌ 管道布线失败: {e}")
+                continue
             break
             # print(pipe_pt_seq)
             out_file = output_dir / "HeatingDesign_output.json"
