@@ -272,7 +272,6 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
 
             print(f"🔷 当前处理多边编号: {key}")
             # print(f"🔷 当前处理多边形点数: {len(points)}")
-            continue
 
             # 保存分区输入数据
             partition_input = {
@@ -308,10 +307,11 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             output_dir = Path('output')
             output_dir.mkdir(exist_ok=True)
 
-            partition_input_file = output_dir / 'partition_input.json'
+            partition_input_file = output_dir / f'floor_{floor_data["Name"]}_{key}_partition_input.json'
             with open(partition_input_file, 'w', encoding='utf-8') as f:
                 json.dump(partition_input, f, indent=2, ensure_ascii=False)
             print(f"\n💾 分区输入数据已保存至: {partition_input_file}")
+            continue
 
             # 1. 执行分区
             print("\n🔷 开始执行空间分区...")
