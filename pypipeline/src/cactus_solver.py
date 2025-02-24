@@ -45,16 +45,18 @@ def solve_pipeline(intermediate_data_file: str):
     }
 
     print("🔷 开始计算管道布线方案...")
+    print("seg_pts=", seg_pts)
+
     solver = cactus.CactusSolver(
-        glb_h=1000, 
-        glb_w=1000, 
+        glb_h=200, 
+        glb_w=200, 
         cmap=cmap, 
         # seg_pts=[arr(x[0] / 100 - 130, x[1] / 100) for x in seg_pts], 
         # seg_pts=seg_pts, 
         seg_pts=[arr(x[0], x[1]) for x in seg_pts],
         wall_pt_path=wall_path, 
         cac_region_fake=[CacRegion(x[0][::1], x[1]) for x in regions], 
-        destination_pt=11, 
+        destination_pt=2, 
         suggested_m0_pipe_interval=2.5
     )
     
