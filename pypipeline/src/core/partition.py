@@ -388,7 +388,20 @@ def get_closest_ratios(target_aspect_ratio, possible_ratios):
     distances.sort()
     return [(num_x, num_y) for _, num_x, num_y in distances[:5]]
 
-def partition_work(polygon_coords, num_x = 1, num_y = 2):
+def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
+    def dis(x,y):
+        return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
+
+    collector = [76, 109.5]
+    p = collector
+    l = len(polygon_coords)
+    for i in range(l):
+        if (dis(polygon_coords[i], p) > 1e-3) and (dis(p, polygon_coords[(i + 1) % l]) > 1e-3) and \
+        (abs(dis(polygon_coords[i], p) + dis(p, polygon_coords[(i + 1) % l]) - dis(polygon_coords[i], polygon_coords[(i + 1) % l])) < 1e-3):
+            polygon_coords = polygon_coords[:i + 1] + [(p[0], p[1])] + polygon_coords[i + 1:]
+            print("YESYES")
+            break
+    
     polygon_coords = [(round(pt[0], 2), round(pt[1], 2)) for pt in polygon_coords]
 
     polygon = Polygon(polygon_coords)
@@ -409,15 +422,13 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
     best_region_info = None  # 用来保存最佳区域信息
     best_global_points = None  # 用来保存最佳全局点列表
     best_score = -float('inf')  # 初始化得分为负无穷
+    best_destination_point = None
 
     # 对于每个比例，运行算法
     for num_x, num_y in closest_ratios:
         print(f"Running for {num_x}x{num_y}")
         for _ in range(shuffle_times):
             final_polygons, nat_lines, global_points, region_info, score = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
-
-            def dis(x,y):
-                return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
 
             allp = [x for x in polygon_coords]
             for p in global_points:
@@ -476,6 +487,7 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
                 best_polygon = final_polygons
                 best_wall_path = [i for i in range(num_of_nodes)]
                 best_region_info = new_region_info
+                best_destination_point = allp.index((round(collector[0], 2), round(collector[1], 2)))
             
             # plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
 
@@ -484,10 +496,11 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
     print("WALL_PT_PATH=", best_wall_path)
     print("SEG_PTS=", best_global_points)
     print("CAC_REGIONS_FAKE=", best_region_info)
+    print("DESTINATION_POINT=", best_destination_point)
     print("")
     plot_polygons(best_polygon, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=best_global_points)
 
-    return best_polygon, best_global_points, best_region_info, best_wall_path
+    return best_polygon, best_global_points, best_region_info, best_wall_path, best_destination_point
 
 
 if __name__ == "__main__":

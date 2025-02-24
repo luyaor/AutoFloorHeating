@@ -233,9 +233,10 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
 
     partition_input = load_partition_input(partition_input_file)
 
-    final_polygons, allp, new_region_info, wall_path = partition.partition_work(partition_input['points'], 
-                                                                                          num_x=partition_input['num_x'], 
-                                                                                          num_y=partition_input['num_y'])
+    final_polygons, allp, new_region_info, wall_path, destination_pt = partition.partition_work(partition_input['points'], 
+                                                                                num_x=partition_input['num_x'], 
+                                                                                num_y=partition_input['num_y'], 
+                                                                                collector=[0,0])
 
     print("\n📊 分区结果:")
     print(f"  - 分区数量: {len(final_polygons)}")
@@ -254,7 +255,7 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
     # Filter out regions where r[1] == -1
     # regions = [(r[0], r[1]) for r in regions if r[1] != -1]
 
-    return seg_pts, regions, wall_path
+    return seg_pts, regions, wall_path, destination_pt
 
 
 def run_pipeline(num_x: int = 3, num_y: int = 3):
@@ -344,7 +345,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             output_dir.mkdir(exist_ok=True)
 
             # 1. 执行分区
-            seg_pts, regions, wall_path = area_partition(key, floor_data, points, num_x, num_y, collectors)
+            seg_pts, regions, wall_path, destination_pt = area_partition(key, floor_data, points, num_x, num_y, collectors)
             print(f"🔷 分区结果: {regions}")
 
 
@@ -358,7 +359,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                 'seg_pts': seg_pts,
                 'regions': regions,  
                 'wall_path': wall_path,
-                'destination_pt': 2,
+                'destination_pt': destination_pt,
                 'pipe_interval': .25
             }
             
