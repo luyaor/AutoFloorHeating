@@ -229,18 +229,40 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
 
     print("\n🔷 开始执行空间分区...")
 
-    partition_input_file = output_dir / "1_polygon_group_1_partition_input.json"
+    # (TODO) hardcode.....need improve
+    #----------
+    # partition_input_file = output_dir / "1_polygon_group_1_partition_input.json"
+    #----------
 
     partition_input = load_partition_input(partition_input_file)
+
+    inputp = partition_input['points']
+    inputp = [(round(pt[0], 2), round(pt[1], 2)) for pt in inputp]
 
     final_polygons, allp, new_region_info, wall_path = partition.partition_work(partition_input['points'], 
                                                                                           num_x=partition_input['num_x'], 
                                                                                           num_y=partition_input['num_y'])
+    
+    # (TODO) hardcode.....need improve
+    #----------
+    start_point = allp.index(inputp[0])
+    new_region_info = [(x[0], x[1] + 1) for x in new_region_info]
+    st_in_area_cnt = 0
+    for x in new_region_info:
+        if start_point in x[0]:
+            st_in_area_cnt += 1
+            x = (x[0], 0)
+    assert (st_in_area_cnt == 1)
+    #----------
+
+
 
     print("\n📊 分区结果:")
     print(f"  - 分区数量: {len(final_polygons)}")
     print(f"  - 分区点数: {len(allp)}")
     print(f"  - 区域信息: {len(new_region_info)}个区域")
+    print(f"  - 起点位置: {start_point}")
+    
 
     print("\n✅ 分区计算完成...")
 
@@ -254,7 +276,7 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
     # Filter out regions where r[1] == -1
     # regions = [(r[0], r[1]) for r in regions if r[1] != -1]
 
-    return seg_pts, regions, wall_path
+    return seg_pts, regions, wall_path, start_point
 
 
 def run_pipeline(num_x: int = 3, num_y: int = 3):
@@ -344,7 +366,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             output_dir.mkdir(exist_ok=True)
 
             # 1. 执行分区
-            seg_pts, regions, wall_path = area_partition(key, floor_data, points, num_x, num_y, collectors)
+            seg_pts, regions, wall_path, start_point = area_partition(key, floor_data, points, num_x, num_y, collectors)
             print(f"🔷 分区结果: {regions}")
 
 
@@ -358,7 +380,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                 'seg_pts': seg_pts,
                 'regions': regions,  
                 'wall_path': wall_path,
-                'destination_pt': 2,
+                'destination_pt': start_point,
                 'pipe_interval': .25
             }
             
