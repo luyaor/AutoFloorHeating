@@ -229,6 +229,8 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
 
     print("\n🔷 开始执行空间分区...")
 
+    partition_input_file = output_dir / "1_polygon_group_1_partition_input.json"
+
     partition_input = load_partition_input(partition_input_file)
 
     final_polygons, allp, new_region_info, wall_path = partition.partition_work(partition_input['points'], 
