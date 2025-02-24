@@ -260,107 +260,118 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
         # # 绘制原始数据
         # input()
         # visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
+        # continue
 
         print("\n📊 提取的多边形信息:")
         for key, points in polygons.items():
             print(f"\n📊 当前处理楼层: {floor_data['Name']}")
-            if key.startswith("polygon"):
-                points = [(x[0]/100, x[1]/100) for x in points]
+            if not key.startswith("polygon"):
+                continue
 
-                # 保存分区输入数据
-                partition_input = {
-                    'points': points,
-                    'num_x': num_x,
-                    'num_y': num_y,
-                    'floor_name': floor_data['Name'],
-                    'collectors': [
-                        {
-                            'location': {
-                                'x': collector['Location']['x']/100,  # 转换为米
-                                'y': collector['Location']['y']/100,
-                                'z': collector['Location']['z']/100
-                            },
-                            'borders': [
-                                {
-                                    'start': {
-                                        'x': border['StartPoint']['x']/100,
-                                        'y': border['StartPoint']['y']/100
-                                    },
-                                    'end': {
-                                        'x': border['EndPoint']['x']/100,
-                                        'y': border['EndPoint']['y']/100
-                                    }
+            points = [(x[0]/100, x[1]/100) for x in points]
+
+            print(f"🔷 当前处理多边编号: {key}")
+            # print(f"🔷 当前处理多边形点数: {len(points)}")
+
+            # 保存分区输入数据
+            partition_input = {
+                'points': points,
+                'num_x': num_x,
+                'num_y': num_y,
+                'floor_name': floor_data['Name'],
+                'collectors': [
+                    {
+                        'location': {
+                            'x': collector['Location']['x']/100,  # 转换为米
+                            'y': collector['Location']['y']/100,
+                            'z': collector['Location']['z']/100
+                        },
+                        'borders': [
+                            {
+                                'start': {
+                                    'x': border['StartPoint']['x']/100,
+                                    'y': border['StartPoint']['y']/100
+                                },
+                                'end': {
+                                    'x': border['EndPoint']['x']/100,
+                                    'y': border['EndPoint']['y']/100
                                 }
-                                for border in collector.get('Borders', [])
-                            ] if 'Borders' in collector else []
-                        }
-                        for collector in collectors
-                    ]
-                }
+                            }
+                            for border in collector.get('Borders', [])
+                        ] if 'Borders' in collector else []
+                    }
+                    for collector in collectors
+                ]
+            }
 
-                output_dir = Path('output')
-                output_dir.mkdir(exist_ok=True)
+            output_dir = Path('output')
+            output_dir.mkdir(exist_ok=True)
 
-                partition_input_file = output_dir / 'partition_input.json'
-                with open(partition_input_file, 'w', encoding='utf-8') as f:
-                    json.dump(partition_input, f, indent=2, ensure_ascii=False)
-                print(f"\n💾 分区输入数据已保存至: {partition_input_file}")
+            partition_input_file = output_dir / f'floor_{floor_data["Name"]}_{key}_partition_input.json'
+            with open(partition_input_file, 'w', encoding='utf-8') as f:
+                json.dump(partition_input, f, indent=2, ensure_ascii=False)
+            print(f"\n💾 分区输入数据已保存至: {partition_input_file}")
 
-                # 1. 执行分区
-                print("\n🔷 开始执行空间分区...")
+            # 1. 执行分区
+            print("\n🔷 开始执行空间分区...")
 
-                partition_input = load_partition_input(partition_input_file)
+            partition_input = load_partition_input(partition_input_file)
 
-                final_polygons, allp, new_region_info, wall_path = partition.partition_work(partition_input['points'], 
-                                                                                                      num_x=partition_input['num_x'], 
-                                                                                                      num_y=partition_input['num_y'])
+            final_polygons, allp, new_region_info, wall_path = partition.partition_work(partition_input['points'], 
+                                                                                                  num_x=partition_input['num_x'], 
+                                                                                                  num_y=partition_input['num_y'])
 
-                print("\n📊 分区结果:")
-                print(f"  - 分区数量: {len(final_polygons)}")
-                print(f"  - 分区点数: {len(allp)}")
-                print(f"  - 区域信息: {len(new_region_info)}个区域")
+            print("\n📊 分区结果:")
+            print(f"  - 分区数量: {len(final_polygons)}")
+            print(f"  - 分区点数: {len(allp)}")
+            print(f"  - 区域信息: {len(new_region_info)}个区域")
 
-                print("\n✅ 分区计算完成...")
+            print("\n✅ 分区计算完成...")
 
-                # # 绘制分区结果
-                # partition.plot_polygons(final_polygons, nat_lines=nat_lines, 
-                #                      title="Space Partition Result", global_points=allp)
+            # # 绘制分区结果
+            # partition.plot_polygons(final_polygons, nat_lines=nat_lines, 
+            #                      title="Space Partition Result", global_points=allp)
 
 
-                # 2. 执行管道布线
-                print("\n🔷 开始执行管道布线...")
-                
-                # 准备输入数据
-                seg_pts = [(x[0]/100, x[1]/100) for x in allp]  # 从原始数据转换并缩放
-                regions = [(r[0], r[1]) for r in new_region_info]  # 从原始数据转换
+            # 2. 执行管道布线
+            print("\n🔷 开始执行管道布线...")
+            
+            # 准备输入数据
+            seg_pts = [(x[0]/100, x[1]/100) for x in allp]  # 从原始数据转换并缩放
+            regions = [(r[0], r[1]) for r in new_region_info]  # 从原始数据转换
 
-                # 保存中间数据
-                intermediate_data = {
-                    'floor_name': floor_data['Name'],
-                    'seg_pts': seg_pts,
-                    'regions': regions,  
-                    'wall_path': wall_path
-                }
-                
-                output_file = output_dir / 'intermediate_data.json'
-                with open(output_file, 'w', encoding='utf-8') as f:
-                    json.dump(intermediate_data, f, indent=2, ensure_ascii=False)
+            # 保存中间数据
+            intermediate_data = {
+                'floor_name': floor_data['Name'],
+                'seg_pts': seg_pts,
+                'regions': regions,  
+                'wall_path': wall_path
+            }
+            
+            output_file = output_dir / f'{floor_data["Name"]}_{key}_intermediate.json'
+            with open(output_file, 'w', encoding='utf-8') as f:
+                json.dump(intermediate_data, f, indent=2, ensure_ascii=False)
 
-                print(f"\n💾 中间数据已保存至: {output_file}")
-                
-                output_file = output_dir / 'cases/case8_intermediate.json'
+            print(f"\n💾 中间数据已保存至: {output_file}")
+            
+            # output_file = output_dir / 'cases/case8_intermediate.json'
+            try:
                 pipe_pt_seq = solve_pipeline(output_file)
-                # print(pipe_pt_seq)
-                out_file = output_dir / "HeatingDesign_output.json"
-                design_data = convert_to_heating_design.convert_pipe_pt_seq_to_heating_design(pipe_pt_seq, 
-                                                        level_name="1F",
-                                                        level_no=1,
-                                                        level_desc="首层",
-                                                        house_name="c1c37dc1a40f4302b6552a23cd1fd557",
-                                                        curvity=100,
-                                                        input_data=input_data)
-                convert_to_heating_design.save_design_to_json(design_data, out_file)
-                print(f"转换后的地暖设计数据已保存到：{out_file}")
+            except Exception as e:
+                print(f"\n❌ 管道布线失败: {e}")
+                continue
+            break
+            # print(pipe_pt_seq)
+            out_file = output_dir / "HeatingDesign_output.json"
+            design_data = convert_to_heating_design.convert_pipe_pt_seq_to_heating_design(pipe_pt_seq, 
+                                                    level_name="1F",
+                                                    level_no=1,
+                                                    level_desc="首层",
+                                                    house_name="c1c37dc1a40f4302b6552a23cd1fd557",
+                                                    curvity=100,
+                                                    input_data=input_data)
+            convert_to_heating_design.save_design_to_json(design_data, out_file)
+            print(f"转换后的地暖设计数据已保存到：{out_file}")
         print("\n✅ 管道布线完成!")
         break
 
