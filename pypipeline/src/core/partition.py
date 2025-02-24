@@ -447,7 +447,9 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
 
             new_region_info = []
             cnt = -1
-            threshold_area = 200
+            # threshold_area = 200
+            threshold_area = 0
+            
             for r in region_info:
                 r = [ind[x] for x in r]
                 cnt = cnt + 1
@@ -455,17 +457,14 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
                 # 获取区域的面积
                 poly = final_polygons[cnt]  # 根据cnt索引找到对应的区域
                 area = poly.area
+                if area < 1e-5:
+                    continue
                 
                 # 如果区域面积小于阈值，将颜色值设为-1，否则使用cnt
                 color_value = -1 if area < threshold_area else cnt
                 
                 new_region_info.append((r[::-1], color_value))  # 用color_value代替cnt
 
-            print("WALL_PT_PATH=", [i for i in range(num_of_nodes)])
-            # print("SEG_WALL_PT_NUM=", num_of_nodes)
-            print("SEG_PTS=", allp)
-            print("CAC_REGIONS_FAKE=", new_region_info)
-            print("")
 
             # 更新得分最高的多边形
             if score > best_score:
@@ -475,8 +474,16 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
                 best_wall_path = [i for i in range(num_of_nodes)]
                 best_region_info = new_region_info
             
-            plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
-        
+            # plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
+
+    # print("WALL_PT_PATH=", [i for i in range(num_of_nodes)])
+    # print("SEG_WALL_PT_NUM=", num_of_nodes)
+    print("WALL_PT_PATH=", best_wall_path)
+    print("SEG_PTS=", best_global_points)
+    print("CAC_REGIONS_FAKE=", best_region_info)
+    print("")
+    plot_polygons(best_polygon, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=best_global_points)
+
     return best_polygon, best_global_points, best_region_info, best_wall_path
 
 
