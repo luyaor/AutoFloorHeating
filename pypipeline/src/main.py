@@ -7,7 +7,6 @@ import convert_to_heating_design
 import json
 import os
 
-
 def get_available_json_files(file_type="design"):
     """Get list of available JSON files in the example directory
     
@@ -189,6 +188,71 @@ def display_input_info(design_data, input_data):
                 location = collector["Location"]
                 print(f"  - 位置: ({location['x']:.2f}, {location['y']:.2f}, {location['z']:.2f})")
 
+def area_partition(key, floor_data, points, num_x, num_y, collectors):
+    # 保存分区输入数据
+    partition_input = {
+        'points': points,
+        'num_x': num_x,
+        'num_y': num_y,
+        'floor_name': floor_data['Name'],
+        'collectors': [
+            {
+                'location': {
+                    'x': collector['Location']['x']/100,  # 转换为米
+                    'y': collector['Location']['y']/100,
+                    'z': collector['Location']['z']/100
+                },
+                'borders': [
+                    {
+                        'start': {
+                            'x': border['StartPoint']['x']/100,
+                            'y': border['StartPoint']['y']/100
+                        },
+                        'end': {
+                            'x': border['EndPoint']['x']/100,
+                            'y': border['EndPoint']['y']/100
+                        }
+                    }
+                    for border in collector.get('Borders', [])
+                ] if 'Borders' in collector else []
+            }
+            for collector in collectors
+        ]
+    }
+
+
+    output_dir = Path('output')
+    partition_input_file = output_dir / f'floor_{floor_data["Name"]}_{key}_partition_input.json'
+    with open(partition_input_file, 'w', encoding='utf-8') as f:
+        json.dump(partition_input, f, indent=2, ensure_ascii=False)
+    print(f"\n💾 分区输入数据已保存至: {partition_input_file}")
+
+    print("\n🔷 开始执行空间分区...")
+
+    partition_input = load_partition_input(partition_input_file)
+
+    final_polygons, allp, new_region_info, wall_path = partition.partition_work(partition_input['points'], 
+                                                                                          num_x=partition_input['num_x'], 
+                                                                                          num_y=partition_input['num_y'])
+
+    print("\n📊 分区结果:")
+    print(f"  - 分区数量: {len(final_polygons)}")
+    print(f"  - 分区点数: {len(allp)}")
+    print(f"  - 区域信息: {len(new_region_info)}个区域")
+
+    print("\n✅ 分区计算完成...")
+
+    # # 绘制分区结果
+    # partition.plot_polygons(final_polygons, nat_lines=nat_lines, 
+    #                      title="Space Partition Result", global_points=allp)
+    # 准备输入数据
+    seg_pts = [(x[0]/100, x[1]/100) for x in allp]  # 从原始数据转换并缩放
+    regions = [(r[0], r[1]) for r in new_region_info]  # 从原始数据转换
+    # Filter out regions where r[1] == -1
+    # regions = [(r[0], r[1]) for r in regions if r[1] != -1]
+
+    return seg_pts, regions, wall_path
+
 
 def run_pipeline(num_x: int = 3, num_y: int = 3):
     """
@@ -250,7 +314,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
         
         if not has_collector:
             print(f"\n⚠️ 楼层 {floor_name} 没有集水器，跳过处理...")
-            continue
+            # continue
             
         print(f"\n📊 开始处理楼层: {floor_name}")
         print(f"✅ 检测到 {len(collectors)} 个集水器，继续处理...")
@@ -273,72 +337,17 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             print(f"🔷 当前处理多边编号: {key}")
             # print(f"🔷 当前处理多边形点数: {len(points)}")
 
-            # 保存分区输入数据
-            partition_input = {
-                'points': points,
-                'num_x': num_x,
-                'num_y': num_y,
-                'floor_name': floor_data['Name'],
-                'collectors': [
-                    {
-                        'location': {
-                            'x': collector['Location']['x']/100,  # 转换为米
-                            'y': collector['Location']['y']/100,
-                            'z': collector['Location']['z']/100
-                        },
-                        'borders': [
-                            {
-                                'start': {
-                                    'x': border['StartPoint']['x']/100,
-                                    'y': border['StartPoint']['y']/100
-                                },
-                                'end': {
-                                    'x': border['EndPoint']['x']/100,
-                                    'y': border['EndPoint']['y']/100
-                                }
-                            }
-                            for border in collector.get('Borders', [])
-                        ] if 'Borders' in collector else []
-                    }
-                    for collector in collectors
-                ]
-            }
-
             output_dir = Path('output')
             output_dir.mkdir(exist_ok=True)
 
-            partition_input_file = output_dir / f'floor_{floor_data["Name"]}_{key}_partition_input.json'
-            with open(partition_input_file, 'w', encoding='utf-8') as f:
-                json.dump(partition_input, f, indent=2, ensure_ascii=False)
-            print(f"\n💾 分区输入数据已保存至: {partition_input_file}")
-
             # 1. 执行分区
-            print("\n🔷 开始执行空间分区...")
-
-            partition_input = load_partition_input(partition_input_file)
-
-            final_polygons, allp, new_region_info, wall_path = partition.partition_work(partition_input['points'], 
-                                                                                                  num_x=partition_input['num_x'], 
-                                                                                                  num_y=partition_input['num_y'])
-
-            print("\n📊 分区结果:")
-            print(f"  - 分区数量: {len(final_polygons)}")
-            print(f"  - 分区点数: {len(allp)}")
-            print(f"  - 区域信息: {len(new_region_info)}个区域")
-
-            print("\n✅ 分区计算完成...")
-
-            # # 绘制分区结果
-            # partition.plot_polygons(final_polygons, nat_lines=nat_lines, 
-            #                      title="Space Partition Result", global_points=allp)
+            seg_pts, regions, wall_path = area_partition(key, floor_data, points, num_x, num_y, collectors)
+            print(f"🔷 分区结果: {regions}")
 
 
             # 2. 执行管道布线
             print("\n🔷 开始执行管道布线...")
-            
-            # 准备输入数据
-            seg_pts = [(x[0]/100, x[1]/100) for x in allp]  # 从原始数据转换并缩放
-            regions = [(r[0], r[1]) for r in new_region_info]  # 从原始数据转换
+
 
             # 保存中间数据
             intermediate_data = {
@@ -355,13 +364,20 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             print(f"\n💾 中间数据已保存至: {output_file}")
             
             # output_file = output_dir / 'cases/case8_intermediate.json'
+            # output_file = output_dir / '1_polygon_group_1_intermediate.json'
             try:
                 pipe_pt_seq = solve_pipeline(output_file)
             except Exception as e:
                 print(f"\n❌ 管道布线失败: {e}")
+                import traceback
+                print("\n🔴 错误堆栈信息:")
+                print(traceback.format_exc())
                 continue
+            print(pipe_pt_seq)
+            # 可视化管道布线结果
+            from plot_pipe_data import plot_pipe_pt_seq
+            plot_pipe_pt_seq(pipe_pt_seq)
             break
-            # print(pipe_pt_seq)
             out_file = output_dir / "HeatingDesign_output.json"
             design_data = convert_to_heating_design.convert_pipe_pt_seq_to_heating_design(pipe_pt_seq, 
                                                     level_name="1F",
