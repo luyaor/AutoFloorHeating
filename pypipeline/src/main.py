@@ -357,7 +357,9 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                 'floor_name': floor_data['Name'],
                 'seg_pts': seg_pts,
                 'regions': regions,  
-                'wall_path': wall_path
+                'wall_path': wall_path,
+                'destination_pt': 2,
+                'pipe_interval': .25
             }
             
             output_file = output_dir / f'{floor_data["Name"]}_{key}_intermediate.json'
