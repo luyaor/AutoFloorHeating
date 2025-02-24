@@ -28,11 +28,27 @@ def solve_pipeline(intermediate_data_file: str):
     regions = loaded_params['regions']
     wall_path = loaded_params['wall_path']
 
+    cmap_0 = [
+        "blue",
+        "yellow",
+        "red",
+        "cyan",
+        "green",
+        "purple",
+        "orange",
+        "pink",
+    ]
+    cmap = {
+        -1: "black",
+        0: "grey",
+        **{(i + 1): cmap_0[i % len(cmap_0)] for i in range(100)},
+    }
+
     print("🔷 开始计算管道布线方案...")
     solver = cactus.CactusSolver(
         glb_h=1000, 
         glb_w=1000, 
-        cmap={-1: "black", 8: "grey", 1:"blue", 2:"yellow", 3:"red", 4: "cyan"}, 
+        cmap=cmap, 
         # seg_pts=[arr(x[0] / 100 - 130, x[1] / 100) for x in seg_pts], 
         # seg_pts=seg_pts, 
         seg_pts=[arr(x[0], x[1]) for x in seg_pts],
