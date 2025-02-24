@@ -338,8 +338,8 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
     index = 0
     for pt in all_points:
         # 四舍五入坐标以处理浮点精度问题
-        # rounded_pt = (round(pt[0], 7), round(pt[1], 7))
-        rounded_pt = pt
+        rounded_pt = (round(pt[0], 2), round(pt[1], 2))
+        # rounded_pt = pt
         if rounded_pt not in unique_points:
             unique_points[rounded_pt] = index
             global_points.append(rounded_pt)
@@ -355,8 +355,8 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
         
         region_idx = []
         for pt in pts:
-            # rounded_pt = (round(pt[0], 7), round(pt[1], 7))
-            rounded_pt = pt
+            rounded_pt = (round(pt[0], 2), round(pt[1], 2))
+            # rounded_pt = pt
             idx = unique_points.get(rounded_pt)
             if idx is not None:
                 region_idx.append(idx)
@@ -425,6 +425,7 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
                         allp = allp[:i + 1] + [p] + allp[i + 1:]
                         break
             allp = allp[::-1]
+            allp = [(round(pt[0], 2), round(pt[1], 2)) for pt in allp]
             num_of_nodes = len(allp)
 
             ind = []
@@ -459,7 +460,6 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
                 color_value = -1 if area < threshold_area else cnt
                 
                 new_region_info.append((r[::-1], color_value))  # 用color_value代替cnt
-
 
             print("WALL_PT_PATH=", [i for i in range(num_of_nodes)])
             # print("SEG_WALL_PT_NUM=", num_of_nodes)
