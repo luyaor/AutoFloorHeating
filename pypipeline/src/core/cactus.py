@@ -147,8 +147,8 @@ class CactusSolverDebug:
     xw: bool = False
     g2s1: bool = False
     g2s2: bool = False
-    g2s3: bool = False
-    g3: bool = False
+    g2s3: bool = True
+    g3: bool = True
     m1: bool = False
 
 

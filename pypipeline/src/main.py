@@ -248,7 +248,8 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
     # partition.plot_polygons(final_polygons, nat_lines=nat_lines, 
     #                      title="Space Partition Result", global_points=allp)
     # 准备输入数据
-    seg_pts = [(x[0]/100, x[1]/100) for x in allp]  # 从原始数据转换并缩放
+    # seg_pts = [(x[0]/100, x[1]/100) for x in allp]  # 从原始数据转换并缩放
+    seg_pts = [(x[0], x[1]) for x in allp]
     regions = [(r[0], r[1]) for r in new_region_info]  # 从原始数据转换
     # Filter out regions where r[1] == -1
     # regions = [(r[0], r[1]) for r in regions if r[1] != -1]
@@ -334,7 +335,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             if not key.startswith("polygon"):
                 continue
 
-            points = [(x[0]/100, x[1]/100) for x in points]
+            # points = [(x[0]/100, x[1]/100) for x in points]
 
             print(f"🔷 当前处理多边编号: {key}")
             # print(f"🔷 当前处理多边形点数: {len(points)}")
