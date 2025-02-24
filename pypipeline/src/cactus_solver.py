@@ -27,6 +27,8 @@ def solve_pipeline(intermediate_data_file: str):
     seg_pts = loaded_params['seg_pts']
     regions = loaded_params['regions']
     wall_path = loaded_params['wall_path']
+    destination_pt=loaded_params['destination_pt']
+    suggested_m0_pipe_interval=loaded_params['pipe_interval']
 
     cmap_0 = [
         "blue",
@@ -56,8 +58,8 @@ def solve_pipeline(intermediate_data_file: str):
         seg_pts=[arr(x[0], x[1]) for x in seg_pts],
         wall_pt_path=wall_path, 
         cac_region_fake=[CacRegion(x[0][::1], x[1]) for x in regions], 
-        destination_pt=2, 
-        suggested_m0_pipe_interval=2.5
+        destination_pt=destination_pt, 
+        suggested_m0_pipe_interval=suggested_m0_pipe_interval
     )
     
     pipe_pt_seq = solver.process(CactusSolverDebug(m1=False))
