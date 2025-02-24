@@ -7,7 +7,7 @@ from scipy.spatial import ConvexHull
 from shapely.geometry import Polygon, LineString, MultiPoint, Point
 from shapely.ops import split, unary_union
 
-from data.test_data import *
+# from data.test_data import *
 
 random.seed(1234)
 
@@ -338,8 +338,8 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
     index = 0
     for pt in all_points:
         # 四舍五入坐标以处理浮点精度问题
-        rounded_pt = (round(pt[0], 2), round(pt[1], 2))
-        # rounded_pt = pt
+        # rounded_pt = (round(pt[0], 3), round(pt[1], 3))
+        rounded_pt = pt
         if rounded_pt not in unique_points:
             unique_points[rounded_pt] = index
             global_points.append(rounded_pt)
@@ -355,8 +355,8 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
         
         region_idx = []
         for pt in pts:
-            rounded_pt = (round(pt[0], 2), round(pt[1], 2))
-            # rounded_pt = pt
+            # rounded_pt = (round(pt[0], 3), round(pt[1], 3))
+            rounded_pt = pt
             idx = unique_points.get(rounded_pt)
             if idx is not None:
                 region_idx.append(idx)
@@ -389,12 +389,15 @@ def get_closest_ratios(target_aspect_ratio, possible_ratios):
     return [(num_x, num_y) for _, num_x, num_y in distances[:5]]
 
 def partition_work(polygon_coords, num_x = 1, num_y = 2):
+    polygon_coords = [(round(pt[0], 2), round(pt[1], 2)) for pt in polygon_coords]
 
     polygon = Polygon(polygon_coords)
     target_aspect_ratio = bounding_box_aspect_ratio(polygon)
 
     # 所有可能的比例
     possible_ratios = [(x, y) for x in [2, 3, 4, 5, 6] for y in [2, 3, 4, 5, 6]]
+
+    possible_ratios = [(3, 3)]
     
     # 获取最接近的5个比例
     closest_ratios = get_closest_ratios(target_aspect_ratio, possible_ratios)
@@ -420,12 +423,12 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
             for p in global_points:
                 l = len(allp)
                 for i in range(l):
-                    if (dis(allp[i], p) > 1e-9) and (dis(p, allp[(i + 1) % l]) > 1e-9) and \
-                    (abs(dis(allp[i], p) + dis(p, allp[(i + 1) % l]) - dis(allp[i], allp[(i + 1) % l])) < 1e-9):
+                    if (dis(allp[i], p) > 1e-3) and (dis(p, allp[(i + 1) % l]) > 1e-3) and \
+                    (abs(dis(allp[i], p) + dis(p, allp[(i + 1) % l]) - dis(allp[i], allp[(i + 1) % l])) < 1e-3):
                         allp = allp[:i + 1] + [p] + allp[i + 1:]
                         break
             allp = allp[::-1]
-            allp = [(round(pt[0], 2), round(pt[1], 2)) for pt in allp]
+            # allp = [(round(pt[0], 3), round(pt[1], 3)) for pt in allp]
             num_of_nodes = len(allp)
 
             ind = []
@@ -488,6 +491,8 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
 
 
 if __name__ == "__main__":
-    work(2)
+    # work(2)
     # for i in [0,1,2,3,5]:
     #     work(i)
+    partition_work([[72.49999999334628, 95.99977354578732], [96.49999999481253, 95.9997735490289], [96.49999999481253, 109.49977354526258], [72.49999999146908, 109.49977354526258]],3,3)
+    
