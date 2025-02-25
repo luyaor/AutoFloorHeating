@@ -230,7 +230,7 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
 
     def polygon_bounding_rect_area(poly):
         bxmin, bymin, bxmax, bymax = poly.bounds
-        return (bxmax - bxmin) * (bymax - bymin)
+        return (bxmax - bxmin) * (bymin - bymax)
 
     def aspect_ratio(poly):
         bxmin, bymin, bxmax, bymax = poly.bounds
@@ -418,6 +418,54 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
         for _ in range(shuffle_times):
             final_polygons, nat_lines, global_points, region_info, score = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
 
+            # --- 新增：清理 region_info 中的冗余共线点 ---
+            def is_collinear(p_prev, p_cur, p_next, epsilon=1e-3):
+                return abs((p_cur[0]-p_prev[0])*(p_next[1]-p_prev[1]) - (p_next[0]-p_prev[0])*(p_cur[1]-p_prev[1])) < epsilon
+
+            freq = {}
+            for reg in region_info:
+                for idx in reg:
+                    freq[idx] = freq.get(idx, 0) + 1
+
+            cleaned_region_info = []
+            for reg in region_info:
+                if len(reg) < 3:
+                    cleaned_region_info.append(reg)
+                    continue
+                cleaned = []
+                n = len(reg)
+                for i in range(n):
+                    prev_idx = reg[i-1]
+                    cur_idx = reg[i]
+                    next_idx = reg[(i+1) % n]
+                    p_prev = global_points[prev_idx]
+                    p_cur = global_points[cur_idx]
+                    p_next = global_points[next_idx]
+                    # 若当前点与前后点共线且只属于本区域，则去除
+                    if is_collinear(p_prev, p_cur, p_next) and freq[cur_idx] == 1:
+                        continue
+                    cleaned.append(cur_idx)
+                if len(cleaned) < 3:
+                    cleaned = reg  # 保证至少有3个点
+                cleaned_region_info.append(cleaned)
+            region_info = cleaned_region_info
+            # --- 清理结束 ---
+
+            # --- 新增：同步更新 global_points ---
+            used_indices = set()
+            for reg in region_info:
+                used_indices.update(reg)
+            new_mapping = {}
+            new_global_points = []
+            for old_idx, pt in enumerate(global_points):
+                if old_idx in used_indices:
+                    new_mapping[old_idx] = len(new_global_points)
+                    new_global_points.append(pt)
+            # 更新 region_info 中的索引
+            region_info = [[ new_mapping[idx] for idx in reg ] for reg in region_info]
+            global_points = new_global_points
+            # --- 同步更新结束 ---
+
             def dis(x,y):
                 return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
 
@@ -511,4 +559,3 @@ if __name__ == "__main__":
     # for i in [0,1,2,3,5]:
     #     work(i)
     partition_work([[72.49999999334628, 95.99977354578732], [96.49999999481253, 95.9997735490289], [96.49999999481253, 109.49977354526258], [72.49999999146908, 109.49977354526258]],3,3)
-    
