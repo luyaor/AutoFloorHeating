@@ -389,7 +389,7 @@ def get_closest_ratios(target_aspect_ratio, possible_ratios):
     return [(num_x, num_y) for _, num_x, num_y in distances[:5]]
 
 def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
-    collector = [76, 109.5]
+    # collector = [76, 109.5]
     polygon_coords = [(round(pt[0], 2), round(pt[1], 2)) for pt in polygon_coords]
 
     polygon = Polygon(polygon_coords)

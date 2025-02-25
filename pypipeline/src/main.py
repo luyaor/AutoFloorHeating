@@ -351,7 +351,7 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
 
     # (TODO) hardcode.....need improve
     #----------
-    partition_input_file = output_dir / "1_polygon_group_1_partition_input.json"
+    # partition_input_file = output_dir / "1_polygon_group_1_partition_input.json"
     #----------
 
     partition_input = load_partition_input(partition_input_file)
@@ -359,10 +359,12 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
     inputp = partition_input['points']
     inputp = [(round(pt[0], 2), round(pt[1], 2)) for pt in inputp]
 
+    collector = partition_input['collectors'][0]["projection"]["point"]
+    collector_pt = (collector['x'], collector['y'])
     final_polygons, allp, new_region_info, wall_path, destination_pt = partition.partition_work(partition_input['points'], 
                                                                                           num_x=partition_input['num_x'], 
                                                                                           num_y=partition_input['num_y'],
-                                                                                          collector=partition_input['collectors'])
+                                                                                          collector=collector_pt)
     
     # (TODO) hardcode.....need improve
     #----------
