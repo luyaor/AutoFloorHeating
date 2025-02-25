@@ -13,3 +13,13 @@
 - 外部给的数据必须 Assertion
 - M1 名字搞错了算了
 
+```
+got pt dir
+for pt0, dir0 in out:
+    seg0 = pt0, pt0'nxt
+    inner_line0 = seg0'inner_line(sug)
+    获得与 inner_line0 相交时刻
+    对于线段
+        - 不断远离的线段：从距离大于等于 sug 开始允许
+        - 其他线段：一旦距离小于 sug 就禁止
+```
