@@ -485,6 +485,9 @@ class CactusSolver:
                     for i in range(st - 1, ed - 1, -1):
                         ccw_cross_i(i)
 
+            if len(djk_states) == 0:
+                continue
+
             ls = djk_states[0]
             cnt_state_sets: Dict[Tuple, Set[StateT]] = {key(cnt_di): {ls}}
             for s in djk_states[1:]:
@@ -870,7 +873,15 @@ class CactusSolver:
 
         if debug:
             test_plot_pipes()
-        return edge_pipes, pt_pipe_sets, pipe_color
+
+
+        # [def] pipe_pt[pipe_pt] is a tuple of 2 pt_id
+        pipe_pt: Dict[int, Tuple[int, int]] = dict()
+        for eid, edge in edge_pipes.items():
+            for i, pipe_id in enumerate(edge.ccw_pipes):
+                pipe_pt[pipe_id] = (eid[0], eid[1])
+
+        return edge_pipes, pt_pipe_sets, pipe_color, pipe_pt
 
     @staticmethod
     def get_xw_for_each_pipe(regions, seg_pts, wall_pt_path, edge_pipes, sug_w):
@@ -988,7 +999,7 @@ class CactusSolver:
         node_set: Set[G2Node] = set()
         edge_dict: Dict[G2Node, List[G2Node]] = dict()
         node_pos: Dict[G2Node, Point] = dict()
-        pipe_pt: Dict[int, List[int]] = dict()
+        # pipe_pt: Dict[int, List[int]] = dict()
         edge_info_s1: Dict[G2Edge, G0EdgeInfo] = dict()
 
         for uid in range(len(seg_pts)):
@@ -1030,11 +1041,11 @@ class CactusSolver:
             # 传入的所有 x 正方向为所属 edge_dir 方向的左方向
             expanded = pt_edge_pipes_expand_pts_v1(center, u_edge_pipes, edge_dir)
             for pipe_id, pos in expanded.items():
-                if pipe_id not in pipe_pt:
-                    pipe_pt[pipe_id] = []
-                pipe_pt[pipe_id].append(uid)
+                # if pipe_id not in pipe_pt:
+                #     pipe_pt[pipe_id] = []
+                # pipe_pt[pipe_id].append(uid)
                 node_pos[(pipe_id, uid)] = pos
-        return pipe_pt, node_set, edge_dict, node_pos, edge_info_s1
+        return node_set, edge_dict, node_pos, edge_info_s1
 
     def test_plot_pipes2(self, edge_pipes, pipe_color, pipe_pt, node_pos_s1):
         def plot_pipes(edge_pipes, seg_pts, pipe_color, cmap, pipe_pt, node_pos):
@@ -1272,8 +1283,8 @@ class CactusSolver:
                     )
 
                 no_del_cycle, inner_pts, indices = fn()
-                # print(f"found cycle: {cycle}")
-                # print(f"pts (test it): {[node_pos[x] for x in no_del_cycle]}")
+                print(f"found cycle: {cycle}")
+                print(f"pts (test it): {[node_pos[x] for x in no_del_cycle]}")
 
                 rt_idx = no_del_cycle.index(rt)
                 # [反向加 outer 边]
@@ -1365,7 +1376,7 @@ class CactusSolver:
         plt.figure(figsize=(20, 10))
         self.plot_matrix(self.global_mat, title="test")
 
-        for s in start_nodes:
+        for s in start_nodes[1:2]:
             n, e, p, i = CactusSolver.g3_tarjan_for_a_color(
                 s,
                 g2_node_set_s3,
@@ -1387,26 +1398,6 @@ class CactusSolver:
                     dfs_plot(v)
 
             dfs_plot(("outer", s))
-        array = np.array
-        li = [
-            array([218.49995, 15.24984103]),
-            array([218.49995, 38.7498]),
-            array([255.75, 38.7498]),
-            array([255.75, 20.24981374]),
-            array([223.49995, 20.24983736]),
-            array([223.49995, 33.7498]),
-            array([250.75, 33.7498]),
-            array([250.75, 25.2498174]),
-            array([228.49995, 25.2498337]),
-            array([228.49995, 28.7498]),
-            array([247.00000092, 30.24982015]),
-        ]
-        plt.scatter(
-            [x[1] for x in li],
-            [x[0] for x in li],
-            s=[0.5] * len(li),
-            color="red",
-        )
         plt.show()
 
     @staticmethod
@@ -1500,7 +1491,7 @@ class CactusSolver:
         CactusSolver.test_get_djk_states_for_color_at_pt()
         CactusSolver.test_get_djk_states_for_color_at_pt2()
         self.test_transfer()
-        edge_pipes, pt_pipe_sets, pipe_color = self.dijk2(
+        edge_pipes, pt_pipe_sets, pipe_color, pipe_pt = self.dijk2(
             self.seg_pts,
             pt_edge_to,
             self.cac_regions_fake,
@@ -1521,13 +1512,13 @@ class CactusSolver:
         if debug.xw:
             self.test_plot_pipes(edge_pipes, pipe_color, pipe_xw)
         for k, v in pipe_xw.items():
-            MES = f"pipe {k} has nan member"
+            MES = f"pipe {k} has nan member. {v}"
             assert not np.isnan(v.x), MES
             assert not np.isnan(v.rw), MES
             assert not np.isnan(v.lw), MES
 
         # [g2s1]
-        pipe_pt, node_set_s1, edge_dict_s1, node_pos_s1, edge_info_s1 = (
+        node_set_s1, edge_dict_s1, node_pos_s1, edge_info_s1 = (
             CactusSolver.get_endpoint_for_each_pipe(
                 self.seg_pts, pt_edge_to, edge_pipes, pipe_xw
             )
@@ -1575,7 +1566,7 @@ class CactusSolver:
 
         # [m1]
         pipe_pt_seq: List[List[Point]] = []
-        for s in g2_start_nodes:
+        for s in g2_start_nodes[1:2]:
             n, e, p, i = CactusSolver.g3_tarjan_for_a_color(
                 s,
                 g2_node_set_s3,
@@ -1623,12 +1614,12 @@ if __name__ == "__main__":
     CAC_REGIONS_FAKE= [([41, 40, 39, 38, 37, 36, 22, 21], 4), ([23, 22, 36, 37, 38, 29, 28, 27, 26, 25, 24], 0), ([16, 42, 40, 41, 21, 20, 19, 18, 17], 2), ([32, 45, 44, 43, 34, 33], 3), ([34, 43, 47, 46, 4, 3, 2, 1, 0, 35], 1), ([32, 31, 30, 29, 38, 39, 40, 42, 16, 15, 14, 13, 12, 11, 10, 49, 48, 45], 5), ([8, 7, 6, 5, 4, 46, 47, 43, 44, 45, 48, 49, 10, 9], 6)]
 
     DESTINATION_PT = 25
-
     # [---]
 
     SEG_PTS = [arr(x[0], x[1]) for x in SEG_PTS]
 
     CAC_REGIONS_FAKE = [CacRegion(x[0][::1], x[1]) for x in CAC_REGIONS_FAKE]
+
 
     cmap_0 = [
         "blue",
@@ -1654,11 +1645,12 @@ if __name__ == "__main__":
         wall_pt_path=WALL_PT_PATH,
         cac_region_fake=CAC_REGIONS_FAKE,
         destination_pt=DESTINATION_PT,
-        suggested_m0_pipe_interval=1.0,
+        suggested_m0_pipe_interval=1.11,
     )
 
     pipe_pt_seq = solver.process(
         CactusSolverDebug(
+            # xw=True,
             g3=True,
             m1=True,
         )
