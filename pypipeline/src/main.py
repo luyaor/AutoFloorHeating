@@ -1,4 +1,4 @@
-from cactus_solver import solve_pipeline
+import cactus_solver
 from core import partition
 from pathlib import Path
 from tools import dxf_export
@@ -188,15 +188,115 @@ def display_input_info(design_data, input_data):
                 location = collector["Location"]
                 print(f"  - 位置: ({location['x']:.2f}, {location['y']:.2f}, {location['z']:.2f})")
 
+def is_point_in_polygon(point, polygon):
+    """
+    判断点是否在多边形内部
+    使用射线法 (Ray Casting Algorithm)
+    
+    Args:
+        point: (x, y) 坐标元组
+        polygon: 多边形顶点坐标列表 [(x1,y1), (x2,y2), ...]
+    
+    Returns:
+        bool: 点是否在多边形内
+    """
+    x, y = point
+    n = len(polygon)
+    inside = False
+    
+    p1x, p1y = polygon[0]
+    for i in range(1, n + 1):
+        p2x, p2y = polygon[i % n]
+        if y > min(p1y, p2y) and y <= max(p1y, p2y) and x <= max(p1x, p2x):
+            if p1y != p2y:
+                xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+            if p1x == p2x or x <= xinters:
+                inside = not inside
+        p1x, p1y = p2x, p2y
+    
+    return inside
+
+def calculate_point_to_edge_projection(point, edge_start, edge_end):
+    """
+    计算点到线段的投影点
+    
+    Args:
+        point: (x, y) 坐标元组
+        edge_start: 线段起点 (x, y) 坐标元组
+        edge_end: 线段终点 (x, y) 坐标元组
+        
+    Returns:
+        tuple: 投影点坐标 (x, y), 到线段的距离
+    """
+    x, y = point
+    x1, y1 = edge_start
+    x2, y2 = edge_end
+    
+    # 计算线段长度的平方
+    line_length_sq = (x2 - x1)**2 + (y2 - y1)**2
+    
+    # 如果线段长度为0，返回起点和点到起点的距离
+    if line_length_sq == 0:
+        return edge_start, ((x - x1)**2 + (y - y1)**2)**0.5
+    
+    # 计算投影比例 t
+    t = max(0, min(1, ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / line_length_sq))
+    
+    # 计算投影点坐标
+    proj_x = x1 + t * (x2 - x1)
+    proj_y = y1 + t * (y2 - y1)
+    
+    # 计算点到投影点的距离
+    distance = ((x - proj_x)**2 + (y - proj_y)**2)**0.5
+    
+    return (proj_x, proj_y), distance
+
+def find_nearest_edge_projection(point, polygon):
+    """
+    找到点到多边形所有边的最近投影点
+    
+    Args:
+        point: (x, y) 坐标元组
+        polygon: 多边形顶点坐标列表 [(x1,y1), (x2,y2), ...]
+        
+    Returns:
+        tuple: (投影点坐标 (x, y), 最小距离, 边的索引)
+    """
+    min_distance = float('inf')
+    nearest_projection = None
+    nearest_edge_index = -1
+    
+    for i in range(len(polygon)):
+        edge_start = polygon[i]
+        edge_end = polygon[(i + 1) % len(polygon)]
+        
+        projection, distance = calculate_point_to_edge_projection(point, edge_start, edge_end)
+        
+        if distance < min_distance:
+            min_distance = distance
+            nearest_projection = projection
+            nearest_edge_index = i
+    
+    return nearest_projection, min_distance, nearest_edge_index
+
 def area_partition(key, floor_data, points, num_x, num_y, collectors):
-    # 保存分区输入数据
-    partition_input = {
-        'points': points,
-        'num_x': num_x,
-        'num_y': num_y,
-        'floor_name': floor_data['Name'],
-        'collectors': [
-            {
+    # 将points从列表转换为元组列表以便于后续处理
+    points_tuple = [(p[0], p[1]) for p in points]
+    
+    # 1. 只保留当前图形区域内的集水器
+    filtered_collectors = []
+    for collector in collectors:
+        # 将集水器坐标转换为米单位
+        # collector_point = (collector['Location']['x']/100, collector['Location']['y']/100)
+        collector_point = (collector['Location']['x'], collector['Location']['y'])
+        
+        # 检查集水器是否在当前多边形区域内
+        if is_point_in_polygon(collector_point, points_tuple):
+            # 2. 计算到最近边的投影
+            projection, distance, edge_index = find_nearest_edge_projection(collector_point, points_tuple)
+            
+            # 添加集水器及其投影信息
+            collector_data = {
                 'location': {
                     'x': collector['Location']['x']/100,  # 转换为米
                     'y': collector['Location']['y']/100,
@@ -214,10 +314,30 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
                         }
                     }
                     for border in collector.get('Borders', [])
-                ] if 'Borders' in collector else []
+                ] if 'Borders' in collector else [],
+                'projection': {
+                    'point': {
+                        'x': projection[0]/100,
+                        'y': projection[1]/100
+                    },
+                    'distance': distance,
+                    'edge_index': edge_index
+                }
             }
-            for collector in collectors
-        ]
+            filtered_collectors.append(collector_data)
+    
+    # 2. 如果当前范围内没有集水器，则跳过这个方法
+    if not filtered_collectors:
+        print(f"\n⚠️ 当前区域 {key} 没有集水器，跳过处理...")
+        return None, None, None, None
+    
+    # 保存分区输入数据
+    partition_input = {
+        'points': points,
+        'num_x': num_x,
+        'num_y': num_y,
+        'floor_name': floor_data['Name'],
+        'collectors': filtered_collectors
     }
 
 
@@ -276,8 +396,30 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
     # Filter out regions where r[1] == -1
     # regions = [(r[0], r[1]) for r in regions if r[1] != -1]
 
-    return seg_pts, regions, wall_path, destination_pt
+    return seg_pts, regions, wall_path, start_point
 
+def process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point):
+    # 保存中间数据
+    intermediate_data = {
+        'floor_name': floor_data['Name'],
+        'seg_pts': seg_pts,
+        'regions': regions,  
+        'wall_path': wall_path,
+        'destination_pt': start_point,
+        'pipe_interval': .25
+    }
+
+    output_dir = Path('output')
+    output_file = output_dir / f'{floor_data["Name"]}_{key}_intermediate.json'
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(intermediate_data, f, indent=2, ensure_ascii=False)
+
+    print(f"\n💾 中间数据已保存至: {output_file}")
+
+    # output_file = output_dir / 'cases/case8_intermediate.json'
+    # output_file = output_dir / '1_polygon_group_1_intermediate.json'
+    pipe_pt_seq = cactus_solver.solve_pipeline(output_file)
+    return pipe_pt_seq
 
 def run_pipeline(num_x: int = 3, num_y: int = 3):
     """
@@ -348,8 +490,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
         # print("\n✅ 原始图像绘制完成，按任意键继续...")
         # # 绘制原始数据
         # input()
-        # visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
-        # continue
+        visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
 
         print("\n📊 提取的多边形信息:")
         for key, points in polygons.items():
@@ -366,34 +507,21 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             output_dir.mkdir(exist_ok=True)
 
             # 1. 执行分区
-            seg_pts, regions, wall_path, destination_pt = area_partition(key, floor_data, points, num_x, num_y, collectors)
+            seg_pts, regions, wall_path, start_point = area_partition(key, floor_data, points, num_x, num_y, collectors)
+            
+            # 如果没有集水器或分区处理失败，跳过当前多边形
+            if seg_pts is None:
+                print(f"\n⚠️ 跳过当前多边形 {key} 的管道布线...")
+                continue
+                
             print(f"🔷 分区结果: {regions}")
 
 
             # 2. 执行管道布线
             print("\n🔷 开始执行管道布线...")
 
-
-            # 保存中间数据
-            intermediate_data = {
-                'floor_name': floor_data['Name'],
-                'seg_pts': seg_pts,
-                'regions': regions,  
-                'wall_path': wall_path,
-                'destination_pt': destination_pt,
-                'pipe_interval': .25
-            }
-            
-            output_file = output_dir / f'{floor_data["Name"]}_{key}_intermediate.json'
-            with open(output_file, 'w', encoding='utf-8') as f:
-                json.dump(intermediate_data, f, indent=2, ensure_ascii=False)
-
-            print(f"\n💾 中间数据已保存至: {output_file}")
-            
-            # output_file = output_dir / 'cases/case8_intermediate.json'
-            # output_file = output_dir / '1_polygon_group_1_intermediate.json'
             try:
-                pipe_pt_seq = solve_pipeline(output_file)
+                pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point)
             except Exception as e:
                 print(f"\n❌ 管道布线失败: {e}")
                 import traceback
@@ -416,7 +544,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             convert_to_heating_design.save_design_to_json(design_data, out_file)
             print(f"转换后的地暖设计数据已保存到：{out_file}")
         print("\n✅ 管道布线完成!")
-        break
+        continue
 
 
 def load_solver_params(json_file):
