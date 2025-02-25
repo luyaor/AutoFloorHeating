@@ -50,8 +50,8 @@ def solve_pipeline(intermediate_data_file: str):
     print("seg_pts=", seg_pts)
 
     solver = cactus.CactusSolver(
-        glb_h=200, 
-        glb_w=200, 
+        glb_h=30000, 
+        glb_w=30000, 
         cmap=cmap, 
         # seg_pts=[arr(x[0] / 100 - 130, x[1] / 100) for x in seg_pts], 
         # seg_pts=seg_pts, 
