@@ -389,19 +389,8 @@ def get_closest_ratios(target_aspect_ratio, possible_ratios):
     return [(num_x, num_y) for _, num_x, num_y in distances[:5]]
 
 def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
-    def dis(x,y):
-        return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
-
+    collector = [76, 109.5]
     polygon_coords = [(round(pt[0], 2), round(pt[1], 2)) for pt in polygon_coords]
-
-    collector = [76.0, 109.5]
-    p = collector
-    l = len(polygon_coords)
-    for i in range(l):
-        if (dis(polygon_coords[i], p) > 1e-3) and (dis(p, polygon_coords[(i + 1) % l]) > 1e-3) and \
-        (abs(dis(polygon_coords[i], p) + dis(p, polygon_coords[(i + 1) % l]) - dis(polygon_coords[i], polygon_coords[(i + 1) % l])) < 1e-3):
-            polygon_coords = polygon_coords[:i + 1] + [(p[0], p[1])] + polygon_coords[i + 1:]
-            break
 
     polygon = Polygon(polygon_coords)
     target_aspect_ratio = bounding_box_aspect_ratio(polygon)
@@ -429,7 +418,11 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
         for _ in range(shuffle_times):
             final_polygons, nat_lines, global_points, region_info, score = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
 
+            def dis(x,y):
+                return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
+
             allp = [x for x in polygon_coords]
+            global_points.append((round(collector[0], 2), round(collector[1], 2)))
             for p in global_points:
                 l = len(allp)
                 for i in range(l):
@@ -438,7 +431,6 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
                         allp = allp[:i + 1] + [p] + allp[i + 1:]
                         break
             allp = allp[::-1]
-            # allp = [(round(pt[0], 3), round(pt[1], 3)) for pt in allp]
             num_of_nodes = len(allp)
 
             ind = []
@@ -463,7 +455,21 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
             # threshold_area = 200
             threshold_area = 0
             
+            is_collector = False
+            p = (round(collector[0], 2), round(collector[1], 2))
+            pid = global_points.index(p)
             for r in region_info:
+                is_collector = False
+                l = len(r)
+                for i in range(l):
+                    pi = global_points[r[i]]
+                    pi1 = global_points[r[(i + 1) % l]]
+                    if (dis(pi, p) > 1e-3) and (dis(p, pi1) > 1e-3) and \
+                    (abs(dis(pi, p) + dis(p, pi1) - dis(pi, pi1)) < 1e-3):
+                        r = r[:i + 1] + [pid] + r[i + 1:]
+                        is_collector = True
+                        break
+
                 r = [ind[x] for x in r]
                 cnt = cnt + 1
                 
@@ -475,7 +481,7 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
                 
                 # 如果区域面积小于阈值，将颜色值设为-1，否则使用cnt
                 color_value = -1 if area < threshold_area else cnt
-                
+                color_value = 0 if is_collector else color_value
                 new_region_info.append((r[::-1], color_value))  # 用color_value代替cnt
 
 
@@ -486,13 +492,10 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
                 best_polygon = final_polygons
                 best_wall_path = [i for i in range(num_of_nodes)]
                 best_region_info = new_region_info
-                print(allp)
                 best_destination_point = allp.index((round(collector[0], 2), round(collector[1], 2)))
             
             # plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
 
-    # print("WALL_PT_PATH=", [i for i in range(num_of_nodes)])
-    # print("SEG_WALL_PT_NUM=", num_of_nodes)
     print("WALL_PT_PATH=", best_wall_path)
     print("SEG_PTS=", best_global_points)
     print("CAC_REGIONS_FAKE=", best_region_info)
