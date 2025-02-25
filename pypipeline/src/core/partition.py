@@ -418,9 +418,11 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
         for _ in range(shuffle_times):
             final_polygons, nat_lines, global_points, region_info, score = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
 
+            def dis(x,y):
+                return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
             # --- 新增：清理 region_info 中的冗余共线点 ---
             def is_collinear(p_prev, p_cur, p_next, epsilon=1e-3):
-                return abs((p_cur[0]-p_prev[0])*(p_next[1]-p_prev[1]) - (p_next[0]-p_prev[0])*(p_cur[1]-p_prev[1])) < epsilon
+                return (abs((p_cur[0]-p_prev[0])*(p_next[1]-p_prev[1]) - (p_next[0]-p_prev[0])*(p_cur[1]-p_prev[1])) < epsilon) or (dis(p_cur, p_prev) < epsilon)
 
             freq = {}
             for reg in region_info:
@@ -465,9 +467,6 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
             region_info = [[ new_mapping[idx] for idx in reg ] for reg in region_info]
             global_points = new_global_points
             # --- 同步更新结束 ---
-
-            def dis(x,y):
-                return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
 
             allp = [x for x in polygon_coords]
             global_points.append((round(collector[0], 2), round(collector[1], 2)))
