@@ -322,7 +322,7 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
     # -------------------------------------------------------------------------
 
     # -------------------- Step 4: 构造全局点列表和区域信息 --------------------
-    # 1. 收集所有多边形的外部边界点，去除重复和共线点
+    # 1. 收集所有多边形的外部边界点
     all_points = []
     for poly in final_polygons:
         pts = list(poly.exterior.coords)[:-1]
@@ -389,7 +389,6 @@ def get_closest_ratios(target_aspect_ratio, possible_ratios):
     return [(num_x, num_y) for _, num_x, num_y in distances[:5]]
 
 def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
-    # collector = [76, 109.5]
     polygon_coords = [(round(pt[0], 2), round(pt[1], 2)) for pt in polygon_coords]
 
     polygon = Polygon(polygon_coords)
@@ -412,6 +411,7 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
     best_score = -float('inf')  # 初始化得分为负无穷
     best_destination_point = None
 
+    closest_ratios = [(3, 3)]
     # 对于每个比例，运行算法
     for num_x, num_y in closest_ratios:
         print(f"Running for {num_x}x{num_y}")
@@ -423,7 +423,7 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
             # --- 新增：清理 region_info 中的冗余共线点 ---
             def is_collinear(p_prev, p_cur, p_next, epsilon=1e-3):
                 return (abs((p_cur[0]-p_prev[0])*(p_next[1]-p_prev[1]) - (p_next[0]-p_prev[0])*(p_cur[1]-p_prev[1])) < epsilon) or (dis(p_cur, p_prev) < epsilon)
-
+            
             freq = {}
             for reg in region_info:
                 for idx in reg:
@@ -469,6 +469,17 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
             # --- 同步更新结束 ---
 
             allp = [x for x in polygon_coords]
+            cleaned_allp = []
+            n = len(allp)
+            for i in range(n):
+                p_prev = allp[i-1]
+                p_cur = allp[i]
+                p_next = allp[(i+1) % n]
+                # 若当前点与前后点共线，则去除
+                if is_collinear(p_prev, p_cur, p_next):
+                    continue
+                cleaned_allp.append(p_cur)
+            allp = cleaned_allp
             global_points.append((round(collector[0], 2), round(collector[1], 2)))
             for p in global_points:
                 l = len(allp)
@@ -485,17 +496,6 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
                 if p not in allp:
                     allp.append(p)
                 ind.append(allp.index(p))
-
-            # for x in polygon_coords:
-            #     if x not in global_points:
-            #         print("error=", x)
-
-            # new_region_info = []
-            # cnt = -1
-            # for r in region_info:
-            #     r = [ind[x] for x in r]
-            #     cnt = cnt + 1
-            #     new_region_info.append((r[::-1], cnt))
 
             new_region_info = []
             cnt = -1
@@ -527,8 +527,10 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
                     continue
                 
                 # 如果区域面积小于阈值，将颜色值设为-1，否则使用cnt
-                color_value = -1 if area < threshold_area else cnt
-                color_value = 0 if is_collector else color_value
+                color_value = -1 if area < threshold_area else cnt+1
+                if is_collector:
+                    color_value = 0
+                    is_collector = False
                 new_region_info.append((r[::-1], color_value))  # 用color_value代替cnt
 
 
@@ -557,4 +559,11 @@ if __name__ == "__main__":
     # work(2)
     # for i in [0,1,2,3,5]:
     #     work(i)
-    partition_work([[72.49999999334628, 95.99977354578732], [96.49999999481253, 95.9997735490289], [96.49999999481253, 109.49977354526258], [72.49999999146908, 109.49977354526258]],3,3)
+    partition_work([
+    (6, 54), (6, 48), (18, 48), (18, 38), (18, 0), (96, 0), 
+    (168, 0), (238, 0), (238, 94), (238, 158), (168, 158), 
+    (98, 158), (98, 94), (98, 38), (96, 38), (94, 38), 
+    (94, 41), (94, 158), (58, 158), (58, 42), (72, 42), 
+    (72, 41), (72, 38), (44, 38), (44, 60), (44, 144), 
+    (18, 144), (18, 60), (6, 60)
+],3,3)
