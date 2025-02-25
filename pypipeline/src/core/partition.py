@@ -392,17 +392,16 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
     def dis(x,y):
         return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
 
-    collector = [76, 109.5]
+    polygon_coords = [(round(pt[0], 2), round(pt[1], 2)) for pt in polygon_coords]
+
+    collector = [76.0, 109.5]
     p = collector
     l = len(polygon_coords)
     for i in range(l):
         if (dis(polygon_coords[i], p) > 1e-3) and (dis(p, polygon_coords[(i + 1) % l]) > 1e-3) and \
         (abs(dis(polygon_coords[i], p) + dis(p, polygon_coords[(i + 1) % l]) - dis(polygon_coords[i], polygon_coords[(i + 1) % l])) < 1e-3):
             polygon_coords = polygon_coords[:i + 1] + [(p[0], p[1])] + polygon_coords[i + 1:]
-            print("YESYES")
             break
-    
-    polygon_coords = [(round(pt[0], 2), round(pt[1], 2)) for pt in polygon_coords]
 
     polygon = Polygon(polygon_coords)
     target_aspect_ratio = bounding_box_aspect_ratio(polygon)
@@ -487,6 +486,7 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
                 best_polygon = final_polygons
                 best_wall_path = [i for i in range(num_of_nodes)]
                 best_region_info = new_region_info
+                print(allp)
                 best_destination_point = allp.index((round(collector[0], 2), round(collector[1], 2)))
             
             # plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
