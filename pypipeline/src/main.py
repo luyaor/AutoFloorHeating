@@ -368,14 +368,14 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
     
     # (TODO) hardcode.....need improve
     #----------
-    start_point = allp.index(inputp[0])
-    new_region_info = [(x[0], x[1] + 1) for x in new_region_info]
-    st_in_area_cnt = 0
-    for x in new_region_info:
-        if start_point in x[0]:
-            st_in_area_cnt += 1
-            x = (x[0], 0)
-    assert (st_in_area_cnt == 1)
+    # start_point = allp.index(inputp[0])
+    # new_region_info = [(x[0], x[1] + 1) for x in new_region_info]
+    # st_in_area_cnt = 0
+    # for x in new_region_info:
+    #     if start_point in x[0]:
+    #         st_in_area_cnt += 1
+    #         x = (x[0], 0)
+    # assert (st_in_area_cnt == 1)
     #----------
 
 
@@ -383,7 +383,7 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
     print(f"  - 分区数量: {len(final_polygons)}")
     print(f"  - 分区点数: {len(allp)}")
     print(f"  - 区域信息: {len(new_region_info)}个区域")
-    print(f"  - 起点位置: {start_point}")
+    print(f"  - 起点位置: {destination_pt}")
     
 
     print("\n✅ 分区计算完成...")
@@ -398,7 +398,7 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
     # Filter out regions where r[1] == -1
     # regions = [(r[0], r[1]) for r in regions if r[1] != -1]
 
-    return seg_pts, regions, wall_path, start_point
+    return seg_pts, regions, wall_path, destination_pt
 
 def process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point):
     # 保存中间数据
