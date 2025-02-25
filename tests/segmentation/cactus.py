@@ -7,8 +7,8 @@ from loguru import logger
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
-import plane
-from plane import (
+from . import plane
+from .plane import (
     is_counter_clockwise,
     strictly_less,
     Polygon,
@@ -32,7 +32,7 @@ from plane import (
 from queue import PriorityQueue
 import scipy
 from typing import List, Tuple, Dict, Set, Final, Hashable, Any
-from utils import DisjointSet
+from .utils import DisjointSet
 
 
 # [util]
