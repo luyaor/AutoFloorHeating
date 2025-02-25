@@ -317,8 +317,8 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
                 ] if 'Borders' in collector else [],
                 'projection': {
                     'point': {
-                        'x': projection[0],
-                        'y': projection[1]
+                        'x': projection[0]/100,
+                        'y': projection[1]/100
                     },
                     'distance': distance,
                     'edge_index': edge_index
