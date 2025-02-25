@@ -230,7 +230,7 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
 
     def polygon_bounding_rect_area(poly):
         bxmin, bymin, bxmax, bymax = poly.bounds
-        return (bxmax - bxmin) * (bymax - bymin)
+        return (bxmax - bxmin) * (bymin - bymax)
 
     def aspect_ratio(poly):
         bxmin, bymin, bxmax, bymax = poly.bounds
@@ -322,7 +322,7 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
     # -------------------------------------------------------------------------
 
     # -------------------- Step 4: 构造全局点列表和区域信息 --------------------
-    # 1. 收集所有多边形的外部边界点，去除重复和共线点
+    # 1. 收集所有多边形的外部边界点
     all_points = []
     for poly in final_polygons:
         pts = list(poly.exterior.coords)[:-1]
@@ -388,7 +388,7 @@ def get_closest_ratios(target_aspect_ratio, possible_ratios):
     distances.sort()
     return [(num_x, num_y) for _, num_x, num_y in distances[:5]]
 
-def partition_work(polygon_coords, num_x = 1, num_y = 2):
+def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
     polygon_coords = [(round(pt[0], 2), round(pt[1], 2)) for pt in polygon_coords]
 
     polygon = Polygon(polygon_coords)
@@ -409,7 +409,9 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
     best_region_info = None  # 用来保存最佳区域信息
     best_global_points = None  # 用来保存最佳全局点列表
     best_score = -float('inf')  # 初始化得分为负无穷
+    best_destination_point = None
 
+    closest_ratios = [(3, 3)]
     # 对于每个比例，运行算法
     for num_x, num_y in closest_ratios:
         print(f"Running for {num_x}x{num_y}")
@@ -418,8 +420,67 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
 
             def dis(x,y):
                 return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
+            # --- 新增：清理 region_info 中的冗余共线点 ---
+            def is_collinear(p_prev, p_cur, p_next, epsilon=1e-3):
+                return (abs((p_cur[0]-p_prev[0])*(p_next[1]-p_prev[1]) - (p_next[0]-p_prev[0])*(p_cur[1]-p_prev[1])) < epsilon) or (dis(p_cur, p_prev) < epsilon)
+            
+            freq = {}
+            for reg in region_info:
+                for idx in reg:
+                    freq[idx] = freq.get(idx, 0) + 1
+
+            cleaned_region_info = []
+            for reg in region_info:
+                if len(reg) < 3:
+                    cleaned_region_info.append(reg)
+                    continue
+                cleaned = []
+                n = len(reg)
+                for i in range(n):
+                    prev_idx = reg[i-1]
+                    cur_idx = reg[i]
+                    next_idx = reg[(i+1) % n]
+                    p_prev = global_points[prev_idx]
+                    p_cur = global_points[cur_idx]
+                    p_next = global_points[next_idx]
+                    # 若当前点与前后点共线且只属于本区域，则去除
+                    if is_collinear(p_prev, p_cur, p_next) and freq[cur_idx] == 1:
+                        continue
+                    cleaned.append(cur_idx)
+                if len(cleaned) < 3:
+                    cleaned = reg  # 保证至少有3个点
+                cleaned_region_info.append(cleaned)
+            region_info = cleaned_region_info
+            # --- 清理结束 ---
+
+            # --- 新增：同步更新 global_points ---
+            used_indices = set()
+            for reg in region_info:
+                used_indices.update(reg)
+            new_mapping = {}
+            new_global_points = []
+            for old_idx, pt in enumerate(global_points):
+                if old_idx in used_indices:
+                    new_mapping[old_idx] = len(new_global_points)
+                    new_global_points.append(pt)
+            # 更新 region_info 中的索引
+            region_info = [[ new_mapping[idx] for idx in reg ] for reg in region_info]
+            global_points = new_global_points
+            # --- 同步更新结束 ---
 
             allp = [x for x in polygon_coords]
+            cleaned_allp = []
+            n = len(allp)
+            for i in range(n):
+                p_prev = allp[i-1]
+                p_cur = allp[i]
+                p_next = allp[(i+1) % n]
+                # 若当前点与前后点共线，则去除
+                if is_collinear(p_prev, p_cur, p_next):
+                    continue
+                cleaned_allp.append(p_cur)
+            allp = cleaned_allp
+            global_points.append((round(collector[0], 2), round(collector[1], 2)))
             for p in global_points:
                 l = len(allp)
                 for i in range(l):
@@ -428,7 +489,6 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
                         allp = allp[:i + 1] + [p] + allp[i + 1:]
                         break
             allp = allp[::-1]
-            # allp = [(round(pt[0], 3), round(pt[1], 3)) for pt in allp]
             num_of_nodes = len(allp)
 
             ind = []
@@ -437,23 +497,26 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
                     allp.append(p)
                 ind.append(allp.index(p))
 
-            # for x in polygon_coords:
-            #     if x not in global_points:
-            #         print("error=", x)
-
-            # new_region_info = []
-            # cnt = -1
-            # for r in region_info:
-            #     r = [ind[x] for x in r]
-            #     cnt = cnt + 1
-            #     new_region_info.append((r[::-1], cnt))
-
             new_region_info = []
             cnt = -1
             # threshold_area = 200
             threshold_area = 0
             
+            is_collector = False
+            p = (round(collector[0], 2), round(collector[1], 2))
+            pid = global_points.index(p)
             for r in region_info:
+                is_collector = False
+                l = len(r)
+                for i in range(l):
+                    pi = global_points[r[i]]
+                    pi1 = global_points[r[(i + 1) % l]]
+                    if (dis(pi, p) > 1e-3) and (dis(p, pi1) > 1e-3) and \
+                    (abs(dis(pi, p) + dis(p, pi1) - dis(pi, pi1)) < 1e-3):
+                        r = r[:i + 1] + [pid] + r[i + 1:]
+                        is_collector = True
+                        break
+
                 r = [ind[x] for x in r]
                 cnt = cnt + 1
                 
@@ -464,8 +527,10 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
                     continue
                 
                 # 如果区域面积小于阈值，将颜色值设为-1，否则使用cnt
-                color_value = -1 if area < threshold_area else cnt
-                
+                color_value = -1 if area < threshold_area else cnt+1
+                if is_collector:
+                    color_value = 0
+                    is_collector = False
                 new_region_info.append((r[::-1], color_value))  # 用color_value代替cnt
 
 
@@ -476,23 +541,29 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2):
                 best_polygon = final_polygons
                 best_wall_path = [i for i in range(num_of_nodes)]
                 best_region_info = new_region_info
+                best_destination_point = allp.index((round(collector[0], 2), round(collector[1], 2)))
             
             # plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
 
-    # print("WALL_PT_PATH=", [i for i in range(num_of_nodes)])
-    # print("SEG_WALL_PT_NUM=", num_of_nodes)
     print("WALL_PT_PATH=", best_wall_path)
     print("SEG_PTS=", best_global_points)
     print("CAC_REGIONS_FAKE=", best_region_info)
+    print("DESTINATION_POINT=", best_destination_point)
     print("")
     plot_polygons(best_polygon, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=best_global_points)
 
-    return best_polygon, best_global_points, best_region_info, best_wall_path
+    return best_polygon, best_global_points, best_region_info, best_wall_path, best_destination_point
 
 
 if __name__ == "__main__":
     # work(2)
     # for i in [0,1,2,3,5]:
     #     work(i)
-    partition_work([[72.49999999334628, 95.99977354578732], [96.49999999481253, 95.9997735490289], [96.49999999481253, 109.49977354526258], [72.49999999146908, 109.49977354526258]],3,3)
-    
+    partition_work([
+    (6, 54), (6, 48), (18, 48), (18, 38), (18, 0), (96, 0), 
+    (168, 0), (238, 0), (238, 94), (238, 158), (168, 158), 
+    (98, 158), (98, 94), (98, 38), (96, 38), (94, 38), 
+    (94, 41), (94, 158), (58, 158), (58, 42), (72, 42), 
+    (72, 41), (72, 38), (44, 38), (44, 60), (44, 144), 
+    (18, 144), (18, 60), (6, 60)
+],3,3)
