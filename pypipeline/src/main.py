@@ -601,7 +601,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                 level_name=floor_info['floor_name'],
                 level_no=floor_info['level_no'],
                 level_desc=floor_info['level_desc'],
-                house_name="c1c37dc1a40f4302b6552a23cd1fd557",  # 这里可能需要从输入数据中获取
+                house_name=design_data.get('WebParam', {}).get('Id', ""),  # 从设计文件中获取Id作为house_name，如果获取不到则使用空字符串
                 curvity=100,
                 input_data=input_data
             )
@@ -626,7 +626,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                     level_name=floor_info['floor_name'],
                     level_no=floor_info['level_no'],
                     level_desc=floor_info['level_desc'],
-                    house_name="c1c37dc1a40f4302b6552a23cd1fd557",
+                    house_name=design_data.get('WebParam', {}).get('Id', ""),
                     curvity=100,
                     input_data=input_data
                 )
@@ -636,7 +636,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             merged_out_file = output_dir / "HeatingDesign_All_Floors.json"
             # 这里我们创建一个包含所有楼层数据的字典
             merged_design_data = {
-                "BuildingName": "多层建筑",
+                "BuildingName": design_data.get('ARGeneralInfo', {}).get('BuildingName', ""),
                 "Floors": all_floors_data
             }
             convert_to_heating_design.save_design_to_json(merged_design_data, merged_out_file)
