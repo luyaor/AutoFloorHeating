@@ -439,11 +439,6 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
     design_json_path = select_input_file("design")
     print(f"\n✅ 成功读取设计文件: {design_json_path}")
     
-    if False:
-        # 导出DXF文件
-        print("\n🔷 正在导出DXF文件...")
-        dxf_file = dxf_export.export_to_dxf(design_json_path)
-        print(f"✅ DXF文件已导出至: {dxf_file}")
     
     # 选择输入数据文件
     input_json_path = select_input_file("input")
@@ -540,7 +535,6 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                 pipe_pt_seq = [[np.array([0, 0]), np.array([100, 100])]]
                 # continue
 
-            print(pipe_pt_seq)
             # 可视化管道布线结果
             # from plot_pipe_data import plot_pipe_pt_seq
             # plot_pipe_pt_seq(pipe_pt_seq)
@@ -554,97 +548,113 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
         # 收集当前楼层的数据
         if floor_pipe_data:
             # 提取楼层信息
-            level_no = 1  # 默认楼层编号
-            try:
-                # 尝试从楼层名称中提取数字
-                if floor_name.endswith('F'):
-                    level_no = int(floor_name.strip('F'))
-                else:
-                    # 尝试直接将楼层名称转换为整数
-                    level_no = int(floor_name)
-            except ValueError:
-                # 如果转换失败，使用默认值1
-                level_no = 1
-            
-            # 修改：确保楼层描述保留原始楼层名称
-            # 如果原始名称有F后缀，则直接使用原始名称，否则使用"X层"格式
-            if floor_name.endswith('F'):
-                level_desc = floor_name  # 保留原始带F的名称
-            else:
-                level_desc = f"{level_no}层"  # 为不带F的名称添加"层"后缀
-            
             all_pipe_data.append({
                 'floor_data': floor_data,
                 'floor_name': floor_name,  # 保持原始楼层名称不变
-                'level_no': level_no,
-                'level_desc': level_desc,
+                'level_no': get_level_no(floor_name),
+                'level_desc': floor_name,
                 'pipe_data': floor_pipe_data
             })
             
         print("\n✅ 楼层处理完成!")
     
     # 所有楼层和区域处理完毕，生成最终的设计文件
-    if all_pipe_data:
-        print("\n🔷 开始生成最终设计文件...")
-        output_dir = Path('output')
+    out_file = generate_design_files(all_pipe_data, design_data, input_data)
+    
+    # 导出DXF文件
+    if out_file:
+        print("\n🔷 正在导出DXF文件...")
+        dxf_file = dxf_export.export_to_dxf(design_json_path, str(out_file))
+        print(f"✅ DXF文件已导出至: {dxf_file}")
+    else:
+        print("\n⚠️ 未生成设计文件，跳过DXF导出")
+
+    print("\n✅ 管道布线完成!")
+
+def generate_design_files(all_pipe_data, design_data, input_data):
+    """
+    生成最终的地暖设计文件
+    
+    Args:
+        all_pipe_data: 包含所有楼层管道数据的列表
+        design_data: 原始设计数据
+        input_data: 输入参数数据
         
-        # 为每个楼层单独生成设计文件
+    Returns:
+        Path: 生成的设计文件路径，多楼层时返回合并文件路径，单楼层时返回楼层文件路径
+    """
+    if not all_pipe_data:
+        print("\n👮 没有找到有效的管道布线数据，未生成设计文件")
+        return None
+        
+    print("\n🔷 开始生成最终设计文件...")
+    output_dir = Path('output')
+    
+    # 保存最后一个生成的文件路径
+    last_file_path = None
+    
+    # 为每个楼层单独生成设计文件
+    for floor_info in all_pipe_data:
+        # 收集当前楼层所有区域的管道布线数据
+        floor_pipe_pt_seq = []
+        for area_info in floor_info['pipe_data']:
+            floor_pipe_pt_seq.extend(area_info['pipe_pt_seq'])
+        
+        # 为当前楼层生成设计数据
+        floor_design_data = convert_to_heating_design.convert_pipe_pt_seq_to_heating_design(
+            floor_pipe_pt_seq,
+            level_name=floor_info['floor_name'],
+            level_no=floor_info['level_no'],
+            level_desc=floor_info['level_desc'],
+            house_name=design_data.get('WebParam', {}).get('Id', ""),  # 从设计文件中获取Id作为house_name，如果获取不到则使用空字符串
+            curvity=100,
+            input_data=input_data
+        )
+        
+        # 为每个楼层保存单独的设计文件
+        floor_out_file = output_dir / f"HeatingDesign_{floor_info['floor_name']}.json"
+        convert_to_heating_design.save_design_to_json(floor_design_data, floor_out_file)
+        print(f"\n✅ {floor_info['floor_name']}楼层的地暖设计数据已保存到：{floor_out_file}")
+        
+        # 更新最后生成的文件路径
+        last_file_path = floor_out_file
+    
+    # 如果需要，还可以生成一个合并版本的文件（可选）
+    if len(all_pipe_data) > 1:
+        # 创建包含所有楼层数据的列表
+        all_floors_data = []
         for floor_info in all_pipe_data:
             # 收集当前楼层所有区域的管道布线数据
             floor_pipe_pt_seq = []
             for area_info in floor_info['pipe_data']:
                 floor_pipe_pt_seq.extend(area_info['pipe_pt_seq'])
             
-            # 为当前楼层生成设计数据
             floor_design_data = convert_to_heating_design.convert_pipe_pt_seq_to_heating_design(
                 floor_pipe_pt_seq,
                 level_name=floor_info['floor_name'],
                 level_no=floor_info['level_no'],
                 level_desc=floor_info['level_desc'],
-                house_name=design_data.get('WebParam', {}).get('Id', ""),  # 从设计文件中获取Id作为house_name，如果获取不到则使用空字符串
+                house_name=design_data.get('WebParam', {}).get('Id', ""),
                 curvity=100,
                 input_data=input_data
             )
-            
-            # 为每个楼层保存单独的设计文件
-            floor_out_file = output_dir / f"HeatingDesign_{floor_info['floor_name']}.json"
-            convert_to_heating_design.save_design_to_json(floor_design_data, floor_out_file)
-            print(f"\n✅ {floor_info['floor_name']}楼层的地暖设计数据已保存到：{floor_out_file}")
+            all_floors_data.append(floor_design_data)
         
-        # 如果需要，还可以生成一个合并版本的文件（可选）
-        if len(all_pipe_data) > 1:
-            # 创建包含所有楼层数据的列表
-            all_floors_data = []
-            for floor_info in all_pipe_data:
-                # 收集当前楼层所有区域的管道布线数据
-                floor_pipe_pt_seq = []
-                for area_info in floor_info['pipe_data']:
-                    floor_pipe_pt_seq.extend(area_info['pipe_pt_seq'])
-                
-                floor_design_data = convert_to_heating_design.convert_pipe_pt_seq_to_heating_design(
-                    floor_pipe_pt_seq,
-                    level_name=floor_info['floor_name'],
-                    level_no=floor_info['level_no'],
-                    level_desc=floor_info['level_desc'],
-                    house_name=design_data.get('WebParam', {}).get('Id', ""),
-                    curvity=100,
-                    input_data=input_data
-                )
-                all_floors_data.append(floor_design_data)
-            
-            # 保存合并版本的文件
-            merged_out_file = output_dir / "HeatingDesign_All_Floors.json"
-            # 这里我们创建一个包含所有楼层数据的字典
-            merged_design_data = {
-                "BuildingName": design_data.get('ARGeneralInfo', {}).get('BuildingName', ""),
-                "Floors": all_floors_data
-            }
-            convert_to_heating_design.save_design_to_json(merged_design_data, merged_out_file)
-            print(f"\n✅ 合并版本的多楼层地暖设计数据已保存到：{merged_out_file}")
-    else:
-        print("\n👮 没有找到有效的管道布线数据，未生成设计文件")
-    
-    print("\n✅ 管道布线完成!")
+        # 保存合并版本的文件
+        merged_out_file = output_dir / "HeatingDesign_All_Floors.json"
+        # 这里我们创建一个包含所有楼层数据的字典
+        merged_design_data = {
+            "BuildingName": design_data.get('ARGeneralInfo', {}).get('BuildingName', ""),
+            "Floors": all_floors_data
+        }
+        convert_to_heating_design.save_design_to_json(merged_design_data, merged_out_file)
+        print(f"\n✅ 合并版本的多楼层地暖设计数据已保存到：{merged_out_file}")
+        
+        # 多楼层时，优先返回合并文件路径
+        return merged_out_file
+        
+    # 单楼层时，返回最后一个生成的文件路径
+    return last_file_path
 
 def load_solver_params(json_file):
     """从JSON文件加载求解器参数"""
@@ -656,6 +666,30 @@ def load_partition_input(json_file):
     """从JSON文件加载分区输入数据"""
     with open(json_file, 'r', encoding='utf-8') as f:
         return json.load(f)
+
+def get_level_no(floor_name):
+    """
+    从楼层名称中提取楼层编号
+    
+    Args:
+        floor_name: 楼层名称，如"1"、"2F"等
+        
+    Returns:
+        int: 楼层编号，默认为1
+    """
+    level_no = 1  # 默认楼层编号
+    try:
+        # 尝试从楼层名称中提取数字
+        if floor_name.endswith('F'):
+            level_no = int(floor_name.strip('F'))
+        else:
+            # 尝试直接将楼层名称转换为整数
+            level_no = int(floor_name)
+    except ValueError:
+        # 如果转换失败，使用默认值1
+        level_no = 1
+    
+    return level_no
 
 def main():
     print(f"\n{'='*50}")
