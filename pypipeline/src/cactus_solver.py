@@ -72,7 +72,7 @@ if __name__ == "__main__":
     from tools.case_converter import convert_all_cases
     convert_all_cases()
     print("\n✅ All cases converted successfully!") 
-    cases_dir = "output/cases"
+    cases_dir = "output"
     results = []
     
     # 遍历所有案例文件

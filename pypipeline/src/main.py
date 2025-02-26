@@ -1,3 +1,4 @@
+import numpy as np
 import cactus_solver
 from core import partition
 from pathlib import Path
@@ -328,7 +329,7 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
     
     # 2. 如果当前范围内没有集水器，则跳过这个方法
     if not filtered_collectors:
-        print(f"\n⚠️ 当前区域 {key} 没有集水器，跳过处理...")
+        print(f"\n👮 当前区域 {key} 没有集水器，跳过处理...")
         return None, None, None, None
     
     # 保存分区输入数据
@@ -462,6 +463,9 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
     print("\n🔷 按任意键继续处理数据...")
     input()
     
+    # 创建用于收集所有管道布线数据的结构
+    all_pipe_data = []
+    
     # data = visualization_data.load_json_data(design_json_path)
     # 遍历每个楼层, 绘制原始图像, 提取多边形信息, 执行分区, 执行管道布线
     for floor_data in design_data["Floor"]:
@@ -482,8 +486,8 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                 break
         
         if not has_collector:
-            print(f"\n⚠️ 楼层 {floor_name} 没有集水器，跳过处理...")
-            # continue
+            print(f"\n👮 楼层 {floor_name} 没有集水器，跳过处理...")
+            continue
             
         print(f"\n📊 开始处理楼层: {floor_name}")
         print(f"✅ 检测到 {len(collectors)} 个集水器，继续处理...")
@@ -492,9 +496,13 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
         # print("\n✅ 原始图像绘制完成，按任意键继续...")
         # # 绘制原始数据
         # input()
-        visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
+        # visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
 
         print("\n📊 提取的多边形信息:")
+        
+        # 收集当前楼层的所有管道布线数据
+        floor_pipe_data = []
+        
         for key, points in polygons.items():
             print(f"\n📊 当前处理楼层: {floor_data['Name']}")
             if not key.startswith("polygon"):
@@ -513,7 +521,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             
             # 如果没有集水器或分区处理失败，跳过当前多边形
             if seg_pts is None:
-                print(f"\n⚠️ 跳过当前多边形 {key} 的管道布线...")
+                print(f"\n👮 跳过当前多边形 {key} 的管道布线...")
                 continue
                 
             print(f"🔷 分区结果: {regions}")
@@ -529,25 +537,114 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                 import traceback
                 print("\n🔴 错误堆栈信息:")
                 print(traceback.format_exc())
-                continue
+                pipe_pt_seq = [[np.array([0, 0]), np.array([100, 100])]]
+                # continue
+
             print(pipe_pt_seq)
             # 可视化管道布线结果
-            from plot_pipe_data import plot_pipe_pt_seq
-            plot_pipe_pt_seq(pipe_pt_seq)
-            break
-            out_file = output_dir / "HeatingDesign_output.json"
-            design_data = convert_to_heating_design.convert_pipe_pt_seq_to_heating_design(pipe_pt_seq, 
-                                                    level_name="1F",
-                                                    level_no=1,
-                                                    level_desc="首层",
-                                                    house_name="c1c37dc1a40f4302b6552a23cd1fd557",
-                                                    curvity=100,
-                                                    input_data=input_data)
-            convert_to_heating_design.save_design_to_json(design_data, out_file)
-            print(f"转换后的地暖设计数据已保存到：{out_file}")
-        print("\n✅ 管道布线完成!")
-        continue
-
+            # from plot_pipe_data import plot_pipe_pt_seq
+            # plot_pipe_pt_seq(pipe_pt_seq)
+            
+            # 收集当前区域的管道布线数据
+            floor_pipe_data.append({
+                'area_key': key,
+                'pipe_pt_seq': pipe_pt_seq
+            })
+        
+        # 收集当前楼层的数据
+        if floor_pipe_data:
+            # 提取楼层信息
+            level_no = 1  # 默认楼层编号
+            try:
+                # 尝试从楼层名称中提取数字
+                if floor_name.endswith('F'):
+                    level_no = int(floor_name.strip('F'))
+                else:
+                    # 尝试直接将楼层名称转换为整数
+                    level_no = int(floor_name)
+            except ValueError:
+                # 如果转换失败，使用默认值1
+                level_no = 1
+            
+            # 修改：确保楼层描述保留原始楼层名称
+            # 如果原始名称有F后缀，则直接使用原始名称，否则使用"X层"格式
+            if floor_name.endswith('F'):
+                level_desc = floor_name  # 保留原始带F的名称
+            else:
+                level_desc = f"{level_no}层"  # 为不带F的名称添加"层"后缀
+            
+            all_pipe_data.append({
+                'floor_data': floor_data,
+                'floor_name': floor_name,  # 保持原始楼层名称不变
+                'level_no': level_no,
+                'level_desc': level_desc,
+                'pipe_data': floor_pipe_data
+            })
+            
+        print("\n✅ 楼层处理完成!")
+    
+    # 所有楼层和区域处理完毕，生成最终的设计文件
+    if all_pipe_data:
+        print("\n🔷 开始生成最终设计文件...")
+        output_dir = Path('output')
+        
+        # 为每个楼层单独生成设计文件
+        for floor_info in all_pipe_data:
+            # 收集当前楼层所有区域的管道布线数据
+            floor_pipe_pt_seq = []
+            for area_info in floor_info['pipe_data']:
+                floor_pipe_pt_seq.extend(area_info['pipe_pt_seq'])
+            
+            # 为当前楼层生成设计数据
+            floor_design_data = convert_to_heating_design.convert_pipe_pt_seq_to_heating_design(
+                floor_pipe_pt_seq,
+                level_name=floor_info['floor_name'],
+                level_no=floor_info['level_no'],
+                level_desc=floor_info['level_desc'],
+                house_name="c1c37dc1a40f4302b6552a23cd1fd557",  # 这里可能需要从输入数据中获取
+                curvity=100,
+                input_data=input_data
+            )
+            
+            # 为每个楼层保存单独的设计文件
+            floor_out_file = output_dir / f"HeatingDesign_{floor_info['floor_name']}.json"
+            convert_to_heating_design.save_design_to_json(floor_design_data, floor_out_file)
+            print(f"\n✅ {floor_info['floor_name']}楼层的地暖设计数据已保存到：{floor_out_file}")
+        
+        # 如果需要，还可以生成一个合并版本的文件（可选）
+        if len(all_pipe_data) > 1:
+            # 创建包含所有楼层数据的列表
+            all_floors_data = []
+            for floor_info in all_pipe_data:
+                # 收集当前楼层所有区域的管道布线数据
+                floor_pipe_pt_seq = []
+                for area_info in floor_info['pipe_data']:
+                    floor_pipe_pt_seq.extend(area_info['pipe_pt_seq'])
+                
+                floor_design_data = convert_to_heating_design.convert_pipe_pt_seq_to_heating_design(
+                    floor_pipe_pt_seq,
+                    level_name=floor_info['floor_name'],
+                    level_no=floor_info['level_no'],
+                    level_desc=floor_info['level_desc'],
+                    house_name="c1c37dc1a40f4302b6552a23cd1fd557",
+                    curvity=100,
+                    input_data=input_data
+                )
+                all_floors_data.append(floor_design_data)
+            
+            # 保存合并版本的文件
+            merged_out_file = output_dir / "HeatingDesign_All_Floors.json"
+            # 这里我们创建一个包含所有楼层数据的字典
+            merged_design_data = {
+                "BuildingName": "多层建筑",
+                "Floors": all_floors_data
+            }
+            convert_to_heating_design.save_design_to_json(merged_design_data, merged_out_file)
+            print(f"\n✅ 合并版本的多楼层地暖设计数据已保存到：{merged_out_file}")
+    else:
+        print("\n👮 没有找到有效的管道布线数据，未生成设计文件")
+    
+    print("\n✅ 管道布线完成!")
 
 def load_solver_params(json_file):
     """从JSON文件加载求解器参数"""
