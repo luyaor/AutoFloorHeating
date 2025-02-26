@@ -44,13 +44,14 @@ def create_floor_layout(doc, floor_name, ms_block, layout_name=None):
     
     return layout
 
-def export_to_dxf(design_file: str, heating_design_file: str = None, output_file=None) -> str:
+def export_to_dxf(design_file: str, heating_design_file: str, input_data_file: str, output_file=None) -> str:
     """
     将AR设计文件和地暖设计文件导出为DXF格式
     
     Args:
         design_file: AR设计JSON文件路径
         heating_design_file: 地暖设计JSON文件路径，如果不指定则使用相同文件名但扩展名为.dxf
+        input_data_file: 输入数据文件，包含集水器位置信息
         output_file: 输出DXF文件路径，如果未指定则使用默认路径
         
     Returns:
@@ -71,6 +72,8 @@ def export_to_dxf(design_file: str, heating_design_file: str = None, output_file
     print(f"  - 设计文件: {design_file}")
     if heating_design_file:
         print(f"  - 地暖设计文件: {heating_design_file}")
+    if input_data_file:
+        print(f"  - 输入数据文件: {input_data_file}")
     print()
     
     # 加载设计文件
@@ -103,6 +106,34 @@ def export_to_dxf(design_file: str, heating_design_file: str = None, output_file
             print(f"⚠️ 加载地暖设计文件失败: {str(e)}")
             heating_data = None
     
+    # 加载输入数据文件（如果有）
+    input_data = None
+    floor_collectors_map = {}  # 存储每个楼层的集水器信息
+    if input_data_file and os.path.exists(input_data_file):
+        try:
+            with open(input_data_file, 'r', encoding='utf-8') as f:
+                input_data = json.load(f)
+            print(f"✅ 成功加载输入数据文件: {input_data_file}")
+            
+            # 处理集水器信息
+            if "AssistData" in input_data and "Floor" in input_data["AssistData"]:
+                floors = input_data["AssistData"]["Floor"]
+                for floor in floors:
+                    floor_num = floor.get("Num", "")
+                    if floor_num and "Construction" in floor and isinstance(floor["Construction"], dict):
+                        collectors = floor["Construction"].get("AssistCollector", [])
+                        if collectors:
+                            if floor_num not in floor_collectors_map:
+                                floor_collectors_map[floor_num] = []
+                            floor_collectors_map[floor_num].extend(collectors)
+                            print(f"  - 楼层 {floor_num}: 找到 {len(collectors)} 个集水器")
+                
+                print(f"  - 共从输入数据文件中提取了 {sum(len(v) for v in floor_collectors_map.values())} 个集水器")
+            print()
+        except Exception as e:
+            print(f"⚠️ 加载输入数据文件失败: {str(e)}")
+            input_data = None
+    
     # 创建楼层数据映射
     floor_data_map = {}
     
@@ -117,7 +148,8 @@ def export_to_dxf(design_file: str, heating_design_file: str = None, output_file
                 print(f"  - 发现楼层 {floor_name}")
                 floor_data_map[floor_name] = {
                     'design': floor,
-                    'heating': None  # 先设为空，后面添加
+                    'heating': None,  # 先设为空，后面添加
+                    'collectors': floor_collectors_map.get(floor_name, [])  # 添加集水器信息
                 }
     # 旧版数据结构（floors）
     elif "floors" in design_data:
@@ -128,7 +160,8 @@ def export_to_dxf(design_file: str, heating_design_file: str = None, output_file
             if floor_name:
                 floor_data_map[floor_name] = {
                     'design': floor,
-                    'heating': None  # 先设为空，后面添加
+                    'heating': None,  # 先设为空，后面添加
+                    'collectors': floor_collectors_map.get(floor_name, [])  # 添加集水器信息
                 }
     else:
         print(f"  ⚠️ 未能识别设计文件数据结构，无法提取楼层信息")
@@ -152,7 +185,8 @@ def export_to_dxf(design_file: str, heating_design_file: str = None, output_file
                 # 如果在设计文件中没找到对应楼层，也创建一个新条目
                 floor_data_map[level_name] = {
                     'design': None,
-                    'heating': floor_data
+                    'heating': floor_data,
+                    'collectors': floor_collectors_map.get(level_name, [])  # 添加集水器信息
                 }
     
     # 创建一个新的DXF文档
@@ -209,7 +243,7 @@ def export_to_dxf(design_file: str, heating_design_file: str = None, output_file
             floor_offset = floor_positions[floor_name]
             
             # 绘制地暖元素（不需要偏移，因为每个楼层都在自己的块中）
-            draw_heating_with_offset(floor_block, floor_data['heating'], SCALE, (0, 0))
+            draw_heating_with_offset(floor_block, floor_data['heating'], SCALE, (0, 0), floor_data['design'], floor_data['collectors'])
             print(f"  ✓ 绘制地暖元素")
         else:
             print(f"  ✗ 没有地暖设计数据")
@@ -627,7 +661,90 @@ def draw_floor_with_offset(space, floor_data, scale, offset):
                         dxfattribs={'layer': 'DOORS'}
                     )
 
-def draw_heating_with_offset(space, heating_data, scale, offset):
+def extract_ar_design_collectors(floor_data):
+    """提取AR设计文件中的集水器信息"""
+    collectors = []
+    
+    # 检查是否有Construction字段
+    if "Construction" in floor_data:
+        construction = floor_data.get("Construction", {})
+        
+        # 检查是否有AssistCollector字段
+        assist_collectors = construction.get("AssistCollector", [])
+        if assist_collectors:
+            print(f"  - 从AR设计文件中找到 {len(assist_collectors)} 个集水器")
+            
+            for idx, assist_collector in enumerate(assist_collectors, 1):
+                # 获取集水器位置
+                if "Location" in assist_collector:
+                    location = assist_collector.get("Location")
+                    
+                    # 添加到集水器列表
+                    collectors.append({
+                        "Id": f"AR_{idx}",
+                        "Position": {
+                            "X": float(location.get("x", 0)),
+                            "Y": float(location.get("y", 0))
+                        }
+                    })
+                    print(f"    ✓ 找到集水器 AR_{idx} 位置: ({location.get('x', 0)}, {location.get('y', 0)})")
+                
+                # 检查是否有Borders字段（如visualization_data.py中的处理）
+                if "Borders" in assist_collector:
+                    borders = assist_collector.get("Borders", [])
+                    if borders:
+                        print(f"    ✓ 集水器 AR_{idx} 有 {len(borders)} 个边界点")
+                        
+                        # 计算集水器的中心点作为位置
+                        x_coords = []
+                        y_coords = []
+                        for border in borders:
+                            start_point = border.get("StartPoint", {})
+                            end_point = border.get("EndPoint", {})
+                            x_coords.extend([float(start_point.get("x", 0)), float(end_point.get("x", 0))])
+                            y_coords.extend([float(start_point.get("y", 0)), float(end_point.get("y", 0))])
+                        
+                        if x_coords and y_coords:
+                            # 使用边界点的中心作为集水器位置
+                            center_x = sum(x_coords) / len(x_coords)
+                            center_y = sum(y_coords) / len(y_coords)
+                            
+                            collectors.append({
+                                "Id": f"AR_Border_{idx}",
+                                "Position": {
+                                    "X": center_x,
+                                    "Y": center_y
+                                },
+                                "HasBorders": True,
+                                "Borders": borders
+                            })
+                            print(f"    ✓ 从边界计算集水器 AR_Border_{idx} 中心位置: ({center_x}, {center_y})")
+    
+    # 如果没有找到AssistCollector，尝试在Room信息中查找集水器房间
+    if not collectors and "Construction" in floor_data:
+        construction = floor_data.get("Construction", {})
+        rooms = construction.get("Room", [])
+        
+        for idx, room in enumerate(rooms, 1):
+            room_name = room.get("Name", "").lower()
+            if "集水器" in room_name or "水暖井" in room_name or "分集水器" in room_name or "collector" in room_name.lower():
+                print(f"  - 从房间名称识别出可能的集水器: '{room_name}'")
+                
+                # 使用房间的标注点作为集水器位置
+                annotation_point = room.get("AnnotationPoint", {})
+                if annotation_point:
+                    collectors.append({
+                        "Id": f"AR_Room_{idx}_{room_name}",
+                        "Position": {
+                            "X": float(annotation_point.get("x", 0)),
+                            "Y": float(annotation_point.get("y", 0))
+                        }
+                    })
+                    print(f"    ✓ 从房间找到集水器 {room_name} 位置: ({annotation_point.get('x', 0)}, {annotation_point.get('y', 0)})")
+    
+    return collectors
+
+def draw_heating_with_offset(space, heating_data, scale, offset, floor_data=None, collectors=None):
     """
     绘制单个楼层的地暖元素，应用位置偏移
     
@@ -636,6 +753,8 @@ def draw_heating_with_offset(space, heating_data, scale, offset):
         heating_data: 地暖数据
         scale: 坐标缩放因子
         offset: (x, y) 偏移量元组
+        floor_data: 对应的AR设计楼层数据
+        collectors: 集水器信息列表
     """
     offset_x, offset_y = offset
     
@@ -680,6 +799,9 @@ def draw_heating_with_offset(space, heating_data, scale, offset):
             print(f"  ✓ 成功绘制管道，共 {len(points)} 个点")
         except Exception as e:
             print(f"  ✗ 绘制管道失败: {e}")
+    
+    # 创建用于存储集水器的列表
+    all_collectors = []
     
     # 检查是否有CollectorCoils数据
     collector_coils = heating_data.get("CollectorCoils", [])
@@ -741,13 +863,13 @@ def draw_heating_with_offset(space, heating_data, scale, offset):
                                         if isinstance(first_path_item, dict):
                                             if "StartPoint" in first_path_item:
                                                 start_point = first_path_item["StartPoint"]
-                                                if isinstance(start_point, dict) and "x" in start_point and "y" in start_point:
-                                                    # 使用起点作为集水器位置
-                                                    collector_position = {
-                                                        "X": float(start_point["x"]),
-                                                        "Y": float(start_point["y"])
-                                                    }
-                                                    print(f"    ✓ 从Path起点提取集水器位置: ({collector_position['X']}, {collector_position['Y']})")
+                                                # if isinstance(start_point, dict) and "x" in start_point and "y" in start_point:
+                                                #     # 使用起点作为集水器位置
+                                                #     collector_position = {
+                                                #         "X": float(start_point["x"]),
+                                                #         "Y": float(start_point["y"])
+                                                #     }
+                                                #     print(f"    ✓ 从Path起点提取集水器位置: ({collector_position['X']}, {collector_position['Y']})")
                                         
                                         # 绘制Path中的线段，使用更大的线宽
                                         for path_item in path:
@@ -781,16 +903,55 @@ def draw_heating_with_offset(space, heating_data, scale, offset):
                 })
                 
         # 使用提取的集水器信息替代原始集水器列表
-        collectors = extracted_collectors
-        print(f"  - 从CollectorCoils中提取了 {len(collectors)} 个集水器")
+        if extracted_collectors:
+            all_collectors.extend(extracted_collectors)
+            print(f"  - 从CollectorCoils中提取了 {len(extracted_collectors)} 个集水器")
     else:
         # 使用原始集水器信息
-        collectors = heating_data.get("Collectors", [])
-        print(f"  - 使用原始Collectors数据: {len(collectors)} 个集水器")
+        heating_collectors = heating_data.get("Collectors", [])
+        if heating_collectors:
+            all_collectors.extend(heating_collectors)
+            print(f"  - 使用原始Collectors数据: {len(heating_collectors)} 个集水器")
+    
+    # 如果提供了AR设计楼层数据，提取其中的集水器信息
+    # ar_collectors = []
+    # if floor_data is not None:
+    #     ar_design_collectors = extract_ar_design_collectors(floor_data)
+    #     if ar_design_collectors:
+    #         ar_collectors.extend(ar_design_collectors)
+    #         print(f"  - 添加了 {len(ar_design_collectors)} 个来自AR设计的集水器")
+    
+    # 从输入数据文件添加集水器信息
+    input_collectors = []
+    if collectors:
+        print(f"  - 从输入数据文件中获取了 {len(collectors)} 个集水器")
+        for idx, collector in enumerate(collectors, 1):
+            if "Location" in collector:
+                location = collector.get("Location", {})
+                
+                # 添加集水器到列表
+                collector_data = {
+                    "Id": f"InputCollector_{idx}",
+                    "Position": {
+                        "X": float(location.get("x", 0)),
+                        "Y": float(location.get("y", 0))
+                    }
+                }
+                
+                # 检查是否有Borders字段
+                if "Borders" in collector:
+                    borders = collector.get("Borders", [])
+                    collector_data["HasBorders"] = True
+                    collector_data["Borders"] = borders
+                
+                input_collectors.append(collector_data)
+                print(f"    ✓ 输入数据中的集水器 {idx} 位置: ({location.get('x', 0)}, {location.get('y', 0)})")
+        
+        all_collectors.extend(input_collectors)
     
     # 绘制集水器，使用更大、更明显的图形
-    print(f"  - 绘制 {len(collectors)} 个集水器")
-    for collector in collectors:
+    print(f"  - 绘制 {len(all_collectors)} 个集水器")
+    for collector in all_collectors:
         # 获取集水器位置
         position = collector.get("Position", {})
         if position:
@@ -813,6 +974,27 @@ def draw_heating_with_offset(space, heating_data, scale, offset):
                     }
                 )
                 print(f"    ✓ 成功绘制集水器 {collector.get('Id', '')}")
+                
+                # 如果有边界信息，绘制集水器边界
+                if collector.get("HasBorders", False) and "Borders" in collector:
+                    borders = collector.get("Borders", [])
+                    print(f"    - 绘制集水器边界 ({len(borders)} 个线段)")
+                    
+                    for border in borders:
+                        start_point = border.get("StartPoint", {})
+                        end_point = border.get("EndPoint", {})
+                        
+                        try:
+                            # 绘制边界线
+                            space.add_line(
+                                (float(start_point.get("x", 0)) * scale + offset_x, float(start_point.get("y", 0)) * scale + offset_y),
+                                (float(end_point.get("x", 0)) * scale + offset_x, float(end_point.get("y", 0)) * scale + offset_y),
+                                dxfattribs={'layer': 'COLLECTORS', 'lineweight': 25}
+                            )
+                            print(f"      ✓ 绘制边界线段 ({start_point.get('x', 0)},{start_point.get('y', 0)}) - ({end_point.get('x', 0)},{end_point.get('y', 0)})")
+                        except Exception as e:
+                            print(f"      ✗ 绘制边界线段失败: {e}")
+                
             except Exception as e:
                 print(f"    ✗ 绘制集水器失败: {e}")
 
@@ -827,7 +1009,11 @@ def main():
     """测试DXF导出功能"""
     print("\n=== DXF导出工具 ===")
     try:
-        output_file = export_to_dxf("data/ARDesign02.json", "output/HeatingDesign_All_Floors.json")
+        output_file = export_to_dxf(
+            design_file="data/ARDesign02.json", 
+            heating_design_file="output/HeatingDesign_All_Floors.json", 
+            input_data_file="data/inputData02.json"
+        )
         print(f"\n✅ DXF文件已成功导出至: {output_file}")
     except Exception as e:
         print(f"\n❌ 导出过程中出现错误: {str(e)}")
