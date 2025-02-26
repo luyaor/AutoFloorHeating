@@ -289,7 +289,6 @@ def export_to_dxf(design_file: str, heating_design_file: str, input_data_file: s
     
     # 保存DXF文件
     doc.saveas(output_file)
-    print(f"\n✅ DXF文件已成功导出至: {output_file}")
     
     return output_file
 
