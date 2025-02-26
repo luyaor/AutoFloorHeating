@@ -1,0 +1,241 @@
+{
+    "BuildingName": "多层建筑",
+    "Floors": [
+        {
+            "LevelName": "1",
+            "LevelNo": 1,
+            "LevelDesc": "1层",
+            "HouseName": "c1c37dc1a40f4302b6552a23cd1fd557",
+            "Expansions": [],
+            "CollectorCoils": [
+                {
+                    "CollectorName": "Collector_1",
+                    "Loops": 2,
+                    "CoilLoops": [
+                        {
+                            "Length": 1.41,
+                            "Areas": [],
+                            "Path": [
+                                {
+                                    "StartPoint": {
+                                        "x": 0.0,
+                                        "y": 0.0,
+                                        "z": 0.0
+                                    },
+                                    "EndPoint": {
+                                        "x": 1000.0,
+                                        "y": 1000.0,
+                                        "z": 0.0
+                                    },
+                                    "CurveType": 0
+                                }
+                            ],
+                            "Curvity": 100
+                        },
+                        {
+                            "Length": 1.41,
+                            "Areas": [],
+                            "Path": [
+                                {
+                                    "StartPoint": {
+                                        "x": 0.0,
+                                        "y": 0.0,
+                                        "z": 0.0
+                                    },
+                                    "EndPoint": {
+                                        "x": 1000.0,
+                                        "y": 1000.0,
+                                        "z": 0.0
+                                    },
+                                    "CurveType": 0
+                                }
+                            ],
+                            "Curvity": 100
+                        }
+                    ],
+                    "Deliverys": []
+                }
+            ]
+        },
+        {
+            "LevelName": "2",
+            "LevelNo": 2,
+            "LevelDesc": "2层",
+            "HouseName": "c1c37dc1a40f4302b6552a23cd1fd557",
+            "Expansions": [],
+            "CollectorCoils": [
+                {
+                    "CollectorName": "Collector_1",
+                    "Loops": 1,
+                    "CoilLoops": [
+                        {
+                            "Length": 1.41,
+                            "Areas": [],
+                            "Path": [
+                                {
+                                    "StartPoint": {
+                                        "x": 0.0,
+                                        "y": 0.0,
+                                        "z": 0.0
+                                    },
+                                    "EndPoint": {
+                                        "x": 1000.0,
+                                        "y": 1000.0,
+                                        "z": 0.0
+                                    },
+                                    "CurveType": 0
+                                }
+                            ],
+                            "Curvity": 100
+                        }
+                    ],
+                    "Deliverys": []
+                }
+            ]
+        },
+        {
+            "LevelName": "3",
+            "LevelNo": 3,
+            "LevelDesc": "3层",
+            "HouseName": "c1c37dc1a40f4302b6552a23cd1fd557",
+            "Expansions": [],
+            "CollectorCoils": [
+                {
+                    "CollectorName": "Collector_1",
+                    "Loops": 1,
+                    "CoilLoops": [
+                        {
+                            "Length": 1.41,
+                            "Areas": [],
+                            "Path": [
+                                {
+                                    "StartPoint": {
+                                        "x": 0.0,
+                                        "y": 0.0,
+                                        "z": 0.0
+                                    },
+                                    "EndPoint": {
+                                        "x": 1000.0,
+                                        "y": 1000.0,
+                                        "z": 0.0
+                                    },
+                                    "CurveType": 0
+                                }
+                            ],
+                            "Curvity": 100
+                        }
+                    ],
+                    "Deliverys": []
+                }
+            ]
+        },
+        {
+            "LevelName": "4",
+            "LevelNo": 4,
+            "LevelDesc": "4层",
+            "HouseName": "c1c37dc1a40f4302b6552a23cd1fd557",
+            "Expansions": [],
+            "CollectorCoils": [
+                {
+                    "CollectorName": "Collector_1",
+                    "Loops": 1,
+                    "CoilLoops": [
+                        {
+                            "Length": 1.41,
+                            "Areas": [],
+                            "Path": [
+                                {
+                                    "StartPoint": {
+                                        "x": 0.0,
+                                        "y": 0.0,
+                                        "z": 0.0
+                                    },
+                                    "EndPoint": {
+                                        "x": 1000.0,
+                                        "y": 1000.0,
+                                        "z": 0.0
+                                    },
+                                    "CurveType": 0
+                                }
+                            ],
+                            "Curvity": 100
+                        }
+                    ],
+                    "Deliverys": []
+                }
+            ]
+        },
+        {
+            "LevelName": "5~17",
+            "LevelNo": 1,
+            "LevelDesc": "1层",
+            "HouseName": "c1c37dc1a40f4302b6552a23cd1fd557",
+            "Expansions": [],
+            "CollectorCoils": [
+                {
+                    "CollectorName": "Collector_1",
+                    "Loops": 1,
+                    "CoilLoops": [
+                        {
+                            "Length": 1.41,
+                            "Areas": [],
+                            "Path": [
+                                {
+                                    "StartPoint": {
+                                        "x": 0.0,
+                                        "y": 0.0,
+                                        "z": 0.0
+                                    },
+                                    "EndPoint": {
+                                        "x": 1000.0,
+                                        "y": 1000.0,
+                                        "z": 0.0
+                                    },
+                                    "CurveType": 0
+                                }
+                            ],
+                            "Curvity": 100
+                        }
+                    ],
+                    "Deliverys": []
+                }
+            ]
+        },
+        {
+            "LevelName": "18",
+            "LevelNo": 18,
+            "LevelDesc": "18层",
+            "HouseName": "c1c37dc1a40f4302b6552a23cd1fd557",
+            "Expansions": [],
+            "CollectorCoils": [
+                {
+                    "CollectorName": "Collector_1",
+                    "Loops": 1,
+                    "CoilLoops": [
+                        {
+                            "Length": 1.41,
+                            "Areas": [],
+                            "Path": [
+                                {
+                                    "StartPoint": {
+                                        "x": 0.0,
+                                        "y": 0.0,
+                                        "z": 0.0
+                                    },
+                                    "EndPoint": {
+                                        "x": 1000.0,
+                                        "y": 1000.0,
+                                        "z": 0.0
+                                    },
+                                    "CurveType": 0
+                                }
+                            ],
+                            "Curvity": 100
+                        }
+                    ],
+                    "Deliverys": []
+                }
+            ]
+        }
+    ]
+}

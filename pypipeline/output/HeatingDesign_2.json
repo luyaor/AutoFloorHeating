@@ -1,0 +1,36 @@
+{
+    "LevelName": "2",
+    "LevelNo": 2,
+    "LevelDesc": "2层",
+    "HouseName": "c1c37dc1a40f4302b6552a23cd1fd557",
+    "Expansions": [],
+    "CollectorCoils": [
+        {
+            "CollectorName": "Collector_1",
+            "Loops": 1,
+            "CoilLoops": [
+                {
+                    "Length": 1.41,
+                    "Areas": [],
+                    "Path": [
+                        {
+                            "StartPoint": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 1000.0,
+                                "y": 1000.0,
+                                "z": 0.0
+                            },
+                            "CurveType": 0
+                        }
+                    ],
+                    "Curvity": 100
+                }
+            ],
+            "Deliverys": []
+        }
+    ]
+}
