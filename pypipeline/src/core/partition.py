@@ -545,12 +545,12 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
             
             # plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
 
-    print("WALL_PT_PATH=", best_wall_path)
-    print("SEG_PTS=", best_global_points)
-    print("CAC_REGIONS_FAKE=", best_region_info)
-    print("DESTINATION_POINT=", best_destination_point)
-    print("")
-    plot_polygons(best_polygon, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=best_global_points)
+    # print("WALL_PT_PATH=", best_wall_path)
+    # print("SEG_PTS=", best_global_points)
+    # print("CAC_REGIONS_FAKE=", best_region_info)
+    # print("DESTINATION_POINT=", best_destination_point)
+    # print("")
+    # plot_polygons(best_polygon, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=best_global_points)
 
     return best_polygon, best_global_points, best_region_info, best_wall_path, best_destination_point
 
