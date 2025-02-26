@@ -564,7 +564,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
     # 导出DXF文件
     if out_file:
         print("\n🔷 正在导出DXF文件...")
-        dxf_file = dxf_export.export_to_dxf(design_json_path, str(out_file))
+        dxf_file = dxf_export.export_to_dxf(design_json_path, str(out_file), input_json_path)
         print(f"✅ DXF文件已导出至: {dxf_file}")
     else:
         print("\n⚠️ 未生成设计文件，跳过DXF导出")
