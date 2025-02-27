@@ -28,6 +28,7 @@ from .plane import (
     same_line,
     pt_dir_intersect,
 )
+from .shapely_spiral import generate_spiral_tree, SpiralNode
 
 from queue import PriorityQueue
 import scipy
@@ -87,6 +88,7 @@ def edge_is_wall(eid: EdgeId, wall_pt_path):
 
 
 # [solve.g2s1]
+# pipe_id, pt_id
 G2Node = Tuple[int, int]
 
 G2Edge = Tuple[G2Node, G2Node]
@@ -1015,7 +1017,7 @@ class CactusSolver:
 
                 # [g2.step1]
                 for pipe_id in pipe_id_li:
-                    node_set.add((pipe_id, uid))
+                    node_set.add(G2Node(pipe_id, uid))
                     edge_dict[(pipe_id, uid)] = [(pipe_id, vid)]
 
                 if uid > vid:
@@ -1210,6 +1212,7 @@ class CactusSolver:
     ):
         """
         参数均为 G2
+        G3 为有向树
         """
         g3_node: Set[G3Node] = set()
         # 有向边
@@ -1247,6 +1250,14 @@ class CactusSolver:
                 g3_edge_info[get_g3_edge_id((id1, id2))] = G0EdgeInfo(
                     w_sug / 2.0, w_sug / 2.0
                 )
+
+            def solve_g2_cycle_by_shapely_spiral(cycle: List[G2Node]):
+                # rt 不可删除
+                # 已有子节点不可删除
+                cannot_delete_idx = [0]
+                for i in range(1, len(cycle)):
+                    if ("outer", cycle[i]) in g3_edge:
+                        cannot_delete_idx.append(i)
 
             def solve_g2_cycle(cycle: List[G2Node]):
                 rt = cycle[0]
@@ -1408,7 +1419,7 @@ class CactusSolver:
         g3_node_pos,
         g3_edge_info,
     ):
-        def dfs(u, dir_to_u, rw_to_u, lw_to_u, res_ref: List[Tuple[Point, Vec]]):
+        def dfs(u: G3Node, dir_to_u: Vec, rw_to_u: float, lw_to_u: float, res_ref: List[Tuple[Point, Vec]]):
             """
             u is a g3 node
             """
