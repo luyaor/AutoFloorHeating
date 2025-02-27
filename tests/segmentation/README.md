@@ -23,3 +23,12 @@ for pt0, dir0 in out:
         - 不断远离的线段：从距离大于等于 sug 开始允许
         - 其他线段：一旦距离小于 sug 就禁止
 ```
+
+- g3 图已经建立了一些点和边。(G2Node)
+- solve() 传入一个环
+- spiral() 传入一个 Polygon 返回一个 spiral 图，可能添加了一些新点
+- 需要知道 spiral 图（外围）与 g3 传入环的对应点关系,
+- spiral
+    - 先按需求创建 g3 新点
+        - spiral 图需要有 id. id 对应 g3 (list index) or new
+- return a dict: 
