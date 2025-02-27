@@ -5,14 +5,13 @@ from copy import deepcopy
 from dataclasses import dataclass
 from loguru import logger
 import matplotlib.pyplot as plt
+from typeguard import typechecked
 import matplotlib.colors as mcolors
 import numpy as np
-from . import plane
+from . import plane, shapely_spiral
 from .plane import (
     is_counter_clockwise,
     strictly_less,
-    Polygon,
-    Point,
     poly_edge_pipe_width_v1,
     PipeOnAxis,
     pt_edge_pipes_expand_pts_v1,
@@ -22,17 +21,19 @@ from .plane import (
     dir_left,
     dir_right,
     Vec,
-    line_cross,
-    line_at_dir,
-    eq,
-    same_line,
     pt_dir_intersect,
 )
-from .shapely_spiral import generate_spiral_tree, SpiralNode
+from .shapely_spiral import (
+    generate_spiral_tree,
+    quick_plot,
+    SpiralNode,
+    asymmetric_buffer_linestring_v1,
+    iter_ext_segments,
+)
+from shapely import Polygon, LineString, unary_union, Point
 
 from queue import PriorityQueue
-import scipy
-from typing import List, Tuple, Dict, Set, Final, Hashable, Any
+from typing import List, Tuple, Dict, Set, Any, Union
 from .utils import DisjointSet
 
 
@@ -89,14 +90,25 @@ def edge_is_wall(eid: EdgeId, wall_pt_path):
 
 # [solve.g2s1]
 # pipe_id, pt_id
-G2Node = Tuple[int, int]
+# G2Node = Tuple[int, int]
+@typechecked
+@dataclass(frozen=True)
+class G2Node:
+    pipe_id: int
+    pt_id: int
+
+    def __lt__(self, other):
+        if not isinstance(other, G2Node):
+            return NotImplemented
+        return (self.pipe_id, self.pt_id) < (other.pipe_id, other.pt_id)
+
 
 G2Edge = Tuple[G2Node, G2Node]
 
 
 @dataclass
 class G0EdgeInfo:
-    # x -> y, 逆时针(右向左)
+    # x -> y, 逆时针(右向左). x id < y id
     #      y node
     #      ^
     # l<---|----r
@@ -120,20 +132,35 @@ def get_g2_edge_id(e: G2Edge):
 
 
 # [solve.g3]
-G3Node = Tuple[
-    str, Hashable
-]  # ("outer", (pipe_id, pt_id)) | ("inner", ((pipe_id, pt_id), son_idx))
+# G3Node = Tuple[
+#     str, Hashable
+# ]  # ("outer", (pipe_id, pt_id)) | ("inner", ((pipe_id, pt_id), son_idx))
+@typechecked
+@dataclass(frozen=True)
+class G3NewNode:
+    id: int
+
+    def __hash__(self):
+        return hash(self.id)
+
+
+G3Node = Union[G2Node, G3NewNode]
 G3Edge = Tuple[G3Node, G3Node]
 
 
+@typechecked
 def g3_node_id_less(e1: G3Node, e2: G3Node):
     # outer 排前面
-    if (e1[0] == "inner") != (e2[0] == "inner"):
-        return int(e1[0] == "inner") < int(e2[0] == "inner")
-    # 同类
-    return e1[1] < e2[1]
+    if isinstance(e1, G2Node) != isinstance(e2, G2Node):
+        return int(isinstance(e1, G2Node)) > int(isinstance(e2, G2Node))
+    if isinstance(e1, G2Node):
+        if e1.pipe_id != e2.pipe_id:
+            return e1.pipe_id < e2.pipe_id
+        return e1.pt_id < e2.pt_id
+    return e1.id < e2.id
 
 
+@typechecked
 def get_g3_edge_id(e: G3Edge):
     assert e[0] != e[1]
     if g3_node_id_less(e[0], e[1]):
@@ -159,8 +186,6 @@ class CactusSolverDebug:
 class CactusSolver:
     def __init__(
         self,
-        glb_h,
-        glb_w,
         cmap,
         seg_pts,
         wall_pt_path,
@@ -177,7 +202,6 @@ class CactusSolver:
         self.suggested_m0_pipe_interval = suggested_m0_pipe_interval
 
         # [consequent]
-        self.global_mat = np.zeros((glb_h + 1, glb_w + 1), dtype=int)
         self.g0_pipe_width = self.suggested_m0_pipe_interval * 2.0
 
         # [assert]
@@ -191,84 +215,56 @@ class CactusSolver:
             f"some region color not in cmap, max color is {max(region.color for region in self.cac_regions_fake)}",
         )
 
-        # [fill]
-        blacks = self.fill_pts([self.seg_pts[i] for i in self.wall_pt_path], close=True)
-        for x, y in blacks:
-            self.global_mat[x, y] = -1
-
-    @staticmethod
-    def fill_pts(pts: list, close=False):
-        z = zip(pts, pts[1:] + [pts[0]]) if close else zip(pts[:-1], pts[1:])
-        blacks = []
-        lx, ly = -1, -1
-        for pt, nt in z:
-            cnt = int(np.ceil(max(abs(pt[0] - nt[0]), abs(pt[1] - nt[1]))))
-            for i in range(cnt + 1):
-                x = int(np.round(pt[0] + (nt[0] - pt[0]) * i / cnt))
-                y = int(np.round(pt[1] + (nt[1] - pt[1]) * i / cnt))
-                if (x, y) != (lx, ly):
-                    lx, ly = x, y
-                    blacks.append((x, y))
-        return blacks
-
-    def plot_matrix(self, matrix, title=None):
-        cmap_list = [self.cmap[key] for key in sorted(self.cmap.keys())]
-        custom_cmap = mcolors.ListedColormap(cmap_list)
-        bounds = list(self.cmap.keys()) + [max(self.cmap.keys()) + 1]
-        norm = mcolors.BoundaryNorm(bounds, custom_cmap.N)
-        if title is not None:
-            plt.title(title)
-        plt.imshow(matrix, cmap=custom_cmap, norm=norm)
-        plt.colorbar(ticks=sorted(self.cmap.keys()))
+    # don't show
+    def plot_wall(self, plt):
+        for i in range(len(self.wall_pt_path)):
+            plt.plot(
+                [
+                    self.seg_pts[self.wall_pt_path[i]][0],
+                    self.seg_pts[self.wall_pt_path[(i + 1) % len(self.wall_pt_path)]][
+                        0
+                    ],
+                ],
+                [
+                    self.seg_pts[self.wall_pt_path[i]][1],
+                    self.seg_pts[self.wall_pt_path[(i + 1) % len(self.wall_pt_path)]][
+                        1
+                    ],
+                ],
+                color="black",
+            )
 
     def plot_num(self, nums):
         for idx, (x, y) in enumerate(nums):
             plt.text(
-                y, x, str(idx), color="white", fontsize=9, ha="center", va="center"
+                x, y, str(idx), color="black", fontsize=12, ha="center", va="center"
             )
 
     def show_wall(self):
         plt.figure(figsize=(20, 10))  # 设置图像大小为 12x7
-        self.plot_matrix(self.global_mat, title="test")
+        plt.axis("equal")
+        self.plot_wall(plt)
         self.plot_num(self.seg_pts)
         plt.show()
 
     def show_regions_with_colors(self):
-        matrix = self.global_mat
         regions = self.cac_regions_fake
         seg = self.seg_pts
         dest_pt = self.destination_pt
 
         plt.figure(figsize=(20, 10))  # 设置图像大小为 20x10
-        cmap_list = [self.cmap[key] for key in sorted(self.cmap.keys())]
-        custom_cmap = mcolors.ListedColormap(cmap_list)
-        bounds = list(self.cmap.keys()) + [max(self.cmap.keys()) + 1]
-        norm = mcolors.BoundaryNorm(bounds, custom_cmap.N)
-
-        plt.imshow(matrix, cmap=custom_cmap, norm=norm)
+        plt.axis("equal")
+        self.plot_wall(plt)
+        # plt.imshow(matrix, cmap=custom_cmap, norm=norm)
         for idx, region in enumerate(regions):
             x, y = zip(*[seg[i] for i in region.ccw_pts_id])
             x = list(x) + [x[0]]  # 首尾相连
             y = list(y) + [y[0]]  # 首尾相连
             plt.plot(
-                y, x, color=self.cmap[region.color] if region.color > 0 else "white"
+                x, y, color=self.cmap[region.color] if region.color > 0 else "gray"
             )  # 绘制多边形边缘，颜色为白色
-
-            # 计算质心
-            centroid_x = sum(x[:-1]) / len(x[:-1])
-            centroid_y = sum(y[:-1]) / len(y[:-1])
-            plt.text(
-                centroid_y,
-                centroid_x,
-                str(idx),
-                color="black",
-                fontsize=12,
-                ha="center",
-                va="center",
-            )  # 显示编号
         # 显示 destination
-        plt.colorbar(ticks=sorted(self.cmap.keys()))
-        plt.scatter([seg[dest_pt][1]], [seg[dest_pt][0]], s=[100], color="red")
+        plt.scatter([seg[dest_pt][0]], [seg[dest_pt][1]], s=[100], color="red")
         self.plot_num(self.seg_pts)
         plt.show()
 
@@ -839,6 +835,7 @@ class CactusSolver:
                         )
 
             plt.figure(figsize=(20, 10))
+            plt.axis("equal")
             self.plot_matrix(self.global_mat, title="test")
             self.plot_num(self.seg_pts)
             plot_transfer(transfer, self.seg_pts)
@@ -861,23 +858,24 @@ class CactusSolver:
                         color = cmap[pipe_color[pipe_id]]
                         i = idx + sti
                         plt.plot(
-                            [st[1] + i * ox, ed[1] + i * ox],
                             [st[0] + i * oy, ed[0] + i * oy],
+                            [st[1] + i * ox, ed[1] + i * ox],
                             color=color,
                             linewidth=2,
                         )
 
             plt.figure(figsize=(20, 10))
-            self.plot_matrix(self.global_mat, title="test")
+            plt.axis("equal")
             self.plot_num(self.seg_pts)
+            self.plot_wall(plt)
             plot_pipes(edge_pipes, self.seg_pts, pipe_color, self.cmap)
             plt.show()
 
         if debug:
             test_plot_pipes()
 
-
         # [def] pipe_pt[pipe_pt] is a tuple of 2 pt_id
+        # A pipe consists of 2 pt_id
         pipe_pt: Dict[int, Tuple[int, int]] = dict()
         for eid, edge in edge_pipes.items():
             for i, pipe_id in enumerate(edge.ccw_pipes):
@@ -898,7 +896,7 @@ class CactusSolver:
         # fill this
 
         for cac in regions:
-            pts: Polygon = [seg_pts[i] for i in cac.ccw_pts_id]
+            pts: plane.Polygon = [seg_pts[i] for i in cac.ccw_pts_id]
             edge_pipe_num = []
             for uid, vid in zip(
                 cac.ccw_pts_id, cac.ccw_pts_id[1:] + [cac.ccw_pts_id[0]]
@@ -983,25 +981,33 @@ class CactusSolver:
                     so_st = st + dir_left * x
                     so_ed = ed + dir_left * x
                     plt.plot(
-                        [so_st[1], so_ed[1]],
                         [so_st[0], so_ed[0]],
+                        [so_st[1], so_ed[1]],
                         color=color,
                         linewidth=0.5,
                     )
 
         plt.figure(figsize=(20, 10))
-        self.plot_matrix(self.global_mat, title="test")
+        plt.axis("equal")
+        self.plot_wall(plt)
         self.plot_num(self.seg_pts)
         plot_pipes(edge_pipes, self.seg_pts, pipe_color, self.cmap, pipe_xw)
         plt.show()
 
+    @typechecked
     @staticmethod
-    def get_endpoint_for_each_pipe(seg_pts, pt_edge_to, edge_pipes, pipe_wx):
+    def get_endpoint_for_each_pipe(
+        seg_pts, pt_edge_to, edge_pipes, pipe_wx
+    ) -> Tuple[
+        Set[G2Node],
+        Dict[G2Node, List[G2Node]],
+        Dict[G2Node, plane.Point],
+        Dict[G2Edge, G0EdgeInfo],
+    ]:
         # 初步生成
         node_set: Set[G2Node] = set()
         edge_dict: Dict[G2Node, List[G2Node]] = dict()
-        node_pos: Dict[G2Node, Point] = dict()
-        # pipe_pt: Dict[int, List[int]] = dict()
+        node_pos: Dict[G2Node, plane.Point] = dict()
         edge_info_s1: Dict[G2Edge, G0EdgeInfo] = dict()
 
         for uid in range(len(seg_pts)):
@@ -1018,7 +1024,7 @@ class CactusSolver:
                 # [g2.step1]
                 for pipe_id in pipe_id_li:
                     node_set.add(G2Node(pipe_id, uid))
-                    edge_dict[(pipe_id, uid)] = [(pipe_id, vid)]
+                    edge_dict[G2Node(pipe_id, uid)] = [G2Node(pipe_id, vid)]
 
                 if uid > vid:
                     # 反转 x，因为这种情况轴转了
@@ -1029,8 +1035,8 @@ class CactusSolver:
 
                 # [edge info]
                 for pipe_id in edge_pipes[eid].ccw_pipes:
-                    g2_node_ex = (pipe_id, eid[0])
-                    g2_node_ey = (pipe_id, eid[1])
+                    g2_node_ex = G2Node(pipe_id, eid[0])
+                    g2_node_ey = G2Node(pipe_id, eid[1])
                     assert g2_node_ex < g2_node_ey
                     # pipe_wx 内 rw 为 min(u, v) -> max(u, v) 主方向
                     # 此步骤中恰好 ex -> ey 为主方向
@@ -1046,7 +1052,7 @@ class CactusSolver:
                 # if pipe_id not in pipe_pt:
                 #     pipe_pt[pipe_id] = []
                 # pipe_pt[pipe_id].append(uid)
-                node_pos[(pipe_id, uid)] = pos
+                node_pos[G2Node(pipe_id, uid)] = pos
         return node_set, edge_dict, node_pos, edge_info_s1
 
     def test_plot_pipes2(self, edge_pipes, pipe_color, pipe_pt, node_pos_s1):
@@ -1063,7 +1069,7 @@ class CactusSolver:
                     pt0, pt1 = pipe_pt[pipe_id]
                     st = node_pos[(pipe_id, pt0)]
                     ed = node_pos[(pipe_id, pt1)]
-                    plt.plot([st[1], ed[1]], [st[0], ed[0]], color=color, linewidth=1.1)
+                    plt.plot([st[0], ed[0]], [st[1], ed[1]], color=color, linewidth=1.1)
                     # 在中点绘制文字 pipe_id
                     mid = (st + ed) / 2
                     plt.text(
@@ -1083,6 +1089,7 @@ class CactusSolver:
         #     print(v.get_sets_di())
 
         plt.figure(figsize=(20, 10))
+        plt.axis("equal")
         self.plot_num(self.seg_pts)
         self.plot_matrix(self.global_mat, title="test")
         plot_pipes(
@@ -1095,8 +1102,15 @@ class CactusSolver:
         )
         plt.show()
 
+    @typechecked
     @staticmethod
-    def build_linked_g2(node_set, edge_dict, pt_pipe_sets, edge_info_s1, pipe_pt):
+    def build_linked_g2(
+        node_set: Set[G2Node],
+        edge_dict: Dict[G2Node, List[G2Node]],
+        pt_pipe_sets: Dict[int, DisjointSet],
+        edge_info_s1: Dict[G2Edge, G0EdgeInfo],
+        pipe_pt: Dict[int, Tuple[int, int]],
+    ):
         node_set = copy.deepcopy(node_set)
         edge_dict = copy.deepcopy(edge_dict)
         edge_info_s2 = copy.deepcopy(edge_info_s1)
@@ -1104,15 +1118,17 @@ class CactusSolver:
         for pt_id in pt_pipe_sets.keys():
             for _, disjoint in pt_pipe_sets[pt_id].get_sets_di().items():
                 for i in range(1, len(disjoint)):
-                    assert (disjoint[i], pt_id) in node_set
-                    u = (disjoint[i], pt_id)
-                    v = (disjoint[i - 1], pt_id)
+                    assert G2Node(disjoint[i], pt_id) in node_set
+                    u = G2Node(disjoint[i], pt_id)
+                    v = G2Node(disjoint[i - 1], pt_id)
                     edge_dict[u].append(v)
                     edge_dict[v].append(u)
 
                     uv_edge_id = get_g2_edge_id((u, v))
-                    uo = (disjoint[i], the_other(pt_id, pipe_pt[disjoint[i]]))
-                    vo = (disjoint[i - 1], the_other(pt_id, pipe_pt[disjoint[i - 1]]))
+                    uo = G2Node(disjoint[i], the_other(pt_id, pipe_pt[disjoint[i]]))
+                    vo = G2Node(
+                        disjoint[i - 1], the_other(pt_id, pipe_pt[disjoint[i - 1]])
+                    )
                     u_pipe_edge_id = get_g2_edge_id((uo, u))
                     v_pipe_edge_id = get_g2_edge_id((vo, v))
 
@@ -1129,6 +1145,7 @@ class CactusSolver:
 
     def test_g2_s2(self, edge_dict_s2, node_pos_s1, pipe_color):
         plt.figure(figsize=(20, 10))
+        plt.axis("equal")
         self.plot_matrix(self.global_mat, title="test")
         # plot_num(SEG_PTS)
         # plot all edge in EDGE_DICT_S2
@@ -1146,10 +1163,16 @@ class CactusSolver:
         plt.show()
 
     @staticmethod
-    def g2_unique_xy(node_set_s2, edge_dict_s2, node_pos_s2, edge_info_s2, dest_pt):
+    def g2_unique_xy(
+        node_set_s2: Set[G2Node],
+        edge_dict_s2: Dict[G2Node, Set[G2Node]],
+        node_pos_s2: Dict[G2Node, plane.Point],
+        edge_info_s2: Dict[G2Edge, G0EdgeInfo],
+        dest_pt: int,
+    ):
         node_set_s3: Set[G2Node] = set()
         edge_dict_s3: Dict[G2Node, Set[G2Node]] = dict()
-        node_pos_s3: Dict[G2Node, Point] = dict()
+        node_pos_s3: Dict[G2Node, plane.Point] = dict()
         map_s2_s3: Dict[G2Node, G2Node] = dict()
         edge_info_s3: Dict[G2Edge, G0EdgeInfo] = dict()
 
@@ -1161,7 +1184,7 @@ class CactusSolver:
             for v_s2 in not_taken:
                 if same_point(node_pos_s2[u_s2], node_pos_s2[v_s2]):
                     same_li.append(v_s2)  # can be u_s2
-            with_dest = [x for x in same_li if x[1] == dest_pt]
+            with_dest = [x for x in same_li if x.pt_id == dest_pt]
             assert len(with_dest) <= 1
             s3 = with_dest[0] if len(with_dest) > 0 else same_li[0]
             for same in same_li:
@@ -1192,6 +1215,7 @@ class CactusSolver:
 
     def test_g2_s3(self, g2_edge_dict_s3, g2_node_pos_s3, pipe_color):
         plt.figure(figsize=(20, 10))
+        plt.axis("equal")
         self.plot_matrix(self.global_mat, title="test")
         self.plot_num(self.seg_pts)
         for k, v in g2_edge_dict_s3.items():
@@ -1207,9 +1231,20 @@ class CactusSolver:
         plt.show()
 
     @staticmethod
+    @typechecked
     def g3_tarjan_for_a_color(
-        start_node, node_set, edge_dict, node_pos, edge_info, w_sug: float
-    ):
+        start_node: G2Node,
+        node_set: Set[G2Node],
+        edge_dict: Dict[G2Node, Set[G2Node]],
+        node_pos: Dict[G2Node, plane.Point],
+        edge_info: Dict[G2Edge, G0EdgeInfo],
+        w_sug: float,
+    ) -> Tuple[
+        Set[G3Node],
+        Dict[G3Node, List[G3Node]],
+        Dict[G3Node, plane.Point],
+        Dict[G3Edge, G0EdgeInfo],
+    ]:
         """
         参数均为 G2
         G3 为有向树
@@ -1218,8 +1253,10 @@ class CactusSolver:
         # 有向边
         g3_edge: Dict[G3Node, List[G3Node]] = dict()  # copy.deepcopy(edge_dict)
         g3_edge_info: Dict[G3Edge, G0EdgeInfo] = dict()  # copy.deepcopy(edge_dict)
-        g3_node_pos: Dict[G3Node, Point] = dict()
+        g3_node_pos: Dict[G3Node, plane.Point] = dict()
         stack = []
+
+        g3_new_id_cnt = 0
 
         dfn = dict()
         low = dict()
@@ -1232,19 +1269,16 @@ class CactusSolver:
             stack.append(u)
 
             # [g3]
-            g3_node.add(("outer", u))
-            g3_node_pos[("outer", u)] = node_pos[u]
+            g3_node.add(u)
+            g3_node_pos[u] = node_pos[u]
 
-            def solve_id(id1, id2):
+            def solve_id(id1: G3Node, id2: G3Node):
                 # 存储时 rw 方向如何确定？永远都是小 id 指向大 id
                 nonlocal w_sug
-                # print(f"adding {get_g3_edge_id((id1, id2))}")
-                if id1[0] == "outer" and id2[0] == "outer":
-                    g2_id1 = id1[1]
-                    g2_id2 = id2[1]
+                if isinstance(id1, G2Node) and isinstance(id2, G2Node):
                     # 顺序一致
                     g3_edge_info[get_g3_edge_id((id1, id2))] = edge_info[
-                        get_g2_edge_id((g2_id1, g2_id2))
+                        get_g2_edge_id((id1, id2))
                     ]
                     return
                 g3_edge_info[get_g3_edge_id((id1, id2))] = G0EdgeInfo(
@@ -1254,10 +1288,63 @@ class CactusSolver:
             def solve_g2_cycle_by_shapely_spiral(cycle: List[G2Node]):
                 # rt 不可删除
                 # 已有子节点不可删除
-                cannot_delete_idx = [0]
-                for i in range(1, len(cycle)):
-                    if ("outer", cycle[i]) in g3_edge:
-                        cannot_delete_idx.append(i)
+                # [readonly]
+                nonlocal w_sug
+                # cannot_delete_idx = [0]
+                # for i in range(1, len(cycle)):
+                #     if ("outer", cycle[i]) in g3_edge:
+                #         cannot_delete_idx.append(i)
+                make_a_polygon = Polygon([node_pos[g2] for g2 in cycle])
+                root, ed_idx, id_idx_map = generate_spiral_tree(
+                    make_a_polygon, w_sug, 0
+                )
+
+                # 该 map 仅在当前环内有效
+                node_id_g3_map: Dict[int, G3Node] = {
+                    id: cycle[idx] for id, idx in id_idx_map.items()
+                }
+
+                def get_g3_id(spiral_node: SpiralNode) -> G3Node:
+                    id_node = id(spiral_node)
+                    nonlocal node_id_g3_map
+                    if id_node not in node_id_g3_map:
+                        nonlocal g3_new_id_cnt
+                        g3_new_id_cnt += 1
+                        new_node = G3NewNode(g3_new_id_cnt)
+                        node_id_g3_map[id_node] = new_node
+                        g3_node.add(new_node)
+                        g3_node_pos[new_node] = arr(
+                            spiral_node.point.xy[0][0],
+                            spiral_node.point.xy[1][0],
+                        )
+                    return node_id_g3_map[id_node]
+
+                # 遍历这棵树
+                def dfs(u: SpiralNode):
+                    nonlocal id_idx_map
+                    nonlocal node_id_g3_map, g3_edge, g3_edge_info
+                    uid = get_g3_id(u)
+                    if u.children:
+                        for v in u.children:
+                            vid = get_g3_id(v)
+                            g3_edge[uid] = g3_edge.get(uid, []) + [vid]
+                            g3_edge_info[get_g3_edge_id((uid, vid))] = G0EdgeInfo(
+                                w_sug / 2.0, w_sug / 2.0
+                            )
+                            dfs(v)
+
+                dfs(root)
+
+                real_end_point = cycle[ed_idx - 1]
+                for idx in range(ed_idx, len(cycle)):
+                    nonlocal g3_edge, g3_edge_info
+                    deleted_g2 = cycle[idx]
+                    # g3 edge. All link to ed_idx - 1
+                    for v in g3_edge[deleted_g2]:
+                        g3_edge[real_end_point] = g3_edge.get(real_end_point, []) + [v]
+                        g3_edge_info[get_g3_edge_id((real_end_point, v))] = (
+                            g3_edge_info[get_g3_edge_id((deleted_g2, v))]
+                        )
 
             def solve_g2_cycle(cycle: List[G2Node]):
                 rt = cycle[0]
@@ -1320,21 +1407,17 @@ class CactusSolver:
                     solve_id(last_id, g3_id)
                     last_id = g3_id
 
-            # print(f"in {u}")
             for v in edge_dict[u]:
                 if v == fa:
                     continue
                 if v not in dfn:
-                    # [树边]
-                    # g3_edge[u] = g3_edge.get(u, []) + [v]
-                    # print(f"    {u} -> {v}")
                     tarjan(v, u)
                     low[u] = min(low[u], low[v])
                     if low[v] > dfn[u]:
-                        assert stack[-1] == v
                         # 非环边
-                        g3_uid = ("outer", u)
-                        g3_vid = ("outer", v)
+                        assert stack[-1] == v
+                        g3_uid = u
+                        g3_vid = v
                         g3_edge[g3_uid] = g3_edge.get(g3_uid, []) + [g3_vid]
                         solve_id(g3_uid, g3_vid)
                         stack.pop()
@@ -1345,9 +1428,9 @@ class CactusSolver:
                             cycle.append(stack.pop())
                         cycle.append(u)  # 不 pop
                         cycle.reverse()
-                        solve_g2_cycle(cycle)
+                        # solve_g2_cycle(cycle)
+                        solve_g2_cycle_by_shapely_spiral(cycle)
                 else:
-                    # print(f"   {u} -> {v} is not a tree edge")
                     low[u] = min(low[u], dfn[v])
 
             """
@@ -1358,19 +1441,21 @@ class CactusSolver:
         return g3_node, g3_edge, g3_node_pos, g3_edge_info
 
     @staticmethod
-    def g2_get_start_nodes(g2_node_set, pipe_color, dest_pt):
+    def g2_get_start_nodes(
+        g2_node_set: Set[G2Node], pipe_color: Dict[int, int], dest_pt: int
+    ) -> List[G2Node]:
         # 同色保留第一个
         color_registered = set()
         res = []
         for node in g2_node_set:
-            if node[1] == dest_pt:
-                if pipe_color[node[0]] not in color_registered:
-                    color_registered.add(pipe_color[node[0]])
+            if node.pt_id == dest_pt:
+                if pipe_color[node.pipe_id] not in color_registered:
+                    color_registered.add(pipe_color[node.pipe_id])
                     res.append(node)
                 else:
                     logger.error(f"{node}")
                     raise ValueError(
-                        f"There are more than one start node in the same color {pipe_color[node[0]]}. note: `dest_pt` must be in a white region."
+                        f"There are more than one start node in the same color {pipe_color[node.pipe_id]}. note: `dest_pt` must be in a white region."
                     )
         return res
 
@@ -1385,9 +1470,10 @@ class CactusSolver:
         g0_pipe_width,
     ):
         plt.figure(figsize=(20, 10))
-        self.plot_matrix(self.global_mat, title="test")
+        plt.axis("equal")
+        self.plot_wall(plt)
 
-        for s in start_nodes[1:2]:
+        for s in start_nodes:
             n, e, p, i = CactusSolver.g3_tarjan_for_a_color(
                 s,
                 g2_node_set_s3,
@@ -1401,31 +1487,128 @@ class CactusSolver:
             def dfs_plot(u):
                 for v in e.get(u, []):
                     plt.plot(
-                        [p[u][1], p[v][1]],
                         [p[u][0], p[v][0]],
-                        color=self.cmap[pipe_color[s[0]]],
+                        [p[u][1], p[v][1]],
+                        color=self.cmap[pipe_color[s.pipe_id]],
                         linewidth=1,
                     )
                     dfs_plot(v)
 
-            dfs_plot(("outer", s))
+            dfs_plot(s)
         plt.show()
 
+    @typechecked
+    @staticmethod
+    def gen_one_color_m1_by_shapely(
+        start_g3_node: G3Node,
+        dest_pt: int,
+        g3_edge_dict: Dict[G3Node, List[G3Node]],
+        g3_node_pos: Dict[G3Node, plane.Point],
+        g3_edge_info: Dict[G3Edge, G0EdgeInfo],
+    ) -> List[plane.Point]:
+        # get all line strings by dfs
+        polygons: List[Polygon] = []
+
+        def dfs(
+            u: G3Node,
+            dir_to_u: Vec = None,
+            rw_to_u: float = None,
+            lw_to_u: float = None,
+        ):
+            sons = g3_edge_dict.get(u, [])
+            for v in sons:
+                lw_uv = g3_edge_info[get_g3_edge_id((u, v))].lw
+                rw_uv = g3_edge_info[get_g3_edge_id((u, v))].rw
+                if not g3_node_id_less(u, v):
+                    lw_uv, rw_uv = rw_uv, lw_uv
+                # if not same point
+                u_pos = g3_node_pos[u]
+                v_pos = g3_node_pos[v]
+                if not Point(u_pos).equals(Point(v_pos)):
+                    polygons.append(
+                        asymmetric_buffer_linestring_v1(
+                            LineString([u_pos, v_pos]),
+                            lw_uv / 2.0,
+                            rw_uv / 2.0,
+                        )
+                    )
+                dir_uv = (
+                    normalized(v_pos - u_pos)
+                    if not Point(u_pos).equals(Point(v_pos))
+                    else dir_to_u
+                )
+                dir_uv_left = dir_left(dir_uv)
+                if dir_to_u is not None:
+                    dir_to_u_left = dir_left(dir_to_u)
+                    if dir_to_u_left @ dir_uv > 0:  # 左转
+                        polygons.append(
+                            Polygon(
+                                [
+                                    u_pos,
+                                    u_pos - dir_to_u_left * rw_to_u / 2.0,
+                                    u_pos - dir_uv_left * rw_uv / 2.0,
+                                ]
+                            )
+                        )
+                    else:
+                        polygons.append(
+                            Polygon(
+                                [
+                                    u_pos,
+                                    u_pos + dir_to_u_left * lw_to_u / 2.0,
+                                    u_pos + dir_uv_left * lw_uv / 2.0,
+                                ]
+                            )
+                        )
+                dfs(v, dir_uv, rw_uv, lw_uv)
+
+        dfs(start_g3_node)
+        polygon = unary_union(polygons)
+        assert isinstance(polygon, Polygon), (
+            f"Union of polygons is not a Polygon: {polygon}"
+        )
+        # 从 Polygon 中删除与 dest_pt 相交的点，并返回 pts
+        dest_pt_pos = g3_node_pos[start_g3_node]
+
+        # 找到首个与 dest_pt_pos 相交的线段 x, y，返回从 y 开始绕一圈到 x
+        before_pts = []
+        after_pts = []
+        after = False
+        for x, y in iter_ext_segments(polygon):
+            if LineString([x, y]).contains(Point(dest_pt_pos)):
+                assert not after
+                before_pts.append(arr(*x))
+                after = True
+                continue
+            if after:
+                after_pts.append(arr(*x))
+            else:
+                before_pts.append(arr(*x))
+        assert after, "Can't find any line containing dest_pt_pos"
+        return after_pts + before_pts
+
+    @typechecked
     @staticmethod
     def gen_one_color_m1(
-        start_g3_node,
-        dest_pt,
-        g3_edge_dict,
-        g3_node_pos,
-        g3_edge_info,
+        start_g3_node: G3Node,
+        dest_pt: int,
+        g3_edge_dict: Dict[G3Node, List[G3Node]],
+        g3_node_pos: Dict[G3Node, plane.Point],
+        g3_edge_info: Dict[G3Edge, G0EdgeInfo],
     ):
-        def dfs(u: G3Node, dir_to_u: Vec, rw_to_u: float, lw_to_u: float, res_ref: List[Tuple[Point, Vec]]):
+        def dfs(
+            u: G3Node,
+            dir_to_u: Vec,
+            rw_to_u: float,
+            lw_to_u: float,
+            res_ref: List[Tuple[plane.Point, Vec]],
+        ):
             """
             u is a g3 node
             """
             nonlocal dest_pt, g3_edge_dict, g3_node_pos, g3_edge_info
             sons = deepcopy(g3_edge_dict.get(u, []))
-            u_is_root = u[0] == "outer" and u[1][1] == dest_pt
+            u_is_root = isinstance(u, G2Node) and u.pt_id == dest_pt
             if u_is_root:
                 assert len(sons) == 1
             else:
@@ -1489,7 +1672,7 @@ class CactusSolver:
         dfs(start_g3_node, None, None, None, res_ref)
         return res_ref
 
-    def process(self, debug: CactusSolverDebug) -> List[List[Point]]:
+    def process(self, debug: CactusSolverDebug) -> List[List[plane.Point]]:
         if debug.show_wall:
             self.show_wall()
         if debug.show_regions_with_colors:
@@ -1566,7 +1749,7 @@ class CactusSolver:
         )
         if debug.g3:
             self.test_g3(
-                g2_start_nodes,  # adjust this
+                g2_start_nodes,  # you can adjust this
                 pipe_color,
                 g2_node_set_s3,
                 g2_edge_dict_s3,
@@ -1576,8 +1759,8 @@ class CactusSolver:
             )
 
         # [m1]
-        pipe_pt_seq: List[List[Point]] = []
-        for s in g2_start_nodes[1:2]:
+        pipe_pt_seq: List[List[plane.Point]] = []
+        for s in g2_start_nodes:
             n, e, p, i = CactusSolver.g3_tarjan_for_a_color(
                 s,
                 g2_node_set_s3,
@@ -1586,25 +1769,25 @@ class CactusSolver:
                 g2_edge_info_s3,
                 self.g0_pipe_width,
             )
-            seq = CactusSolver.gen_one_color_m1(
-                ("outer", s),
+            seq = CactusSolver.gen_one_color_m1_by_shapely(
+                s,
                 self.destination_pt,
                 e,
                 p,
                 i,
             )
-            pts = [x[0] for x in seq]
-            pipe_pt_seq.append(pts)
+            pipe_pt_seq.append(seq)
 
         if debug.m1:
             plt.figure(figsize=(20, 10))
-            self.plot_matrix(self.global_mat, title="test")
+            plt.axis("equal")
+            self.plot_wall(plt)
             for s, pts in zip(g2_start_nodes, pipe_pt_seq):
                 for i in range(len(pts) - 1):
                     plt.plot(
-                        [pts[i][1], pts[i + 1][1]],
                         [pts[i][0], pts[i + 1][0]],
-                        color=self.cmap[pipe_color[s[0]]],
+                        [pts[i][1], pts[i + 1][1]],
+                        color=self.cmap[pipe_color[s.pipe_id]],
                         linewidth=1,
                     )
             plt.show()
@@ -1612,7 +1795,7 @@ class CactusSolver:
         return pipe_pt_seq
 
 
-def calc_pipe_length(li: List[Point]):
+def calc_pipe_length(li: List[plane.Point]):
     ret = 0.0
     for i in range(1, len(li)):
         ret += np.linalg.norm(li[i] - li[i - 1])
@@ -1620,17 +1803,23 @@ def calc_pipe_length(li: List[Point]):
 
 
 if __name__ == "__main__":
-    WALL_PT_PATH= [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
-    SEG_PTS= [(1.0, 35.166666666666664), (1.0, 36.0), (1.0, 69.33333333333333), (1.0, 88.5), (40.0, 88.5), (40.0, 96.0), (96.5, 96.0), (96.5, 103.5), (120.5, 103.5), (120.5, 96.0), (120.5, 88.5), (145.5, 88.5), (148.5, 88.5), (148.5, 96.0), (148.5, 103.5), (177.5, 103.5), (177.5, 96.0), (250.0, 96.0), (275.0, 96.0), (275.0, 88.5), (280.0, 88.5), (280.0, 69.33333333333333), (280.0, 36.0), (290.0, 36.0), (290.0, 35.166666666666664), (290.0, 1.0), (280.0, 1.0), (275.0, 1.0), (250.0, 1.0), (177.5, 1.0), (148.5, 1.0), (145.5, 1.0), (120.5, 1.0), (96.5, 1.0), (40.0, 1.0), (1.0, 1.0), (280.0, 35.166666666666664), (275.0, 35.166666666666664), (177.5, 35.166666666666664), (177.5, 36.0), (177.5, 69.33333333333333), (275.0, 69.33333333333333), (177.5, 88.5), (40.0, 35.166666666666664), (96.5, 35.166666666666664), (120.5, 35.166666666666664), (40.0, 69.33333333333333), (40.0, 36.0), (120.5, 36.0), (120.5, 69.33333333333333)]
-    CAC_REGIONS_FAKE= [([41, 40, 39, 38, 37, 36, 22, 21], 4), ([23, 22, 36, 37, 38, 29, 28, 27, 26, 25, 24], 0), ([16, 42, 40, 41, 21, 20, 19, 18, 17], 2), ([32, 45, 44, 43, 34, 33], 3), ([34, 43, 47, 46, 4, 3, 2, 1, 0, 35], 1), ([32, 31, 30, 29, 38, 39, 40, 42, 16, 15, 14, 13, 12, 11, 10, 49, 48, 45], 5), ([8, 7, 6, 5, 4, 46, 47, 43, 44, 45, 48, 49, 10, 9], 6)]
-
-    DESTINATION_PT = 25
+    WALL_PT_PATH = [0, 1, 2, 3, 4, 5, 6]
+    SEG_PTS = [
+        (120.0, 10.0),
+        (120.0, 105.0),
+        (120.0, 200.0),
+        (10.0, 200.0),
+        (10.0, 105.0),
+        (10.0, 100.0),
+        (10.0, 10.0),
+    ]
+    CAC_REGIONS_FAKE = [([0, 1, 4, 5, 6], 0), ([1, 2, 3, 4], 1)]
+    DESTINATION_PT = 0
     # [---]
 
     SEG_PTS = [arr(x[0], x[1]) for x in SEG_PTS]
 
     CAC_REGIONS_FAKE = [CacRegion(x[0][::1], x[1]) for x in CAC_REGIONS_FAKE]
-
 
     cmap_0 = [
         "blue",
@@ -1649,19 +1838,16 @@ if __name__ == "__main__":
     }
 
     solver = CactusSolver(
-        glb_h=400,
-        glb_w=400,
         cmap=cmap,
         seg_pts=SEG_PTS,
         wall_pt_path=WALL_PT_PATH,
         cac_region_fake=CAC_REGIONS_FAKE,
         destination_pt=DESTINATION_PT,
-        suggested_m0_pipe_interval=1.11,
+        suggested_m0_pipe_interval=5.00,
     )
 
     pipe_pt_seq = solver.process(
         CactusSolverDebug(
-            # xw=True,
             g3=True,
             m1=True,
         )
