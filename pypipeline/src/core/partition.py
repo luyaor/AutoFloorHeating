@@ -68,8 +68,8 @@ def plot_polygons(polygons, nat_lines=None, title="Polygons", global_points=None
     #         ax.plot(x, y, color='red', linewidth=2, linestyle="--", label="Natural Segmentation")
     if global_points is not None:
         for idx, pt in enumerate(global_points):
-            ax.plot(pt[0], pt[1], 'bo', markersize=4)
-            ax.text(pt[0], pt[1], str(idx), fontsize=10, color='blue',
+            ax.plot(pt[0], pt[1], 'bo', markersize=3)
+            ax.text(pt[0], pt[1], str(idx), fontsize=5, color='blue',
                     verticalalignment='bottom', horizontalalignment='right')
     ax.set_title(title)
     ax.set_aspect('equal', 'box')
@@ -422,7 +422,22 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
                 return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
             # --- 新增：清理 region_info 中的冗余共线点 ---
             def is_collinear(p_prev, p_cur, p_next, epsilon=1e-3):
-                return (abs((p_cur[0]-p_prev[0])*(p_next[1]-p_prev[1]) - (p_next[0]-p_prev[0])*(p_cur[1]-p_prev[1])) < epsilon) or (dis(p_cur, p_prev) < epsilon)
+                return (abs((p_cur[0]-p_prev[0])*(p_next[1]-p_prev[1]) - (p_next[0]-p_prev[0])*(p_cur[1]-p_prev[1])) < epsilon) or (dis(p_cur, p_prev) < 1)
+
+            new_region_info = []
+            for reg in region_info:
+                i = 0
+                while i < len(reg):
+                    pi = global_points[reg[i]]
+                    pi1 = global_points[reg[(i + 1) % len(reg)]]
+                    for p in global_points:
+                        if (dis(pi, p) > 1e-3) and (dis(p, pi1) > 1e-3) and \
+                        (abs(dis(pi, p) + dis(p, pi1) - dis(pi, pi1)) < 1e-3):
+                            reg = reg[:i + 1] + [global_points.index(p)] + reg[i + 1:]
+                            break
+                    i += 1
+                new_region_info.append(reg)
+            region_info = new_region_info
             
             freq = {}
             for reg in region_info:
@@ -545,12 +560,12 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
             
             # plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
 
-    # print("WALL_PT_PATH=", best_wall_path)
-    # print("SEG_PTS=", best_global_points)
-    # print("CAC_REGIONS_FAKE=", best_region_info)
-    # print("DESTINATION_POINT=", best_destination_point)
-    # print("")
-    # plot_polygons(best_polygon, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=best_global_points)
+    print("WALL_PT_PATH=", best_wall_path)
+    print("SEG_PTS=", best_global_points)
+    print("CAC_REGIONS_FAKE=", best_region_info)
+    print("DESTINATION_POINT=", best_destination_point)
+    print("")
+    plot_polygons(best_polygon, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=best_global_points)
 
     return best_polygon, best_global_points, best_region_info, best_wall_path, best_destination_point
 
