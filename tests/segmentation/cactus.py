@@ -9,6 +9,7 @@ from typeguard import typechecked
 import matplotlib.colors as mcolors
 import numpy as np
 from . import plane, shapely_spiral
+from .parse_json import parse_polygon_group_intermediate
 from .plane import (
     is_counter_clockwise,
     strictly_less,
@@ -75,6 +76,7 @@ class EdgePipes:
 
 
 # [solve.dijk2]
+# (pt, y, i)，当前在 (pt, y) 管道的 pt 点上，第 i 个管道
 StateT = Tuple[int, int, int]
 TransferT = Dict[StateT, List[Tuple[StateT, float]]]
 
@@ -263,6 +265,18 @@ class CactusSolver:
             plt.plot(
                 x, y, color=self.cmap[region.color] if region.color > 0 else "gray"
             )  # 绘制多边形边缘，颜色为白色
+            # 在多边形重心绘制编号
+            center_x = sum(x) / len(x)
+            center_y = sum(y) / len(y)
+            plt.text(
+                center_x,
+                center_y,
+                str(idx),
+                color="red",
+                fontsize=12,
+                ha="center",
+                va="center",
+            )
         # 显示 destination
         plt.scatter([seg[dest_pt][0]], [seg[dest_pt][1]], s=[100], color="red")
         self.plot_num(self.seg_pts)
@@ -1340,7 +1354,7 @@ class CactusSolver:
                     nonlocal g3_edge, g3_edge_info
                     deleted_g2 = cycle[idx]
                     # g3 edge. All link to ed_idx - 1
-                    for v in g3_edge[deleted_g2]:
+                    for v in g3_edge.get(deleted_g2, []):
                         g3_edge[real_end_point] = g3_edge.get(real_end_point, []) + [v]
                         g3_edge_info[get_g3_edge_id((real_end_point, v))] = (
                             g3_edge_info[get_g3_edge_id((deleted_g2, v))]
@@ -1548,7 +1562,7 @@ class CactusSolver:
                                     u_pos - dir_to_u_left * rw_to_u / 2.0,
                                     u_pos - dir_uv_left * rw_uv / 2.0,
                                 ]
-                            )
+                            ).buffer(1e-10)
                         )
                     else:
                         polygons.append(
@@ -1558,7 +1572,7 @@ class CactusSolver:
                                     u_pos + dir_to_u_left * lw_to_u / 2.0,
                                     u_pos + dir_uv_left * lw_uv / 2.0,
                                 ]
-                            )
+                            ).buffer(1e-10)
                         )
                 dfs(v, dir_uv, rw_uv, lw_uv)
 
@@ -1803,19 +1817,13 @@ def calc_pipe_length(li: List[plane.Point]):
 
 
 if __name__ == "__main__":
-    WALL_PT_PATH = [0, 1, 2, 3, 4, 5, 6]
-    SEG_PTS = [
-        (120.0, 10.0),
-        (120.0, 105.0),
-        (120.0, 200.0),
-        (10.0, 200.0),
-        (10.0, 105.0),
-        (10.0, 100.0),
-        (10.0, 10.0),
-    ]
-    CAC_REGIONS_FAKE = [([0, 1, 4, 5, 6], 0), ([1, 2, 3, 4], 1)]
-    DESTINATION_PT = 0
     # [---]
+
+    example_filename = "../pypipeline/output/1_polygon_group_2_intermediate.json"
+
+    SEG_PTS, CAC_REGIONS_FAKE, WALL_PT_PATH, DESTINATION_PT, interval = (
+        parse_polygon_group_intermediate(example_filename)
+    )
 
     SEG_PTS = [arr(x[0], x[1]) for x in SEG_PTS]
 
@@ -1843,11 +1851,12 @@ if __name__ == "__main__":
         wall_pt_path=WALL_PT_PATH,
         cac_region_fake=CAC_REGIONS_FAKE,
         destination_pt=DESTINATION_PT,
-        suggested_m0_pipe_interval=5.00,
+        suggested_m0_pipe_interval=interval,
     )
 
     pipe_pt_seq = solver.process(
         CactusSolverDebug(
+            show_regions_with_colors=True,
             g3=True,
             m1=True,
         )
