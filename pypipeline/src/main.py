@@ -42,7 +42,7 @@ def select_input_file(file_type="design"):
     for fname in available_files:
         print(f"  @{fname}")
     
-    default_file = "ARDesign02.json" if file_type == "design" else "inputData02.json"
+    default_file = "ARDesign01.json" if file_type == "design" else "inputData01.json"
     
     while True:
         choice = input(f"\n🔷 请选择{file_type}文件 [@{default_file}]: ").strip()
