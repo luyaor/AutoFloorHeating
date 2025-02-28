@@ -6,3 +6,4 @@ shapely>=1.7.0
 opencv-python>=4.5.0
 loguru>=0.7.0
 ezdxf>=1.0.0 
+typeguard>=3.0.0
