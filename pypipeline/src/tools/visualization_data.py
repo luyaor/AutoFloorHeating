@@ -200,11 +200,14 @@ def create_door_rectangle(door: Door) -> List[Tuple[float, float]]:
         dx, dy = dx/length, dy/length
         
         # Get perpendicular vector for door thickness
-        thickness = 500.0  # Increased thickness for better intersection
-        extension = 200.0  # Extension on both sides
+        # Using significantly larger thickness to ensure connection
+        thickness = max(door.Size.Width, 100)  # Use larger thickness to ensure overlap
+        
+        # Keep original door length without extension
+        extension = 0  # No extension to maintain original door length
         px, py = -dy, dx  # Perpendicular vector
         
-        # Calculate four corners of the door rectangle with extension
+        # Calculate four corners of the door rectangle with original length
         p1 = (door.BaseLine.StartPoint.x - dx * extension - px * thickness/2, 
               door.BaseLine.StartPoint.y - dy * extension - py * thickness/2)
         p2 = (door.BaseLine.EndPoint.x + dx * extension - px * thickness/2, 
@@ -223,7 +226,7 @@ def merge_room_with_doors(room_points: List[Tuple[float, float]],
     # Convert room points to Shapely polygon
     room_polygon = Polygon(room_points)
     
-    # Convert door rectangles to Shapely polygons
+    # Convert door rectangles to Shapely polygons and add buffer
     door_polygons = []
     for rect in door_rectangles:
         door_poly = Polygon(rect)
@@ -232,8 +235,8 @@ def merge_room_with_doors(room_points: List[Tuple[float, float]],
             # Get the intersection between the room and the door
             intersection = room_polygon.intersection(door_poly)
             if not intersection.is_empty:
-                # Create a buffer around the intersection to ensure connection
-                buffered = intersection.buffer(50)
+                # Use a significant buffer to ensure connection between rooms
+                buffered = intersection.buffer(30)
                 door_polygons.append(buffered)
     
     if not door_polygons:
@@ -245,8 +248,8 @@ def merge_room_with_doors(room_points: List[Tuple[float, float]],
     # Create the final polygon by unioning the room with the door areas
     merged = unary_union([room_polygon, door_union])
     
-    # Simplify the resulting polygon to remove small artifacts
-    merged = merged.simplify(1.0)
+    # Simplify the resulting polygon with a smaller tolerance to preserve details
+    merged = merged.simplify(0.01)
     
     # Convert back to list of points
     if isinstance(merged, MultiPolygon):
@@ -268,6 +271,10 @@ def merge_room_with_doors(room_points: List[Tuple[float, float]],
     # Ensure counter-clockwise orientation
     if is_clockwise(unique_points):
         unique_points.reverse()
+    
+    # Remove the last point if it's the same as the first (closing point)
+    if unique_points and len(unique_points) > 1 and unique_points[0] == unique_points[-1]:
+        unique_points = unique_points[:-1]
     
     return unique_points
 
@@ -326,7 +333,6 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
     )
     floors = []
     floors.append(floor)
-    # break
     
     ar_design = ARDesign(Floor=floors)
     
@@ -334,35 +340,69 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
     polygons = {}
     
     # First, collect all rooms and doors
-    rooms = []
-    doors = []
+    room_polygons_by_name = {}
+    door_polygons = []
     
+    from shapely.geometry import LineString, Point, box
+    
+    # 1. 先处理所有房间和门
     for floor in ar_design.Floor:
+        # 处理所有房间
         for i, room in enumerate(floor.Construction.Room):
             points = get_points_from_room(room)
+            # 确保点序列是闭合的，第一个点和最后一个点相同
+            if points and points[0] != points[-1]:
+                points.append(points[0])
             result[f"room_{floor.Num}_{i}"] = points
-            rooms.append((f"room_{floor.Num}_{i}", Polygon(points)))
+            
+            # 存储房间多边形，用于后续处理
+            room_polygons_by_name[f"room_{floor.Num}_{i}"] = {
+                'poly': Polygon(points),
+                'name': room.Name,
+                'original_points': points
+            }
         
-        for door in floor.Construction.Door:
+        # 处理所有门
+        for j, door in enumerate(floor.Construction.Door):
             if door.BaseLine:
+                # 创建门的矩形表示并添加更大的缓冲区确保连接
                 rect = create_door_rectangle(door)
                 if rect:
-                    doors.append(Polygon(rect))
+                    door_poly = Polygon(rect)
+                    # 创建一个更大的缓冲区以确保连接
+                    buffered_door = door_poly.buffer(20)
+                    door_polygons.append((buffered_door, j, rect))
+                    result[f"door_rect_{j}"] = rect
     
-    # Create a graph of connected rooms
+    # 2. 确定房间间的连接关系
+    room_names = list(room_polygons_by_name.keys())
     from collections import defaultdict
     connections = defaultdict(set)
     
-    # Find rooms connected by doors
-    for i, (room1_name, room1_poly) in enumerate(rooms):
-        for j, (room2_name, room2_poly) in enumerate(rooms[i+1:], i+1):
-            # Check if these rooms are connected by any door
-            for door in doors:
-                if (room1_poly.intersects(door) and room2_poly.intersects(door)):
-                    connections[room1_name].add(room2_name)
-                    connections[room2_name].add(room1_name)
+    # 检查每一个门是否连接两个房间
+    for door_poly, door_idx, _ in door_polygons:
+        connected_rooms = []
+        
+        # 检查哪些房间与这个门相交
+        for room_name in room_names:
+            room_info = room_polygons_by_name[room_name]
+            if door_poly.intersects(room_info['poly']):
+                connected_rooms.append(room_name)
+        
+        # 如果门连接了两个或更多房间，记录连接关系
+        if len(connected_rooms) >= 2:
+            for i in range(len(connected_rooms)):
+                for j in range(i+1, len(connected_rooms)):
+                    connections[connected_rooms[i]].add(connected_rooms[j])
+                    connections[connected_rooms[j]].add(connected_rooms[i])
     
-    # Find connected components (groups of connected rooms)
+    # # 3. 打印连接关系进行调试
+    # print("Connections between rooms:")
+    # for room_name, connected_rooms in connections.items():
+    #     if connected_rooms:
+    #         print(f"{room_name} is connected to: {', '.join(connected_rooms)}")
+            
+    # 4. 寻找连通分量（连接房间的组）
     def find_connected_component(start, visited):
         component = set()
         stack = [start]
@@ -377,60 +417,94 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
     visited = set()
     room_groups = []
     
-    # Group connected rooms
-    for room_name, _ in rooms:
+    # 分组连接的房间
+    for room_name in room_names:
         if room_name not in visited:
             component = find_connected_component(room_name, visited)
             if component:
                 room_groups.append(component)
+                
+    # # 打印分组信息进行调试
+    # print(f"Found {len(room_groups)} room groups:")
+    # for i, group in enumerate(room_groups):
+    #     print(f"Group {i}: {', '.join(group)}")
     
-    # Merge rooms in each group
+    # 5. 合并每个组中的房间
     for i, group in enumerate(room_groups):
-        # Get polygons for all rooms in the group
-        group_polys = []
-        group_doors = []
+        if len(group) == 1:
+            # 单个房间，直接使用其多边形
+            room_name = next(iter(group))
+            room_info = room_polygons_by_name[room_name]
+            polygons[f"polygon_group_{i}"] = [p for p in room_info['original_points'][:-1]]  # 移除最后一个闭合点
+            continue
         
-        # Add room polygons
+        # 获取组中所有房间的多边形
+        room_polys = []
+        connecting_door_polys = []
+        
+        # 添加所有房间多边形
         for room_name in group:
-            room_poly = next(poly for name, poly in rooms if name == room_name)
-            group_polys.append(room_poly)
+            room_polys.append(room_polygons_by_name[room_name]['poly'])
         
-        # Add connecting doors
-        for door in doors:
-            # If door connects to any room in the group
-            if any(room_poly.intersects(door) for room_poly in group_polys):
-                group_doors.append(door)
+        # 找出所有连接这些房间的门
+        for door_poly, door_idx, rect in door_polygons:
+            # 检查门是否连接组内的房间
+            connected_to_group_rooms = []
+            for room_name in group:
+                if door_poly.intersects(room_polygons_by_name[room_name]['poly']):
+                    connected_to_group_rooms.append(room_name)
+            
+            # 如果门连接组内至少两个房间，使用它进行连接
+            if len(connected_to_group_rooms) >= 2:
+                # 使用原始门形状，但添加更大的缓冲区以确保连接
+                connecting_door_polys.append(door_poly.buffer(30))
         
-        # Merge all polygons
-        merged = unary_union(group_polys + group_doors)
-        
-        # Convert to points
-        if isinstance(merged, MultiPolygon):
-            # Take the largest polygon if multiple polygons are created
-            largest = max(merged.geoms, key=lambda p: p.area)
-            coords = list(largest.exterior.coords)
-        else:
-            coords = list(merged.exterior.coords)
-        
-        points = [(x, y) for x, y in coords]
-        polygons[f"polygon_group_{i}"] = points
+        try:
+            # 创建房间的并集
+            all_geoms = room_polys + connecting_door_polys
+            merged = unary_union(all_geoms)
+            
+            # 使用较小的容差，避免过度简化
+            merged = merged.simplify(0.01)
+            
+            # 处理合并结果
+            if isinstance(merged, MultiPolygon):
+                # 如果生成多个多边形，选择最大的
+                largest = max(merged.geoms, key=lambda p: p.area)
+                coords = list(largest.exterior.coords)
+            else:
+                coords = list(merged.exterior.coords)
+            
+            # 确保没有重复的连续点
+            unique_coords = []
+            for i in range(len(coords)):
+                if i == 0 or coords[i] != coords[i-1]:
+                    unique_coords.append(coords[i])
+            
+            # 如果最后一个点与第一个点相同，移除最后一个点
+            if unique_coords and len(unique_coords) > 1 and unique_coords[0] == unique_coords[-1]:
+                unique_coords = unique_coords[:-1]
+            
+            points = [(x, y) for x, y in unique_coords]
+            polygons[f"polygon_group_{i}"] = points
+            
+        except Exception as e:
+            print(f"Error merging room group {i}: {e}")
+            # 合并失败时，使用组内第一个房间的多边形
+            if group:
+                first_room = next(iter(group))
+                points = room_polygons_by_name[first_room]['original_points']
+                if points and len(points) > 1 and points[0] == points[-1]:
+                    points = points[:-1]
+                polygons[f"polygon_group_{i}"] = points
     
-    # Add door rectangles to result (for visualization only)
-    for i, door in enumerate(doors):
-        result[f"door_rect_{i}"] = list(door.exterior.coords)
-    
-    # Process polygons to ensure counter-clockwise order
+    # 6. 处理多边形，确保逆时针顺序
     processed_polygons = {}
     for key, points in polygons.items():
         if key.startswith("polygon"):
-            # Ensure points are in counter-clockwise order
+            # 确保点序列是逆时针方向
             if is_clockwise(points):
                 points = points[::-1]
-            
-            # Remove the last point if it's the same as the first (closing point)
-            if points and points[0] == points[-1]:
-                points = points[:-1]
-            
             processed_polygons[key] = points
     
     return result, processed_polygons
