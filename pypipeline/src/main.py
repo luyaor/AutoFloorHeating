@@ -503,8 +503,8 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
         # print("\n✅ 原始图像绘制完成，按任意键继续...")
         # # 绘制原始数据
         # input()
-        visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
-        continue
+        # visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
+        # continue
 
         print("\n📊 提取的多边形信息:")
         
