@@ -201,7 +201,8 @@ def create_door_rectangle(door: Door) -> List[Tuple[float, float]]:
         
         # Get perpendicular vector for door thickness
         # Using significantly larger thickness to ensure connection
-        thickness = max(door.Size.Width, 100)  # Use larger thickness to ensure overlap
+        # thickness = max(door.Size.Width, 100)  # Use larger thickness to ensure overlap
+        thickness = door.Size.Width 
         
         # Keep original door length without extension
         extension = 0  # No extension to maintain original door length
@@ -370,7 +371,7 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
                 if rect:
                     door_poly = Polygon(rect)
                     # 创建一个更大的缓冲区以确保连接
-                    buffered_door = door_poly.buffer(20)
+                    buffered_door = door_poly.buffer(0)
                     door_polygons.append((buffered_door, j, rect))
                     result[f"door_rect_{j}"] = rect
     
@@ -457,7 +458,7 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
             # 如果门连接组内至少两个房间，使用它进行连接
             if len(connected_to_group_rooms) >= 2:
                 # 使用原始门形状，但添加更大的缓冲区以确保连接
-                connecting_door_polys.append(door_poly.buffer(30))
+                connecting_door_polys.append(door_poly.buffer(0))
         
         try:
             # 创建房间的并集
