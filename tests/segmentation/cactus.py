@@ -21,7 +21,7 @@ from .plane import (
     inner_recursive_v2_api,
     dir_left,
     dir_right,
-    Vec,
+    NpVec,
     pt_dir_intersect,
 )
 from .shapely_spiral import (
@@ -31,7 +31,7 @@ from .shapely_spiral import (
     asymmetric_buffer_linestring_v1,
     iter_ext_segments,
 )
-from shapely import Polygon, LineString, unary_union, Point
+from shapely import Polygon, LineString, unary_union, Point, MultiPoint
 
 from queue import PriorityQueue
 from typing import List, Tuple, Dict, Set, Any, Union
@@ -191,7 +191,7 @@ class CactusSolver:
         cmap,
         seg_pts,
         wall_pt_path,
-        cac_region_fake: List[CacRegion],
+        cac_regions: List[CacRegion],
         destination_pt,
         suggested_m0_pipe_interval,
     ):
@@ -199,23 +199,61 @@ class CactusSolver:
         self.cmap = cmap
         self.seg_pts = seg_pts
         self.wall_pt_path = wall_pt_path
-        self.cac_regions_fake = cac_region_fake
+        self.cac_regions = cac_regions
         self.destination_pt = destination_pt
         self.suggested_m0_pipe_interval = suggested_m0_pipe_interval
 
         # [consequent]
         self.g0_pipe_width = self.suggested_m0_pipe_interval * 2.0
 
+        # [fix region]
+        self.cac_regions = self.fixed_regions_skip(cac_regions, seg_pts)
+
         # [assert]
-        for cac in self.cac_regions_fake:
+        for cac in self.cac_regions:
             assert is_counter_clockwise([self.seg_pts[x] for x in cac.ccw_pts_id]), (
                 cac.ccw_pts_id
             )
         assert all(isinstance(x, np.ndarray) for x in self.seg_pts)
 
-        assert all(region.color in self.cmap for region in self.cac_regions_fake), (
-            f"some region color not in cmap, max color is {max(region.color for region in self.cac_regions_fake)}",
+        assert all(region.color in self.cmap for region in self.cac_regions), (
+            f"some region color not in cmap, max color is {max(region.color for region in self.cac_regions)}",
         )
+
+    @staticmethod
+    def fixed_regions_skip(
+        cac_regions_fake: List[CacRegion], seg_pts: List[plane.NpPoint]
+    ):
+        fixed_cac_regions = []
+        for region in cac_regions_fake:
+            fixed_ccw_pts_id = []
+            for i, j in zip(
+                region.ccw_pts_id, region.ccw_pts_id[1:] + [region.ccw_pts_id[0]]
+            ):
+                line_string = LineString([seg_pts[i], seg_pts[j]])
+                skipped = [
+                    (idx, pt)
+                    for idx, pt in enumerate(seg_pts)
+                    if line_string.contains(Point(pt)) and idx not in region.ccw_pts_id
+                ]
+                fixed_ccw_pts_id.append(i)
+                # 根据 i -> j 方向的投影从小到大排序
+                if len(skipped) > 0:
+                    logger.warning(f"edge {i, j} skipped {skipped}")
+                    fixed_ccw_pts_id.extend(
+                        [
+                            idx
+                            for idx, _ in sorted(
+                                skipped,
+                                key=lambda x: np.dot(
+                                    x[1] - seg_pts[i],
+                                    normalized(seg_pts[j] - seg_pts[i]),
+                                ),
+                            )
+                        ]
+                    )
+            fixed_cac_regions.append(CacRegion(fixed_ccw_pts_id, region.color))
+        return fixed_cac_regions
 
     # don't show
     def plot_wall(self, plt):
@@ -250,7 +288,7 @@ class CactusSolver:
         plt.show()
 
     def show_regions_with_colors(self):
-        regions = self.cac_regions_fake
+        regions = self.cac_regions
         seg = self.seg_pts
         dest_pt = self.destination_pt
 
@@ -285,7 +323,7 @@ class CactusSolver:
     def solve_dijk1(self, debug=False):
         # dijkstra 求各个 Region 反向 dijkstra 顺序
         pt_edge_to: List = [[] for _ in range(len(self.seg_pts))]
-        for r in self.cac_regions_fake:
+        for r in self.cac_regions:
             for x, y in zip(r.ccw_pts_id, r.ccw_pts_id[1:] + [r.ccw_pts_id[0]]):
                 pt_edge_to[x].append(y)
                 pt_edge_to[y].append(x)
@@ -316,7 +354,7 @@ class CactusSolver:
 
         pts_dis: Any = dijk1(self.seg_pts, self.destination_pt, pt_edge_to)
         cac_regions_dis: List = [
-            min([pts_dis[x] for x in r.ccw_pts_id]) for r in self.cac_regions_fake
+            min([pts_dis[x] for x in r.ccw_pts_id]) for r in self.cac_regions
         ]
         # printself.pt_edge_to
         if debug:
@@ -713,8 +751,6 @@ class CactusSolver:
                 s_chain.append(back_s)
             s_chain.reverse()
 
-            logger.warning(f"path found for region {s_chain}")
-
             for s in s_chain:
                 colors_finished_states.setdefault(region_color, set()).add(s)
             for s in region_start_states:
@@ -906,11 +942,11 @@ class CactusSolver:
             ):
                 for pipe_id in edge_pipes[edge_id((pti, nxt))].ccw_pipes:
                     if pipe_id not in pipe_xw:
-                        pipe_xw[pipe_id] = PipeOnAxis(pipe_id, np.nan, np.nan, np.nan)
+                        pipe_xw[pipe_id] = PipeOnAxis(pipe_id, None, None, None)
         # fill this
 
         for cac in regions:
-            pts: plane.Polygon = [seg_pts[i] for i in cac.ccw_pts_id]
+            pts: plane.NpPolygon = [seg_pts[i] for i in cac.ccw_pts_id]
             edge_pipe_num = []
             for uid, vid in zip(
                 cac.ccw_pts_id, cac.ccw_pts_id[1:] + [cac.ccw_pts_id[0]]
@@ -978,7 +1014,10 @@ class CactusSolver:
 
         return pipe_xw
 
-    def test_plot_pipes(self, edge_pipes, pipe_color, pipe_xw, pipe_to_draw=[63, 423]):
+    def test_plot_pipes(self, edge_pipes, pipe_color, pipe_xw, pipes_to_plot=[102]):
+        if pipes_to_plot is not None:
+            logger.error(f"debug mode: only plot {pipes_to_plot}")
+
         def plot_pipes(edge_pipes, seg_pts, pipe_color, cmap, pipe_xw):
             for (x, y), edge in edge_pipes.items():
                 st, ed = seg_pts[x], seg_pts[y]
@@ -990,7 +1029,7 @@ class CactusSolver:
                 dir_left = np.array([-dir[1], dir[0]])  # x 正方向
 
                 for idx, pipe_id in enumerate(edge.ccw_pipes):
-                    if pipe_to_draw is not None and pipe_id not in pipe_to_draw:
+                    if pipes_to_plot is not None and pipe_id not in pipes_to_plot:
                         continue
                     color = cmap[pipe_color[pipe_id]]
                     x = pipe_xw[pipe_id].x
@@ -1028,13 +1067,13 @@ class CactusSolver:
     ) -> Tuple[
         Set[G2Node],
         Dict[G2Node, List[G2Node]],
-        Dict[G2Node, plane.Point],
+        Dict[G2Node, plane.NpPoint],
         Dict[G2Edge, G0EdgeInfo],
     ]:
         # 初步生成
         node_set: Set[G2Node] = set()
         edge_dict: Dict[G2Node, List[G2Node]] = dict()
-        node_pos: Dict[G2Node, plane.Point] = dict()
+        node_pos: Dict[G2Node, plane.NpPoint] = dict()
         edge_info_s1: Dict[G2Edge, G0EdgeInfo] = dict()
 
         for uid in range(len(seg_pts)):
@@ -1193,13 +1232,13 @@ class CactusSolver:
     def g2_unique_xy(
         node_set_s2: Set[G2Node],
         edge_dict_s2: Dict[G2Node, Set[G2Node]],
-        node_pos_s2: Dict[G2Node, plane.Point],
+        node_pos_s2: Dict[G2Node, plane.NpPoint],
         edge_info_s2: Dict[G2Edge, G0EdgeInfo],
         dest_pt: int,
     ):
         node_set_s3: Set[G2Node] = set()
         edge_dict_s3: Dict[G2Node, Set[G2Node]] = dict()
-        node_pos_s3: Dict[G2Node, plane.Point] = dict()
+        node_pos_s3: Dict[G2Node, plane.NpPoint] = dict()
         map_s2_s3: Dict[G2Node, G2Node] = dict()
         edge_info_s3: Dict[G2Edge, G0EdgeInfo] = dict()
 
@@ -1262,13 +1301,13 @@ class CactusSolver:
         start_node: G2Node,
         node_set: Set[G2Node],
         edge_dict: Dict[G2Node, Set[G2Node]],
-        node_pos: Dict[G2Node, plane.Point],
+        node_pos: Dict[G2Node, plane.NpPoint],
         edge_info: Dict[G2Edge, G0EdgeInfo],
         w_sug: float,
     ) -> Tuple[
         Set[G3Node],
         Dict[G3Node, List[G3Node]],
-        Dict[G3Node, plane.Point],
+        Dict[G3Node, plane.NpPoint],
         Dict[G3Edge, G0EdgeInfo],
     ]:
         """
@@ -1279,7 +1318,7 @@ class CactusSolver:
         # 有向边
         g3_edge: Dict[G3Node, List[G3Node]] = dict()  # copy.deepcopy(edge_dict)
         g3_edge_info: Dict[G3Edge, G0EdgeInfo] = dict()  # copy.deepcopy(edge_dict)
-        g3_node_pos: Dict[G3Node, plane.Point] = dict()
+        g3_node_pos: Dict[G3Node, plane.NpPoint] = dict()
         stack = []
 
         g3_new_id_cnt = 0
@@ -1529,15 +1568,15 @@ class CactusSolver:
         start_g3_node: G3Node,
         dest_pt: int,
         g3_edge_dict: Dict[G3Node, List[G3Node]],
-        g3_node_pos: Dict[G3Node, plane.Point],
+        g3_node_pos: Dict[G3Node, plane.NpPoint],
         g3_edge_info: Dict[G3Edge, G0EdgeInfo],
-    ) -> List[plane.Point]:
+    ) -> List[plane.NpPoint]:
         # get all line strings by dfs
         polygons: List[Polygon] = []
 
         def dfs(
             u: G3Node,
-            dir_to_u: Vec = None,
+            dir_to_u: NpVec = None,
             rw_to_u: float = None,
             lw_to_u: float = None,
         ):
@@ -1574,7 +1613,7 @@ class CactusSolver:
                                     u_pos - dir_to_u_left * rw_to_u / 2.0,
                                     u_pos - dir_uv_left * rw_uv / 2.0,
                                 ]
-                            ).buffer(1e-10)
+                            ).buffer(1e-6)
                         )
                     else:
                         polygons.append(
@@ -1584,12 +1623,15 @@ class CactusSolver:
                                     u_pos + dir_to_u_left * lw_to_u / 2.0,
                                     u_pos + dir_uv_left * lw_uv / 2.0,
                                 ]
-                            ).buffer(1e-10)
+                            ).buffer(1e-6)
                         )
                 dfs(v, dir_uv, rw_uv, lw_uv)
 
         dfs(start_g3_node)
         polygon = unary_union(polygons)
+        if not isinstance(polygon, Polygon):
+            # get a list of polygons from a MultiPolygon
+            quick_plot(list(polygon.geoms), with_num=False)
         assert isinstance(polygon, Polygon), (
             f"Union of polygons is not a Polygon: {polygon}"
         )
@@ -1610,7 +1652,10 @@ class CactusSolver:
                 after_pts.append(arr(*x))
             else:
                 before_pts.append(arr(*x))
-        assert after, "Can't find any line containing dest_pt_pos"
+        if not after:
+            logger.error("Can't find any line containing dest_pt_pos")
+            return []
+
         return after_pts + before_pts
 
     @typechecked
@@ -1619,15 +1664,15 @@ class CactusSolver:
         start_g3_node: G3Node,
         dest_pt: int,
         g3_edge_dict: Dict[G3Node, List[G3Node]],
-        g3_node_pos: Dict[G3Node, plane.Point],
+        g3_node_pos: Dict[G3Node, plane.NpPoint],
         g3_edge_info: Dict[G3Edge, G0EdgeInfo],
     ):
         def dfs(
             u: G3Node,
-            dir_to_u: Vec,
+            dir_to_u: NpVec,
             rw_to_u: float,
             lw_to_u: float,
-            res_ref: List[Tuple[plane.Point, Vec]],
+            res_ref: List[Tuple[plane.NpPoint, NpVec]],
         ):
             """
             u is a g3 node
@@ -1698,7 +1743,7 @@ class CactusSolver:
         dfs(start_g3_node, None, None, None, res_ref)
         return res_ref
 
-    def process(self, debug: CactusSolverDebug) -> List[List[plane.Point]]:
+    def process(self, debug: CactusSolverDebug) -> List[List[plane.NpPoint]]:
         if debug.show_wall:
             self.show_wall()
         if debug.show_regions_with_colors:
@@ -1714,16 +1759,18 @@ class CactusSolver:
         edge_pipes, pt_pipe_sets, pipe_color, pipe_pt = self.dijk2(
             self.seg_pts,
             pt_edge_to,
-            self.cac_regions_fake,
+            self.cac_regions,
             self.destination_pt,
             cac_regions_dis,
             self.g0_pipe_width,
             debug=debug.dijk2,
         )
 
+        print(pipe_pt[102])
+
         # [xw]
         pipe_xw = CactusSolver.get_xw_for_each_pipe(
-            self.cac_regions_fake,
+            self.cac_regions,
             self.seg_pts,
             self.wall_pt_path,
             edge_pipes,
@@ -1785,7 +1832,7 @@ class CactusSolver:
             )
 
         # [m1]
-        pipe_pt_seq: List[List[plane.Point]] = []
+        pipe_pt_seq: List[List[plane.NpPoint]] = []
         for s in g2_start_nodes:
             n, e, p, i = CactusSolver.g3_tarjan_for_a_color(
                 s,
@@ -1821,7 +1868,7 @@ class CactusSolver:
         return pipe_pt_seq
 
 
-def calc_pipe_length(li: List[plane.Point]):
+def calc_pipe_length(li: List[plane.NpPoint]):
     ret = 0.0
     for i in range(1, len(li)):
         ret += np.linalg.norm(li[i] - li[i - 1])
@@ -1831,7 +1878,7 @@ def calc_pipe_length(li: List[plane.Point]):
 if __name__ == "__main__":
     # [---]
 
-    example_filename = "../pypipeline/output/1_polygon_group_2_intermediate.json"
+    example_filename = "../pypipeline/output/tmp.json"
 
     SEG_PTS, CAC_REGIONS_FAKE, WALL_PT_PATH, DESTINATION_PT, interval = (
         parse_polygon_group_intermediate(example_filename)
@@ -1861,16 +1908,16 @@ if __name__ == "__main__":
         cmap=cmap,
         seg_pts=SEG_PTS,
         wall_pt_path=WALL_PT_PATH,
-        cac_region_fake=CAC_REGIONS_FAKE,
+        cac_regions=CAC_REGIONS_FAKE,
         destination_pt=DESTINATION_PT,
-        suggested_m0_pipe_interval=200,
+        suggested_m0_pipe_interval=2.5,
     )
 
     pipe_pt_seq = solver.process(
         CactusSolverDebug(
-            show_regions_with_colors=True,
-            xw=True,
-            g3=True,
+            # show_regions_with_colors=True,
+            # xw=True,
+            # g3=True,
             m1=True,
         )
     )
