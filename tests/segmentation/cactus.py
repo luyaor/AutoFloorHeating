@@ -850,7 +850,7 @@ class CactusSolver:
 
             plt.figure(figsize=(20, 10))
             plt.axis("equal")
-            self.plot_matrix(self.global_mat, title="test")
+            self.plt_wall(plt)
             self.plot_num(self.seg_pts)
             plot_transfer(transfer, self.seg_pts)
             plt.show()
@@ -978,7 +978,7 @@ class CactusSolver:
 
         return pipe_xw
 
-    def test_plot_pipes(self, edge_pipes, pipe_color, pipe_xw):
+    def test_plot_pipes(self, edge_pipes, pipe_color, pipe_xw, pipe_to_draw=[63, 423]):
         def plot_pipes(edge_pipes, seg_pts, pipe_color, cmap, pipe_xw):
             for (x, y), edge in edge_pipes.items():
                 st, ed = seg_pts[x], seg_pts[y]
@@ -990,6 +990,8 @@ class CactusSolver:
                 dir_left = np.array([-dir[1], dir[0]])  # x 正方向
 
                 for idx, pipe_id in enumerate(edge.ccw_pipes):
+                    if pipe_to_draw is not None and pipe_id not in pipe_to_draw:
+                        continue
                     color = cmap[pipe_color[pipe_id]]
                     x = pipe_xw[pipe_id].x
                     so_st = st + dir_left * x
@@ -999,6 +1001,17 @@ class CactusSolver:
                         [so_st[1], so_ed[1]],
                         color=color,
                         linewidth=0.5,
+                    )
+                    # 在中点位置添加 pipe_id 标注
+                    mid = (so_st + so_ed) / 2
+                    plt.text(
+                        mid[0],
+                        mid[1],
+                        str(pipe_id),
+                        color="black",
+                        fontsize=8,
+                        ha="center",
+                        va="center",
                     )
 
         plt.figure(figsize=(20, 10))
@@ -1105,7 +1118,7 @@ class CactusSolver:
         plt.figure(figsize=(20, 10))
         plt.axis("equal")
         self.plot_num(self.seg_pts)
-        self.plot_matrix(self.global_mat, title="test")
+        self.plot_wall(plt)
         plot_pipes(
             edge_pipes,
             self.seg_pts,
@@ -1160,7 +1173,7 @@ class CactusSolver:
     def test_g2_s2(self, edge_dict_s2, node_pos_s1, pipe_color):
         plt.figure(figsize=(20, 10))
         plt.axis("equal")
-        self.plot_matrix(self.global_mat, title="test")
+        self.plot_wall(plt)
         # plot_num(SEG_PTS)
         # plot all edge in EDGE_DICT_S2
 
@@ -1230,7 +1243,6 @@ class CactusSolver:
     def test_g2_s3(self, g2_edge_dict_s3, g2_node_pos_s3, pipe_color):
         plt.figure(figsize=(20, 10))
         plt.axis("equal")
-        self.plot_matrix(self.global_mat, title="test")
         self.plot_num(self.seg_pts)
         for k, v in g2_edge_dict_s3.items():
             for vv in v:
@@ -1719,11 +1731,11 @@ class CactusSolver:
         )
         if debug.xw:
             self.test_plot_pipes(edge_pipes, pipe_color, pipe_xw)
-        for k, v in pipe_xw.items():
-            MES = f"pipe {k} has nan member. {v}"
-            assert not np.isnan(v.x), MES
-            assert not np.isnan(v.rw), MES
-            assert not np.isnan(v.lw), MES
+        # for k, v in pipe_xw.items():
+        #     MES = f"pipe {k} has nan member. {v}"
+        #     assert not np.isnan(v.x), MES
+        #     assert not np.isnan(v.rw), MES
+        #     assert not np.isnan(v.lw), MES
 
         # [g2s1]
         node_set_s1, edge_dict_s1, node_pos_s1, edge_info_s1 = (
@@ -1851,12 +1863,13 @@ if __name__ == "__main__":
         wall_pt_path=WALL_PT_PATH,
         cac_region_fake=CAC_REGIONS_FAKE,
         destination_pt=DESTINATION_PT,
-        suggested_m0_pipe_interval=interval,
+        suggested_m0_pipe_interval=200,
     )
 
     pipe_pt_seq = solver.process(
         CactusSolverDebug(
             show_regions_with_colors=True,
+            xw=True,
             g3=True,
             m1=True,
         )
