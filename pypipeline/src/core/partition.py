@@ -402,7 +402,7 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
     # 获取最接近的5个比例
     closest_ratios = get_closest_ratios(target_aspect_ratio, possible_ratios)
 
-    shuffle_times = 3
+    shuffle_times = 1
 
     best_polygon = None  # 用来保存得分最高的多边形
     best_wall_path = None  # 用来保存得分最高的墙体路径
@@ -574,11 +574,45 @@ if __name__ == "__main__":
     # work(2)
     # for i in [0,1,2,3,5]:
     #     work(i)
-    partition_work([
+    floor_data = {}
+    floor_data["Name"] = 'test'
+
+    floor = [
     (6, 54), (6, 48), (18, 48), (18, 38), (18, 0), (96, 0), 
     (168, 0), (238, 0), (238, 94), (238, 158), (168, 158), 
     (98, 158), (98, 94), (98, 38), (96, 38), (94, 38), 
     (94, 41), (94, 158), (58, 158), (58, 42), (72, 42), 
     (72, 41), (72, 38), (44, 38), (44, 60), (44, 144), 
     (18, 144), (18, 60), (6, 60)
-],3,3)
+    ]
+    final_polygons, allp, new_region_info, wall_path, destination_pt = partition_work(floor,3,3)
+    seg_pts = [(x[0], x[1]) for x in allp]
+    regions = [(r[0], r[1]) for r in new_region_info]  # 从原始数据转换
+
+    start_point = 2
+    
+    def process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point):
+        # 保存中间数据
+        intermediate_data = {
+            'floor_name': floor_data['Name'],
+            'seg_pts': seg_pts,
+            'regions': regions,  
+            'wall_path': wall_path,
+            'destination_pt': start_point,
+            'pipe_interval': .1
+        }
+
+        import json
+        output_file = "tmp.json"
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(intermediate_data, f, indent=2, ensure_ascii=False)
+
+        # print(f"\n💾 中间数据已保存至: {output_file}")
+
+        # output_file = output_dir / 'cases/case8_intermediate.json'
+        # output_file = output_dir / '1_polygon_group_1_intermediate.json'
+        import cactus_solver_tmp
+        pipe_pt_seq = cactus_solver_tmp.solve_pipeline(output_file)
+        return pipe_pt_seq
+
+    pipe_pt_seq = process_pipeline("1", floor_data, seg_pts, regions, wall_path, start_point)

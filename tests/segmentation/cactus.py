@@ -8,9 +8,12 @@ import matplotlib.pyplot as plt
 from typeguard import typechecked
 import matplotlib.colors as mcolors
 import numpy as np
-from . import plane, shapely_spiral
-from .parse_json import parse_polygon_group_intermediate
-from .plane import (
+# from . import plane, shapely_spiral
+import plane, shapely_spiral
+# from .parse_json import parse_polygon_group_intermediate
+from parse_json import parse_polygon_group_intermediate
+
+from plane import (
     is_counter_clockwise,
     strictly_less,
     poly_edge_pipe_width_v1,
@@ -24,7 +27,7 @@ from .plane import (
     Vec,
     pt_dir_intersect,
 )
-from .shapely_spiral import (
+from shapely_spiral import (
     generate_spiral_tree,
     quick_plot,
     SpiralNode,
@@ -35,7 +38,7 @@ from shapely import Polygon, LineString, unary_union, Point
 
 from queue import PriorityQueue
 from typing import List, Tuple, Dict, Set, Any, Union
-from .utils import DisjointSet
+from utils import DisjointSet
 
 
 # [util]
@@ -177,7 +180,7 @@ class CactusSolverDebug:
     show_regions_with_colors: bool = False
     solve_dijk1: bool = False
     dijk2: bool = False
-    xw: bool = False
+    xw: bool = True
     g2s1: bool = False
     g2s2: bool = False
     g2s3: bool = False
