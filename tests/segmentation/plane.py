@@ -1,4 +1,3 @@
-import random
 import matplotlib.pyplot as plt
 import copy
 import numpy as np
@@ -6,16 +5,16 @@ from numpy.linalg import norm
 from typing import List, Tuple, Callable, Optional, Dict, Hashable
 from dataclasses import dataclass
 from loguru import logger
-
+import shapely
 
 EPS = 1e-8
 
 
-Line = np.ndarray  # 3
-Vec = np.ndarray  # 2
-Point = np.ndarray  # 2
-Polygon = List[Point]
-Seg = Tuple[Point, Point]
+NpLine = np.ndarray  # 3
+NpVec = np.ndarray  # 2
+NpPoint = np.ndarray  # 2
+NpPolygon = List[NpPoint]
+NpSeg = Tuple[NpPoint, NpPoint]
 
 
 def arr(*args):
@@ -36,11 +35,11 @@ def strictly_greater(a: float, b: float) -> bool:
     return a > b + EPS
 
 
-def same_point(p: Point, q: Point) -> bool:
+def same_point(p: NpPoint, q: NpPoint) -> bool:
     return eq(p[0], q[0]) and eq(p[1], q[1])
 
 
-def signed_area(p: Point, q: Point, r: Point) -> float:
+def signed_area(p: NpPoint, q: NpPoint, r: NpPoint) -> float:
     return ((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])) / 2.0
 
 
@@ -55,7 +54,7 @@ def test_signed_area():
     assert eq(signed_area(p, q, r), -0.5)
 
 
-def signed_poly_area(poly: Polygon, ccw: bool) -> float:
+def signed_poly_area(poly: NpPolygon, ccw: bool) -> float:
     n = len(poly)
     if n < 3:
         return 0.0
@@ -76,7 +75,7 @@ if __name__ == "__main__":
     test_signed_area()
 
 
-def pt0_convex(pt_m1: Point, pt_0: Point, pt_1: Point, ccw: bool) -> bool:
+def pt0_convex(pt_m1: NpPoint, pt_0: NpPoint, pt_1: NpPoint, ccw: bool) -> bool:
     return (
         signed_area(pt_m1, pt_0, pt_1) > 0
         if ccw
@@ -84,7 +83,7 @@ def pt0_convex(pt_m1: Point, pt_0: Point, pt_1: Point, ccw: bool) -> bool:
     )
 
 
-def dir0_convex(dir_m1: Vec, dir0: Vec, ccw: bool) -> bool:
+def dir0_convex(dir_m1: NpVec, dir0: NpVec, ccw: bool) -> bool:
     return (
         vec_angle_signed(dir_m1, dir0) > 0
         if ccw
@@ -97,7 +96,7 @@ def same_line(p: np.ndarray, q: np.ndarray) -> bool:
     return abs(p[0] * q[1] - p[1] * q[0]) < EPS and abs(p[0] * q[2] - p[2] * q[0]) < EPS
 
 
-def parallel(p: Line, q: Line) -> bool:
+def parallel(p: NpLine, q: NpLine) -> bool:
     return abs(p[0] * q[1] - p[1] * q[0]) < EPS
 
 
@@ -110,11 +109,11 @@ def vec_angle_signed(v1: np.ndarray, v2: np.ndarray, ccw=True) -> float:  # [-pi
     return res if ccw else -res
 
 
-def dir_left(dir: Vec):
+def dir_left(dir: NpVec):
     return np.array([-dir[1], dir[0]])
 
 
-def dir_right(dir: Vec):
+def dir_right(dir: NpVec):
     return np.array([dir[1], -dir[0]])
 
 
@@ -133,7 +132,7 @@ def norm_fn(v: np.ndarray, fn: Callable):
 
 
 # A, B, C are the coefficients of the line Ax + By + C = 0
-def line_cross(a: np.ndarray, b: np.ndarray) -> Optional[Point]:
+def line_cross(a: np.ndarray, b: np.ndarray) -> Optional[NpPoint]:
     if parallel(a, b):
         return None
     x = (a[1] * b[2] - a[2] * b[1]) / (a[0] * b[1] - a[1] * b[0])
@@ -203,7 +202,7 @@ def _plot_points_linked(pts: List[np.ndarray]):
     plt.show()
 
 
-def inner_nxt_pt_line(outer: List[Line], width) -> Tuple[Point, Line]:
+def inner_nxt_pt_line(outer: List[NpLine], width) -> Tuple[NpPoint, NpLine]:
     pt_0_1 = line_cross(outer[0], outer[1])
     pt_0_m1 = line_cross(outer[0], outer[-1])
     pt_m1_m2 = line_cross(outer[-1], outer[-2])
@@ -213,8 +212,8 @@ def inner_nxt_pt_line(outer: List[Line], width) -> Tuple[Point, Line]:
 
 
 def pt_dir_intersect(
-    pt_dir_start: Tuple[Point, Vec], pt_dir_end: Tuple[Point, Vec]
-) -> Optional[Point]:
+    pt_dir_start: Tuple[NpPoint, NpVec], pt_dir_end: Tuple[NpPoint, NpVec]
+) -> Optional[NpPoint]:
     cross = line_cross(line_at_dir(*pt_dir_start), line_at_dir(*pt_dir_end))
     if cross is None:
         # logger.warning("parallel")
@@ -229,8 +228,8 @@ def pt_dir_intersect(
 # [NOTE] 就算想切分成多个凸多边形，也是外部的事情
 #   - [pin] 241229.1
 def inner_nxt_pt_dir(
-    outer: List[Tuple[Point, Vec]], width, ccw: bool
-) -> Tuple[Optional[Point], Optional[Vec]]:
+    outer: List[Tuple[NpPoint, NpVec]], width, ccw: bool
+) -> Tuple[Optional[NpPoint], Optional[NpVec]]:
     # [v2]
     # cross = pt_dir_intersect(outer[-1], outer[0])
     # if cross is None:
@@ -259,8 +258,8 @@ def inner_nxt_pt_dir(
 
 # [deprecated]
 def inner_recursive_with_depth(
-    outer: List[Line], width, depth
-) -> List[Tuple[Point, Line]]:
+    outer: List[NpLine], width, depth
+) -> List[Tuple[NpPoint, NpLine]]:
     if depth == 0:
         return []
     nxt_pt, nxt_line = inner_nxt_pt_line(outer, width)
@@ -269,7 +268,7 @@ def inner_recursive_with_depth(
     )
 
 
-def point_to_seg_distance(p: Point, s: Seg) -> float:
+def point_to_seg_distance(p: NpPoint, s: NpSeg) -> float:
     """计算点到线段的距离"""
     a, b = s
     if np.all(a == b):
@@ -284,7 +283,7 @@ def point_to_seg_distance(p: Point, s: Seg) -> float:
     return np.abs(np.cross(ab, ap)) / norm(ab)
 
 
-def seg_dis(s1: Seg, s2: Seg) -> float:
+def seg_dis(s1: NpSeg, s2: NpSeg) -> float:
     """计算两条线段之间的距离"""
     a, b = s1
     c, d = s2
@@ -305,17 +304,17 @@ def seg_dis(s1: Seg, s2: Seg) -> float:
     )
 
 
-def pt_from_pt_dir_signed_distance(pt: Point, pt_dir: Tuple[Point, Vec]) -> float:
+def pt_from_pt_dir_signed_distance(pt: NpPoint, pt_dir: Tuple[NpPoint, NpVec]) -> float:
     ...
     # 距离正方向为 dir 方向向左
     return np.dot(pt - pt_dir[0], dir_left(pt_dir[1]))
 
 
-def pt_project_to_pt_dir_x(pt: Point, pt_dir: Tuple[Point, Vec]) -> float:
+def pt_project_to_pt_dir_x(pt: NpPoint, pt_dir: Tuple[NpPoint, NpVec]) -> float:
     return np.dot(pt - pt_dir[0], pt_dir[1])
 
 
-def seg_line_cross(seg: Seg, line: Line) -> Optional[Point]:
+def seg_line_cross(seg: NpSeg, line: NpLine) -> Optional[NpPoint]:
     cross = line_cross(line, line_from_1_to_2(*seg))
     if cross is None:
         return None
@@ -326,7 +325,7 @@ def seg_line_cross(seg: Seg, line: Line) -> Optional[Point]:
     return None
 
 
-def seg1_from_seg2_signed_distance(seg1: Seg, seg2: Seg) -> Optional[float]:
+def seg1_from_seg2_signed_distance(seg1: NpSeg, seg2: NpSeg) -> Optional[float]:
     # seg2 正方向为 seg[1] - seg[0]
     # 距离正方向为 seg[1] - seg[0] 方向向左
 
@@ -361,11 +360,11 @@ if __name__ == "__main__":
 
 
 def inner_recursive_v2(
-    outer: List[Tuple[Point, Vec]],
+    outer: List[Tuple[NpPoint, NpVec]],
     width,
     dont_delete_outer=False,
     start_must_be_convex=False,
-) -> Optional[Tuple[List[Tuple[Point, Vec]], List[Hashable]]]:
+) -> Optional[Tuple[List[Tuple[NpPoint, NpVec]], List[Hashable]]]:
     outer = copy.deepcopy(outer)
     res = copy.deepcopy(outer)
 
@@ -491,7 +490,7 @@ def inner_recursive_v2(
     return res, indices
 
 
-def is_clockwise(points: List[Point]) -> bool:
+def is_clockwise(points: List[NpPoint]) -> bool:
     """
     判断一系列二维点是顺时针还是逆时针排列。
     :param points: 二维点列表，表示多边形的顶点。
@@ -506,12 +505,12 @@ def is_clockwise(points: List[Point]) -> bool:
     return area > 0
 
 
-def is_counter_clockwise(points: List[Point]) -> bool:
+def is_counter_clockwise(points: List[NpPoint]) -> bool:
     return not is_clockwise(points)
 
 
 def poly_edge_pipe_width_v1(
-    poly: Polygon, edge_pipe_num: List[float], sug_w: float, debug=False
+    poly: NpPolygon, edge_pipe_num: List[float], sug_w: float, debug=False
 ) -> List[float]:
     """
     返回输入顺序第 i 条边上所有管道的宽度
@@ -523,13 +522,13 @@ def poly_edge_pipe_width_v1(
     assert n >= 3
     ans = [sug_w] * n
 
-    def ith_edge(i) -> Seg:
+    def ith_edge(i) -> NpSeg:
         return poly[i % n], poly[(i + 1) % n]
 
-    def seg_norm(seg: Seg):
+    def seg_norm(seg: NpSeg):
         return norm(seg[1] - seg[0])
 
-    def seg_dir(seg: Seg):
+    def seg_dir(seg: NpSeg):
         return normalized(seg[1] - seg[0])
 
     print("------") if debug else None
@@ -593,14 +592,16 @@ class PipeOnAxis:
 
 
 def pt_edge_pipes_expand_pts_v1(
-    center: Point, edge_pipes: List[List[PipeOnAxis]], edge_dir: List[Vec]
-) -> Dict[int, Point]:
+    center: NpPoint, edge_pipes: List[List[PipeOnAxis]], edge_dir: List[NpVec]
+) -> Dict[int, NpPoint]:
     """
     !!! [仅适用于垂直情况]
     给出 dir 朝外，pipe 逆时针（从右往左）
     Axis 轴正方向为向左
     边也是逆时针
-    返回 pipe id -> 坐标
+
+    return:
+        dict: pipe id -> 坐标
     """
     n = len(edge_pipes)
     assert n == len(edge_dir)
@@ -646,7 +647,63 @@ def pt_edge_pipes_expand_pts_v1(
     return di
 
 
-def test3():
+def pt_edge_pipes_expand_pts_v2(
+    center: NpPoint, edge_pipes: List[List[PipeOnAxis]], edge_dir: List[NpVec]
+) -> Dict[int, NpPoint]:
+    """
+    !!! [仅适用于垂直情况]
+    给出 dir 朝外，pipe 逆时针（从右往左）
+    Axis 轴正方向为向左
+    边也是逆时针
+
+    return:
+        dict: pipe id -> 坐标
+    """
+    n = len(edge_pipes)
+    assert n == len(edge_dir)
+    di = dict()
+    for i in range(n):
+        # 后退距离: 左右相邻的较大值
+        # delta x is (w1 + w2) / 2
+        m = len(edge_pipes[i])
+        if m == 0:
+            continue
+        assert all(
+            eq(
+                edge_pipes[i][j].x - edge_pipes[i][j - 1].x,
+                (edge_pipes[i][j - 1].lw + edge_pipes[i][j].rw),
+            )
+            for j in range(1, m)
+        ), edge_pipes[i]
+        pre = (i - 1 + n) % n
+        nxt = (i + 1) % n
+
+        # 有时同样管道，宽度会突变
+        fallback = max(edge_pipes[i][-1].lw, edge_pipes[i][0].rw)
+
+        pre_contrib = (
+            +(edge_pipes[pre][-1].x + edge_pipes[pre][-1].lw)
+            if 0 <= vec_angle_signed(edge_dir[pre], edge_dir[i]) <= np.pi * 0.75
+            and len(edge_pipes[pre]) > 0
+            else fallback
+        )
+        nxt_contrib = (
+            -(edge_pipes[nxt][0].x - edge_pipes[nxt][0].rw)
+            if 0 <= vec_angle_signed(edge_dir[i], edge_dir[nxt]) <= np.pi * 0.75
+            and len(edge_pipes[nxt]) > 0
+            else fallback
+        )
+        back = max(pre_contrib, nxt_contrib, fallback)
+        expand_start_pt = center + edge_dir[i] * back
+        # expand
+        left = dir_left(edge_dir[i])
+        for p in edge_pipes[i]:
+            di[p.id] = expand_start_pt + left * p.x
+        # res[i] = expanded
+    return di
+
+
+def test_pt_edge_pipes_expand_pts_v1():
     def get_p(id, x, w):
         return PipeOnAxis(id, x, w / 2.0, w / 2.0)
 
@@ -711,8 +768,8 @@ def test4():
 
 # 外部需要知道哪些外围点被删除了（一定是最后连续若干条），需要投影到新的外围最后一边
 def inner_recursive_v2_api(
-    poly: Polygon, width: float, dont_delete_outer=False, start_must_be_convex=False
-) -> Tuple[List[Point], List[Hashable]]:
+    poly: NpPolygon, width: float, dont_delete_outer=False, start_must_be_convex=False
+) -> Tuple[List[NpPoint], List[Hashable]]:
     # 不删除重复点
     outer = [
         (
@@ -731,7 +788,34 @@ def inner_recursive_v2_api(
 
 def test101():
     array = np.array
-    pts = [array([42.22 , 35.375]), array([40.41666667, 35.58333333]), array([41.11, 37.11]), array([41.11      , 68.22333333]), array([41.11      , 70.44333333]), array([41.11, 86.28]), array([41.11, 89.61]), array([41.11, 93.78]), array([42.22, 94.89]), array([95.39, 94.89]), array([97.61, 97.11]), array([ 97.61, 101.28]), array([ 98.72, 102.39]), array([118.28, 102.39]), array([119.39, 101.28]), array([119.39,  97.11]), array([119.39,  94.89]), array([119.39,  89.61]), array([119.39,  86.28]), array([119.39      ,  70.44333333]), array([119.39      ,  68.22333333]), array([119.39,  37.11]), array([120.08333333,  35.58333333]), array([117.17 ,  35.375]), array([97.61 , 35.375]), array([95.39 , 35.375])]
+    pts = [
+        array([42.22, 35.375]),
+        array([40.41666667, 35.58333333]),
+        array([41.11, 37.11]),
+        array([41.11, 68.22333333]),
+        array([41.11, 70.44333333]),
+        array([41.11, 86.28]),
+        array([41.11, 89.61]),
+        array([41.11, 93.78]),
+        array([42.22, 94.89]),
+        array([95.39, 94.89]),
+        array([97.61, 97.11]),
+        array([97.61, 101.28]),
+        array([98.72, 102.39]),
+        array([118.28, 102.39]),
+        array([119.39, 101.28]),
+        array([119.39, 97.11]),
+        array([119.39, 94.89]),
+        array([119.39, 89.61]),
+        array([119.39, 86.28]),
+        array([119.39, 70.44333333]),
+        array([119.39, 68.22333333]),
+        array([119.39, 37.11]),
+        array([120.08333333, 35.58333333]),
+        array([117.17, 35.375]),
+        array([97.61, 35.375]),
+        array([95.39, 35.375]),
+    ]
     w_sug = 2.22
     res = inner_recursive_v2_api(
         pts, w_sug, dont_delete_outer=True, start_must_be_convex=True
@@ -746,7 +830,7 @@ def test101():
 
 def test1():
     # poly: Polygon = list(reversed([arr(0, 0), arr(1, 2), arr(2, 1), arr(1, 0)]))
-    poly: Polygon = [
+    poly: NpPolygon = [
         arr(0, 0),
         arr(0.5, 0),
         arr(0.98, 0),
@@ -776,4 +860,4 @@ def test2():
 
 
 if __name__ == "__main__":
-    test101()
+    test_pt_edge_pipes_expand_pts_v1()
