@@ -723,9 +723,9 @@ class CactusSolver:
             if this_region_is_finished:
                 for s in region_start_states:
                     colors_finished_states.setdefault(region_color, set()).add(s)
-                logger.info(f"region {region_ord} already connected to destination")
+                # logger.info(f"region {region_ord} already connected to destination")
                 continue
-            logger.info(f"region {region_ord} will find a path to destination")
+            # logger.info(f"region {region_ord} will find a path to destination")
 
             while not q.empty():
                 _, s = q.get()
@@ -1765,8 +1765,6 @@ class CactusSolver:
             self.g0_pipe_width,
             debug=debug.dijk2,
         )
-
-        print(pipe_pt[102])
 
         # [xw]
         pipe_xw = CactusSolver.get_xw_for_each_pipe(
