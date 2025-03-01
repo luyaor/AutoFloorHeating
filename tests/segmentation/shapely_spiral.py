@@ -102,12 +102,12 @@ def get_eroded_polygons(
 
 def quick_plot(
     geometry: List[Union[Polygon, MultiPolygon]],
-    color="blue",
     alpha=0.3,
     title="Polygon Visualization",
     ax=None,
     show=True,
     label=None,
+    with_num=True,
 ):
     """
     快速绘制 Shapely 的 Polygon 或 MultiPolygon 对象，并标注顶点编号
@@ -127,7 +127,7 @@ def quick_plot(
     if ax is None:
         fig, ax = plt.subplots(figsize=(8, 8))
 
-    def plot_polygon_with_numbers(poly):
+    def plot_polygon_with_numbers(poly, color):
         # 绘制外边界
         x, y = poly.exterior.xy
         ax.fill(x, y, alpha=alpha, fc=color, label=label)
@@ -135,13 +135,14 @@ def quick_plot(
 
         # 标注外边界顶点编号
         for i, (xi, yi) in enumerate(zip(x[:-1], y[:-1])):  # [:-1]去掉重复的最后一个点
-            ax.text(
-                xi,
-                yi,
-                str(i),
-                fontsize=10,
-                bbox=dict(facecolor="white", edgecolor="none", alpha=0.7),
-            )
+            if with_num:
+                ax.text(
+                    xi,
+                    yi,
+                    str(i),
+                    fontsize=10,
+                    bbox=dict(facecolor="white", edgecolor="none", alpha=0.7),
+                )
 
         # 绘制内部孔洞（如果有的话）
         for interior in poly.interiors:
@@ -158,9 +159,10 @@ def quick_plot(
                     bbox=dict(facecolor="white", edgecolor="none", alpha=0.7),
                 )
 
-    for poly in geometry:
+    for idx, poly in enumerate(geometry):
         if isinstance(poly, Polygon):
-            plot_polygon_with_numbers(poly)
+            # 根据 idx 传入不同颜色
+            plot_polygon_with_numbers(poly, f"C{idx}")
         else:  # MultiPolygon
             for i, poly in enumerate(poly.geoms):
                 plot_polygon_with_numbers(poly)
@@ -254,6 +256,7 @@ def find_points_at_distance_from_line(
     circle_boundary = circle.boundary
 
     # 计算圆边界与线段的交点
+    # [NOTE] intersection 应该是 absorbing 的吧？即距离小于 EPS 即认为相交
     if line.intersects(circle_boundary):
         intersection = line.intersection(circle_boundary)
 
@@ -267,9 +270,12 @@ def find_points_at_distance_from_line(
 
 
 @typechecked
-def find_point_at_distance(polygon: Polygon, width: float) -> tuple[Point, int]:
+def find_point_at_distance_or_remove_last_line_string(
+    polygon: Polygon, width: float
+) -> tuple[Point, int]:
     """
     在多边形边界上查找距离0号顶点指定距离的点. Polygon 类型 -1 和 0 原来是同一个点，这里保证删除了重复的0点
+    如果没有任何点满足条件，width 压缩为最后一条边 width
 
     参数:
     polygon: 输入的多边形
@@ -301,7 +307,9 @@ def find_point_at_distance(polygon: Polygon, width: float) -> tuple[Point, int]:
             point = min(points_at_width, key=lambda x: x.distance(start))
             return point, len(coords) + i
 
-    raise ValueError(f"找不到距离为 {width} 的点")
+    return find_point_at_distance_or_remove_last_line_string(
+        polygon, LineString(coords[-2:]).length
+    )
 
 
 @typechecked
@@ -422,7 +430,7 @@ def find_nearest_point_and_create_polygon(
             - FromMid: 从中间点创建的新多边形，包含额外的外部多边形信息
     """
     # 找到外部多边形上距离0号顶点width距离的点
-    pt1, end_idx = find_point_at_distance(ext, width)
+    pt1, end_idx = find_point_at_distance_or_remove_last_line_string(ext, width)
     assert end_idx > 0
     # is a LineString
     ext_cut = LineString(list(ext.exterior.coords)[:end_idx] + [pt1])
