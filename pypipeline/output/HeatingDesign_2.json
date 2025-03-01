@@ -2,13 +2,53 @@
     "LevelName": "2",
     "LevelNo": 2,
     "LevelDesc": "2",
-    "HouseName": "1817",
+    "HouseName": "1800",
     "Expansions": [],
     "CollectorCoils": [
         {
             "CollectorName": "Collector_1",
-            "Loops": 1,
+            "Loops": 3,
             "CoilLoops": [
+                {
+                    "Length": 1.41,
+                    "Areas": [],
+                    "Path": [
+                        {
+                            "StartPoint": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 1000.0,
+                                "y": 1000.0,
+                                "z": 0.0
+                            },
+                            "CurveType": 0
+                        }
+                    ],
+                    "Curvity": 100
+                },
+                {
+                    "Length": 1.41,
+                    "Areas": [],
+                    "Path": [
+                        {
+                            "StartPoint": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0
+                            },
+                            "EndPoint": {
+                                "x": 1000.0,
+                                "y": 1000.0,
+                                "z": 0.0
+                            },
+                            "CurveType": 0
+                        }
+                    ],
+                    "Curvity": 100
+                },
                 {
                     "Length": 1.41,
                     "Areas": [],
