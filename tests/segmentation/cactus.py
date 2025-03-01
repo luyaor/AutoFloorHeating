@@ -184,8 +184,8 @@ class CactusSolverDebug:
     g2s1: bool = False
     g2s2: bool = False
     g2s3: bool = False
-    g3: bool = False
-    m1: bool = False
+    g3: bool = True
+    m1: bool = True
 
 
 class CactusSolver:
@@ -1720,8 +1720,9 @@ class CactusSolver:
             edge_pipes,
             self.g0_pipe_width,
         )
-        if debug.xw:
-            self.test_plot_pipes(edge_pipes, pipe_color, pipe_xw)
+        # if debug.xw:
+        self.test_plot_pipes(edge_pipes, pipe_color, pipe_xw)
+
         for k, v in pipe_xw.items():
             MES = f"pipe {k} has nan member. {v}"
             assert not np.isnan(v.x), MES

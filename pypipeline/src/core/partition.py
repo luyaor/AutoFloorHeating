@@ -577,14 +577,16 @@ if __name__ == "__main__":
     floor_data = {}
     floor_data["Name"] = 'test'
 
-    floor = [
-    (6, 54), (6, 48), (18, 48), (18, 38), (18, 0), (96, 0), 
-    (168, 0), (238, 0), (238, 94), (238, 158), (168, 158), 
-    (98, 158), (98, 94), (98, 38), (96, 38), (94, 38), 
-    (94, 41), (94, 158), (58, 158), (58, 42), (72, 42), 
-    (72, 41), (72, 38), (44, 38), (44, 60), (44, 144), 
-    (18, 144), (18, 60), (6, 60)
-    ]
+    # floor = [
+    # (6, 54), (6, 48), (18, 48), (18, 38), (18, 0), (96, 0), 
+    # (168, 0), (238, 0), (238, 94), (238, 158), (168, 158), 
+    # (98, 158), (98, 94), (98, 38), (96, 38), (94, 38), 
+    # (94, 41), (94, 158), (58, 158), (58, 42), (72, 42), 
+    # (72, 41), (72, 38), (44, 38), (44, 60), (44, 144), 
+    # (18, 144), (18, 60), (6, 60)
+    # ]
+    floor = [(0, 0), (10000, 0), (10000, 10000), (0, 10000)]
+
     final_polygons, allp, new_region_info, wall_path, destination_pt = partition_work(floor,3,3)
     seg_pts = [(x[0], x[1]) for x in allp]
     regions = [(r[0], r[1]) for r in new_region_info]  # 从原始数据转换
@@ -599,13 +601,15 @@ if __name__ == "__main__":
             'regions': regions,  
             'wall_path': wall_path,
             'destination_pt': start_point,
-            'pipe_interval': .1
+            'pipe_interval': 2
         }
 
         import json
         output_file = "tmp.json"
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(intermediate_data, f, indent=2, ensure_ascii=False)
+
+        output_file = "tmp2.json"
 
         # print(f"\n💾 中间数据已保存至: {output_file}")
 
