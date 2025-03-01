@@ -9,7 +9,7 @@ from shapely.ops import split, unary_union
 
 # from data.test_data import *
 
-random.seed(1024)
+random.seed(1234)
 
 def get_natural_segmentation_lines(polygon):
     nat_lines = []
@@ -409,7 +409,7 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
     best_score = -float('inf')  # 初始化得分为负无穷
     best_destination_point = None
 
-    closest_ratios = [(2, 2)]
+    closest_ratios = [(3, 3)]
     # 对于每个比例，运行算法
     for num_x, num_y in closest_ratios:
         print(f"Running for {num_x}x{num_y}")
@@ -422,6 +422,7 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
             def is_collinear(p_prev, p_cur, p_next, epsilon=1e-3):
                 return (abs((p_cur[0]-p_prev[0])*(p_next[1]-p_prev[1]) - (p_next[0]-p_prev[0])*(p_cur[1]-p_prev[1])) < epsilon) or (dis(p_cur, p_prev) < 1)
 
+            # 把全局点在区域边界上的点加入到区域中
             new_region_info = []
             for reg in region_info:
                 i = 0
@@ -432,7 +433,6 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
                         if (dis(pi, p) > 1e-3) and (dis(p, pi1) > 1e-3) and \
                         (abs(dis(pi, p) + dis(p, pi1) - dis(pi, pi1)) < 1e-3):
                             reg = reg[:i + 1] + [global_points.index(p)] + reg[i + 1:]
-                            break
                     i += 1
                 new_region_info.append(reg)
             region_info = new_region_info
