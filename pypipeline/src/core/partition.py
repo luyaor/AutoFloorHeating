@@ -9,7 +9,7 @@ from shapely.ops import split, unary_union
 
 # from data.test_data import *
 
-random.seed(1234)
+random.seed(1024)
 
 def get_natural_segmentation_lines(polygon):
     nat_lines = []
@@ -396,8 +396,6 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
 
     # 所有可能的比例
     possible_ratios = [(x, y) for x in [2, 3, 4, 5, 6] for y in [2, 3, 4, 5, 6]]
-
-    possible_ratios = [(3, 3)]
     
     # 获取最接近的5个比例
     closest_ratios = get_closest_ratios(target_aspect_ratio, possible_ratios)
@@ -411,7 +409,7 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
     best_score = -float('inf')  # 初始化得分为负无穷
     best_destination_point = None
 
-    closest_ratios = [(3, 3)]
+    closest_ratios = [(2, 2)]
     # 对于每个比例，运行算法
     for num_x, num_y in closest_ratios:
         print(f"Running for {num_x}x{num_y}")
@@ -560,10 +558,10 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
             
             # plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
 
-    print("WALL_PT_PATH=", best_wall_path)
-    print("SEG_PTS=", best_global_points)
-    print("CAC_REGIONS_FAKE=", best_region_info)
-    print("DESTINATION_POINT=", best_destination_point)
+    print("wall_path=", best_wall_path)
+    print("seg_pts=", best_global_points)
+    print("regions=", best_region_info)
+    print("destination_pt=", best_destination_point)
     print("")
     plot_polygons(best_polygon, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=best_global_points)
 
