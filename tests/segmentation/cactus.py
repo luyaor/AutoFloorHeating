@@ -291,9 +291,6 @@ class CactusSolver:
                 x for i, x in enumerate(fixed_overlap_ccw_pts_id) if i == 0 
                 or (x != fixed_overlap_ccw_pts_id[i - 1] and (i != len(fixed_overlap_ccw_pts_id) - 1 or x != fixed_overlap_ccw_pts_id[0]))
             ]
-            if 92 in fixed_repetition_ccw_pts_id and 101 in fixed_repetition_ccw_pts_id:
-                print(f"region.ccw_pts_id: {region.ccw_pts_id}")
-                print(f"fixed_repetition_ccw_pts_id: {fixed_repetition_ccw_pts_id}")
             fixed_cac_regions.append(CacRegion(fixed_repetition_ccw_pts_id, region.color))
         return fixed_cac_regions
 
@@ -1736,8 +1733,6 @@ class CactusSolver:
         )
 
         # [print pipe pt]
-        print(f"pipe_pt[764]: {pipe_pt[764]}")
-        print(f"pipe_pt[973]: {pipe_pt[973]}")
 
         # [xw]
         pipe_xw = CactusSolver.get_xw_for_each_pipe(
@@ -1853,7 +1848,7 @@ def calc_pipe_length(li: List[plane.NpPoint]):
 if __name__ == "__main__":
     # [---]
 
-    example_filename = "../pypipeline/output/1_polygon_group_348_intermediate.json"
+    example_filename = "../pypipeline/output/1_polygon_group_2_intermediate.json"
 
     SEG_PTS, CAC_REGIONS_FAKE, WALL_PT_PATH, DESTINATION_PT, interval = (
         parse_polygon_group_intermediate(example_filename)
@@ -1885,14 +1880,11 @@ if __name__ == "__main__":
         wall_pt_path=WALL_PT_PATH,
         cac_regions=CAC_REGIONS_FAKE,
         destination_pt=DESTINATION_PT,
-        suggested_m0_pipe_interval=800,
+        suggested_m0_pipe_interval=interval,
     )
 
     pipe_pt_seq = solver.process(
         CactusSolverDebug(
-            show_regions_with_colors=True,
-            xw=True,
-            g3=True,
             m1=True,
         )
     )
