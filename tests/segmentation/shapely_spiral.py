@@ -9,6 +9,8 @@ from typeguard import typechecked
 from dataclasses import dataclass
 from loguru import logger
 
+SHAPE_ABSORB_EPS = 1e-6
+
 plt.rcParams["font.sans-serif"] = [
     "SimHei",
     "WenQuanYi Micro Hei",
