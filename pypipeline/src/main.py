@@ -1,9 +1,9 @@
-
-from pipeline import cactus_solver
+import numpy as np
 from core import partition
 from pathlib import Path
 from tools import dxf_export
 from tools import visualization_data
+from pipeline import cactus_solver
 from pipeline import convert_to_heating_design
 import json
 import os
@@ -447,141 +447,6 @@ def process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point):
     pipe_pt_seq = cactus_solver.solve_pipeline(output_file)
     return pipe_pt_seq
 
-def run_pipeline(num_x: int = 3, num_y: int = 3):
-    """
-    运行管道布线的完整流程
-    
-    Args:
-        num_x: 网格x方向划分数
-        num_y: 网格y方向划分数
-    """
-    # 0. 处理输入数据
-    print("🔷 正在处理输入数据...")
-    
-    # 选择设计文件
-    design_json_path = select_input_file("design")
-    print(f"\n✅ 成功读取设计文件: {design_json_path}")
-    
-    
-    # 选择输入数据文件
-    input_json_path = select_input_file("input")
-    print(f"\n✅ 成功读取输入数据文件: {input_json_path}")
-    
-    # 加载设计JSON数据显示详细信息
-    with open(design_json_path, 'r', encoding='utf-8') as f:
-        design_data = json.load(f)
-    
-    # 加载输入数据JSON
-    with open(input_json_path, 'r', encoding='utf-8') as f:
-        input_data = json.load(f)
-        
-    # 显示输入数据信息
-    display_input_info(design_data, input_data)
-    
-    print("\n🔷 按任意键继续处理数据...")
-    input()
-    
-    # 创建用于收集所有管道布线数据的结构
-    all_pipe_data = []
-    
-    # data = visualization_data.load_json_data(design_json_path)
-    # 遍历每个楼层, 绘制原始图像, 提取多边形信息, 执行分区, 执行管道布线
-    for floor_data in design_data["Floor"]:
-        # 检查当前楼层是否有集水器
-        has_collector, collectors = get_floor_collectors(floor_data, input_data)
-        
-        if not has_collector:
-            print(f"\n👮 楼层 {floor_data['Name']} 没有集水器，跳过处理...")
-            continue
-            
-        print(f"\n📊 开始处理楼层: {floor_data['Name']}")
-        print(f"✅ 检测到 {len(collectors)} 个集水器，继续处理...")
-        
-        processed_data, polygons = visualization_data.process_ar_design(floor_data)
-        # print("\n✅ 原始图像绘制完成，按任意键继续...")
-        # # 绘制原始数据
-        # input()
-        # visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
-        # continue
-
-        print("\n📊 提取的多边形信息:")
-        
-        # 收集当前楼层的所有管道布线数据
-        floor_pipe_data = []
-        
-        for key, points in polygons.items():
-            print(f"\n📊 当前处理楼层: {floor_data['Name']}")
-            if not key.startswith("polygon"):
-                continue
-
-            # points = [(x[0]/100, x[1]/100) for x in points]
-
-            print(f"🔷 当前处理多边编号: {key}")
-            # print(f"🔷 当前处理多边形点数: {len(points)}")
-
-            output_dir = Path('output')
-            output_dir.mkdir(exist_ok=True)
-
-            # 1. 执行分区
-            seg_pts, regions, wall_path, start_point = area_partition(key, floor_data, points, num_x, num_y, collectors)
-            
-            # 如果没有集水器或分区处理失败，跳过当前多边形
-            if seg_pts is None:
-                print(f"\n👮 跳过当前多边形 {key} 的管道布线...")
-                continue
-                
-            print(f"🔷 分区结果: {regions}")
-
-
-            # 2. 执行管道布线
-            print("\n🔷 开始执行管道布线...")
-
-            try:
-                pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point)
-            except Exception as e:
-                print(f"\n❌ 管道布线失败: {e}")
-                import traceback
-                print("\n🔴 错误堆栈信息:")
-                print(traceback.format_exc())
-                pipe_pt_seq = [[np.array([0, 0]), np.array([100, 100])]]
-                # continue
-
-            # 可视化管道布线结果
-            # from plot_pipe_data import plot_pipe_pt_seq
-            # plot_pipe_pt_seq(pipe_pt_seq)
-            
-            # 收集当前区域的管道布线数据
-            floor_pipe_data.append({
-                'area_key': key,
-                'pipe_pt_seq': pipe_pt_seq
-            })
-        
-        # 收集当前楼层的数据
-        if floor_pipe_data:
-            # 提取楼层信息
-            all_pipe_data.append({
-                'floor_data': floor_data,
-                'floor_name': floor_data['Name'],  # 保持原始楼层名称不变
-                'level_no': get_level_no(floor_data['Name']),
-                'level_desc': floor_data['Name'],
-                'pipe_data': floor_pipe_data
-            })
-            
-        print("\n✅ 楼层处理完成!")
-    
-    # 所有楼层和区域处理完毕，生成最终的设计文件
-    out_file = generate_design_files(all_pipe_data, design_data, input_data)
-    
-    # 导出DXF文件
-    if out_file:
-        print("\n🔷 正在导出DXF文件...")
-        dxf_file = dxf_export.export_to_dxf(design_json_path, str(out_file), input_json_path)
-        print(f"✅ DXF文件已导出至: {dxf_file}")
-    else:
-        print("\n⚠️ 未生成设计文件，跳过DXF导出")
-
-    print("\n✅ 管道布线完成!")
-
 def generate_design_files(all_pipe_data, design_data, input_data):
     """
     生成最终的地暖设计文件
@@ -701,6 +566,142 @@ def get_level_no(floor_name):
         level_no = 1
     
     return level_no
+
+def run_pipeline(num_x: int = 3, num_y: int = 3):
+    """
+    运行管道布线的完整流程
+    
+    Args:
+        num_x: 网格x方向划分数
+        num_y: 网格y方向划分数
+    """
+    # 0. 处理输入数据
+    print("🔷 正在处理输入数据...")
+    
+    # 选择设计文件
+    design_json_path = select_input_file("design")
+    print(f"\n✅ 成功读取设计文件: {design_json_path}")
+    
+    
+    # 选择输入数据文件
+    input_json_path = select_input_file("input")
+    print(f"\n✅ 成功读取输入数据文件: {input_json_path}")
+    
+    # 加载设计JSON数据显示详细信息
+    with open(design_json_path, 'r', encoding='utf-8') as f:
+        design_data = json.load(f)
+    
+    # 加载输入数据JSON
+    with open(input_json_path, 'r', encoding='utf-8') as f:
+        input_data = json.load(f)
+        
+    # 显示输入数据信息
+    display_input_info(design_data, input_data)
+    
+    print("\n🔷 按任意键继续处理数据...")
+    input()
+    
+    # 创建用于收集所有管道布线数据的结构
+    all_pipe_data = []
+    
+    # data = visualization_data.load_json_data(design_json_path)
+    # 遍历每个楼层, 绘制原始图像, 提取多边形信息, 执行分区, 执行管道布线
+    for floor_data in design_data["Floor"]:
+        # 检查当前楼层是否有集水器
+        has_collector, collectors = get_floor_collectors(floor_data, input_data)
+        
+        if not has_collector:
+            print(f"\n👮 楼层 {floor_data['Name']} 没有集水器，跳过处理...")
+            continue
+            
+        print(f"\n📊 开始处理楼层: {floor_data['Name']}")
+        print(f"✅ 检测到 {len(collectors)} 个集水器，继续处理...")
+        
+        processed_data, polygons = visualization_data.process_ar_design(floor_data)
+        # print("\n✅ 原始图像绘制完成，按任意键继续...")
+        # # 绘制原始数据
+        # input()
+        # visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
+        # continue
+
+        print("\n📊 提取的多边形信息:")
+        
+        # 收集当前楼层的所有管道布线数据
+        floor_pipe_data = []
+        
+        for key, points in polygons.items():
+            print(f"\n📊 当前处理楼层: {floor_data['Name']}")
+            if not key.startswith("polygon"):
+                continue
+
+            # points = [(x[0]/100, x[1]/100) for x in points]
+
+            print(f"🔷 当前处理多边编号: {key}")
+
+            output_dir = Path('output')
+            output_dir.mkdir(exist_ok=True)
+
+            # 1. 执行分区
+            seg_pts, regions, wall_path, start_point = area_partition(key, floor_data, points, num_x, num_y, collectors)
+            
+            # 如果没有集水器或分区处理失败，跳过当前多边形
+            if seg_pts is None:
+                print(f"\n👮 跳过当前多边形 {key} 的管道布线...")
+                continue
+                
+            print(f"🔷 分区结果: {regions}")
+
+
+            # 2. 执行管道布线
+            print("\n🔷 开始执行管道布线...")
+
+            try:
+                pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point)
+            except Exception as e:
+                print(f"\n❌ 管道布线失败: {e}")
+                import traceback
+                print("\n🔴 错误堆栈信息:")
+                print(traceback.format_exc())
+                pipe_pt_seq = [[np.array([0, 0]), np.array([100, 100])]]
+                # continue
+
+            # 可视化管道布线结果
+            # from plot_pipe_data import plot_pipe_pt_seq
+            # plot_pipe_pt_seq(pipe_pt_seq)
+            
+            # 收集当前区域的管道布线数据
+            floor_pipe_data.append({
+                'area_key': key,
+                'pipe_pt_seq': pipe_pt_seq
+            })
+            break
+        
+        # 收集当前楼层的数据
+        if floor_pipe_data:
+            # 提取楼层信息
+            all_pipe_data.append({
+                'floor_data': floor_data,
+                'floor_name': floor_data['Name'],  # 保持原始楼层名称不变
+                'level_no': get_level_no(floor_data['Name']),
+                'level_desc': floor_data['Name'],
+                'pipe_data': floor_pipe_data
+            })
+            
+        print("\n✅ 楼层处理完成!")
+        break
+    
+    # 所有楼层和区域处理完毕，生成最终的设计文件
+    heating_design_file = generate_design_files(all_pipe_data, design_data, input_data)
+    
+    # 导出DXF文件
+    if heating_design_file:
+        print("\n🔷 正在导出DXF文件...")
+        dxf_file = dxf_export.export_to_dxf(design_json_path, input_json_path, heating_design_file)
+        print(f"✅ DXF文件已导出至: {dxf_file}")
+    else:
+        print("\n⚠️ 未生成设计文件，跳过DXF导出")
+
+    print("\n✅ 管道布线完成!")
 
 def main():
     print(f"\n{'='*50}")
