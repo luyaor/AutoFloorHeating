@@ -674,7 +674,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                 'area_key': key,
                 'pipe_pt_seq': pipe_pt_seq
             })
-            break
+            # break
         
         # 收集当前楼层的数据
         if floor_pipe_data:
@@ -688,7 +688,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             })
             
         print("\n✅ 楼层处理完成!")
-        break
+        # break
     
     # 所有楼层和区域处理完毕，生成最终的设计文件
     heating_design_file = generate_design_files(all_pipe_data, design_data, input_data)
