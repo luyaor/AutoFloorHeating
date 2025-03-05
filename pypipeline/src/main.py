@@ -1,9 +1,9 @@
-
-from pipeline import cactus_solver
+import numpy as np
 from core import partition
 from pathlib import Path
 from tools import dxf_export
 from tools import visualization_data
+from pipeline import cactus_solver
 from pipeline import convert_to_heating_design
 import json
 import os
