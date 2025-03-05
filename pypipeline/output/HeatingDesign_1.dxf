@@ -489,7 +489,7 @@ $SKPOLY
   9
 $TDCREATE
  40
-2460740.863414352
+2460740.881446759
   9
 $TDUCREATE
  40
@@ -497,7 +497,7 @@ $TDUCREATE
   9
 $TDUPDATE
  40
-2460740.863425926
+2460740.881446759
   9
 $TDUUPDATE
  40
@@ -929,11 +929,11 @@ $PSTYLEMODE
   9
 $FINGERPRINTGUID
   2
-{EE1BD0C4-815A-4593-8F36-A1A202115108}
+{7CEBBF53-EF94-4B06-ABB7-9277876C172E}
   9
 $VERSIONGUID
   2
-{CA267CEC-656A-4438-96CD-BDBEEAF7634F}
+{86A42BF6-3053-41E5-8096-415E24DC141B}
   9
 $EXTNAMES
 290
@@ -1323,9 +1323,9 @@ ISM
   0
 CLASS
   1
-ACDBPLACEHOLDER
+LAYOUT
   2
-AcDbPlaceHolder
+AcDbLayout
   3
 ObjectDBX Classes
  90
@@ -1339,9 +1339,9 @@ ObjectDBX Classes
   0
 CLASS
   1
-LAYOUT
+ACDBPLACEHOLDER
   2
-AcDbLayout
+AcDbPlaceHolder
   3
 ObjectDBX Classes
  90
@@ -1615,7 +1615,7 @@ WALLS
  70
 0
  62
-1
+7
   6
 Continuous
 370
@@ -1639,7 +1639,7 @@ DOORS
  70
 0
  62
-2
+9
   6
 Continuous
 370
@@ -1663,7 +1663,7 @@ WINDOWS
  70
 0
  62
-3
+8
   6
 Continuous
 370
@@ -1687,7 +1687,7 @@ ROOMS
  70
 0
  62
-4
+9
   6
 Continuous
 370
@@ -1711,7 +1711,7 @@ TEXT
  70
 0
  62
-7
+3
   6
 Continuous
 370
@@ -1735,7 +1735,7 @@ HEATING_PIPES
  70
 0
  62
-5
+1
   6
 Continuous
 370
@@ -1759,7 +1759,7 @@ COLLECTORS
  70
 0
  62
-6
+2
   6
 Continuous
 370
@@ -29409,7 +29409,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -29437,7 +29437,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -29459,7 +29459,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -29487,7 +29487,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -29509,7 +29509,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -29537,7 +29537,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -29559,7 +29559,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -29587,7 +29587,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -29609,7 +29609,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -29637,7 +29637,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -29659,7 +29659,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -29687,7 +29687,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -29709,7 +29709,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -29737,7 +29737,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -29759,7 +29759,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -29787,7 +29787,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -29809,7 +29809,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -29837,7 +29837,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -29859,7 +29859,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -29887,7 +29887,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -29909,7 +29909,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -29937,7 +29937,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -29959,7 +29959,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -29987,7 +29987,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30009,7 +30009,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30037,7 +30037,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30059,7 +30059,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30087,7 +30087,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30109,7 +30109,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30137,7 +30137,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30159,7 +30159,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30187,7 +30187,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30209,7 +30209,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30237,7 +30237,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30259,7 +30259,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30287,7 +30287,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30309,7 +30309,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30337,7 +30337,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30359,7 +30359,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30387,7 +30387,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30409,7 +30409,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30437,7 +30437,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30459,7 +30459,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30487,7 +30487,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30509,7 +30509,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30537,7 +30537,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30559,7 +30559,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30587,7 +30587,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30609,7 +30609,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30637,7 +30637,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30659,7 +30659,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30687,7 +30687,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30709,7 +30709,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30737,7 +30737,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30759,7 +30759,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30787,7 +30787,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30809,7 +30809,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30837,7 +30837,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30859,7 +30859,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30887,7 +30887,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30909,7 +30909,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30937,7 +30937,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -30959,7 +30959,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -30987,7 +30987,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31009,7 +31009,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31037,7 +31037,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31059,7 +31059,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31087,7 +31087,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31109,7 +31109,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31137,7 +31137,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31159,7 +31159,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31187,7 +31187,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31209,7 +31209,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31237,7 +31237,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31259,7 +31259,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31287,7 +31287,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31309,7 +31309,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31337,7 +31337,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31359,7 +31359,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31387,7 +31387,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31409,7 +31409,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31437,7 +31437,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31459,7 +31459,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31487,7 +31487,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31509,7 +31509,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31537,7 +31537,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31559,7 +31559,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31587,7 +31587,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31609,7 +31609,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31637,7 +31637,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31659,7 +31659,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31687,7 +31687,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31709,7 +31709,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31737,7 +31737,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31759,7 +31759,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31787,7 +31787,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31809,7 +31809,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31837,7 +31837,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31859,7 +31859,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -31887,7 +31887,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -31909,7 +31909,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -31969,7 +31969,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -31995,7 +31995,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -32055,7 +32055,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -32081,7 +32081,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -32141,7 +32141,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -32167,7 +32167,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -32227,7 +32227,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -32253,7 +32253,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -32329,7 +32329,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -32355,7 +32355,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -32431,7 +32431,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -32457,7 +32457,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -32533,7 +32533,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -32559,7 +32559,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -32627,7 +32627,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -32653,7 +32653,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -32721,7 +32721,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -32747,7 +32747,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -32815,7 +32815,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -32841,7 +32841,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -32901,7 +32901,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -32927,7 +32927,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -32987,7 +32987,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -33013,7 +33013,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -33073,7 +33073,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -33099,7 +33099,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -33159,7 +33159,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -33185,7 +33185,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -33245,7 +33245,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -33271,7 +33271,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -33331,7 +33331,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -33357,7 +33357,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -33457,7 +33457,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -33483,7 +33483,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -33535,7 +33535,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -33561,7 +33561,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -33613,7 +33613,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -33639,7 +33639,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -33683,7 +33683,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -33709,7 +33709,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -33753,7 +33753,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -33779,7 +33779,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -33823,7 +33823,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -33849,7 +33849,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -33885,7 +33885,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -33911,7 +33911,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -33947,7 +33947,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -33973,7 +33973,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34009,7 +34009,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34035,7 +34035,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34079,7 +34079,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34105,7 +34105,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34141,7 +34141,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34167,7 +34167,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34203,7 +34203,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34229,7 +34229,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34265,7 +34265,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34291,7 +34291,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34327,7 +34327,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34353,7 +34353,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34389,7 +34389,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34415,7 +34415,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34451,7 +34451,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34477,7 +34477,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34513,7 +34513,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34539,7 +34539,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34575,7 +34575,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34601,7 +34601,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34637,7 +34637,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34663,7 +34663,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34699,7 +34699,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34725,7 +34725,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34761,7 +34761,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34787,7 +34787,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34823,7 +34823,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34849,7 +34849,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34885,7 +34885,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34911,7 +34911,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -34947,7 +34947,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -34973,7 +34973,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35009,7 +35009,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35035,7 +35035,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35071,7 +35071,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35097,7 +35097,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35141,7 +35141,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35167,7 +35167,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35211,7 +35211,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35237,7 +35237,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35281,7 +35281,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35307,7 +35307,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35343,7 +35343,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35369,7 +35369,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35405,7 +35405,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35431,7 +35431,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35467,7 +35467,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35493,7 +35493,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35529,7 +35529,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35555,7 +35555,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35591,7 +35591,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35617,7 +35617,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35653,7 +35653,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35679,7 +35679,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35723,7 +35723,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35749,7 +35749,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35793,7 +35793,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35819,7 +35819,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35855,7 +35855,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35881,7 +35881,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35925,7 +35925,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -35951,7 +35951,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -35995,7 +35995,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -36021,7 +36021,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -36057,7 +36057,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -36083,7 +36083,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -36119,7 +36119,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -36145,7 +36145,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -36189,7 +36189,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -36215,7 +36215,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -36259,7 +36259,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -36285,7 +36285,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -36329,7 +36329,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -36355,7 +36355,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -36399,7 +36399,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -36425,7 +36425,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -36469,7 +36469,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -36495,7 +36495,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -36539,7 +36539,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -36565,7 +36565,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -36609,7 +36609,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -36635,7 +36635,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -36679,7 +36679,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -36705,7 +36705,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -36733,7 +36733,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -36761,7 +36761,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -36789,7 +36789,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -36817,7 +36817,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -36845,7 +36845,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -36873,7 +36873,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -36901,7 +36901,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -36929,7 +36929,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -36957,7 +36957,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -36985,7 +36985,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -37013,7 +37013,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -37041,7 +37041,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -37069,7 +37069,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -37097,7 +37097,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -37125,7 +37125,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -37153,7 +37153,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -37181,7 +37181,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -37209,7 +37209,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -37237,7 +37237,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -37265,7 +37265,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -37293,7 +37293,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -37321,7 +37321,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -37349,7 +37349,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -37433,7 +37433,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -377720,6 +377720,8 @@ CIRCLE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 35
 100
@@ -377743,7 +377745,7 @@ AcDbEntity
   8
 TEXT
  62
-6
+2
 100
 AcDbText
  10
@@ -377768,6 +377770,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -377794,6 +377798,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -377820,6 +377826,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -377846,6 +377854,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -377872,6 +377882,8 @@ CIRCLE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 35
 100
@@ -377895,7 +377907,7 @@ AcDbEntity
   8
 TEXT
  62
-6
+2
 100
 AcDbText
  10
@@ -377920,6 +377932,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -377946,6 +377960,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -377972,6 +377988,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -377998,6 +378016,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -378024,6 +378044,8 @@ CIRCLE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 35
 100
@@ -378047,7 +378069,7 @@ AcDbEntity
   8
 TEXT
  62
-6
+2
 100
 AcDbText
  10
@@ -378072,6 +378094,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -378098,6 +378122,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -378124,6 +378150,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -378150,6 +378178,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -378176,6 +378206,8 @@ CIRCLE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 35
 100
@@ -378199,7 +378231,7 @@ AcDbEntity
   8
 TEXT
  62
-6
+2
 100
 AcDbText
  10
@@ -378224,6 +378256,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -378250,6 +378284,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -378276,6 +378312,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -378302,6 +378340,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -378328,6 +378368,8 @@ CIRCLE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 35
 100
@@ -378351,7 +378393,7 @@ AcDbEntity
   8
 TEXT
  62
-6
+2
 100
 AcDbText
  10
@@ -378376,6 +378418,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -378402,6 +378446,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -378428,6 +378474,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -378454,6 +378502,8 @@ LINE
 AcDbEntity
   8
 COLLECTORS
+ 62
+2
 370
 25
 100
@@ -378481,7 +378531,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -404831,7 +404881,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -404859,7 +404909,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -404881,7 +404931,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -404909,7 +404959,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -404931,7 +404981,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -404959,7 +405009,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -404981,7 +405031,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405009,7 +405059,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405031,7 +405081,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405059,7 +405109,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405081,7 +405131,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405109,7 +405159,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405131,7 +405181,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405159,7 +405209,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405181,7 +405231,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405209,7 +405259,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405231,7 +405281,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405259,7 +405309,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405281,7 +405331,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405309,7 +405359,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405331,7 +405381,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405359,7 +405409,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405381,7 +405431,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405409,7 +405459,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405431,7 +405481,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405459,7 +405509,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405481,7 +405531,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405509,7 +405559,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405531,7 +405581,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405559,7 +405609,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405581,7 +405631,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405609,7 +405659,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405631,7 +405681,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405659,7 +405709,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405681,7 +405731,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405709,7 +405759,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405731,7 +405781,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405759,7 +405809,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405781,7 +405831,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405809,7 +405859,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405831,7 +405881,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405859,7 +405909,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405881,7 +405931,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405909,7 +405959,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405931,7 +405981,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -405959,7 +406009,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -405981,7 +406031,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406009,7 +406059,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406031,7 +406081,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406059,7 +406109,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406081,7 +406131,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406109,7 +406159,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406131,7 +406181,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406159,7 +406209,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406181,7 +406231,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406209,7 +406259,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406231,7 +406281,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406259,7 +406309,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406281,7 +406331,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406309,7 +406359,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406331,7 +406381,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406359,7 +406409,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406381,7 +406431,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406409,7 +406459,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406431,7 +406481,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406459,7 +406509,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406481,7 +406531,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406509,7 +406559,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406531,7 +406581,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406559,7 +406609,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406581,7 +406631,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406609,7 +406659,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406631,7 +406681,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406659,7 +406709,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406681,7 +406731,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406709,7 +406759,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406731,7 +406781,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406759,7 +406809,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406781,7 +406831,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406809,7 +406859,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406831,7 +406881,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406859,7 +406909,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406881,7 +406931,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406909,7 +406959,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406931,7 +406981,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -406959,7 +407009,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -406981,7 +407031,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -407009,7 +407059,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -407031,7 +407081,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -407059,7 +407109,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -407081,7 +407131,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -407109,7 +407159,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -407131,7 +407181,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -407159,7 +407209,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -407181,7 +407231,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -407209,7 +407259,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -407231,7 +407281,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -407259,7 +407309,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -407281,7 +407331,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -407309,7 +407359,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -407331,7 +407381,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -407359,7 +407409,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -407381,7 +407431,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -407409,7 +407459,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -407431,7 +407481,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -407507,7 +407557,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -407533,7 +407583,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -407609,7 +407659,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -407635,7 +407685,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -407711,7 +407761,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -407737,7 +407787,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -407805,7 +407855,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -407831,7 +407881,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -407899,7 +407949,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -407925,7 +407975,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -407993,7 +408043,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -408019,7 +408069,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -408079,7 +408129,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -408105,7 +408155,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -408165,7 +408215,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -408191,7 +408241,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -408251,7 +408301,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -408277,7 +408327,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -408337,7 +408387,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -408363,7 +408413,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -408423,7 +408473,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -408449,7 +408499,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -408509,7 +408559,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -408535,7 +408585,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -408595,7 +408645,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -408621,7 +408671,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -408721,7 +408771,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -408747,7 +408797,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -408799,7 +408849,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -408825,7 +408875,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -408877,7 +408927,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -408903,7 +408953,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -408947,7 +408997,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -408973,7 +409023,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409009,7 +409059,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409035,7 +409085,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409079,7 +409129,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409105,7 +409155,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409149,7 +409199,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409175,7 +409225,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409211,7 +409261,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409237,7 +409287,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409273,7 +409323,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409299,7 +409349,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409335,7 +409385,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409361,7 +409411,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409405,7 +409455,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409431,7 +409481,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409467,7 +409517,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409493,7 +409543,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409529,7 +409579,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409555,7 +409605,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409591,7 +409641,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409617,7 +409667,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409653,7 +409703,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409679,7 +409729,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409715,7 +409765,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409741,7 +409791,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409777,7 +409827,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409803,7 +409853,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409839,7 +409889,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409865,7 +409915,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409909,7 +409959,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409935,7 +409985,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -409971,7 +410021,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -409997,7 +410047,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410033,7 +410083,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410059,7 +410109,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410103,7 +410153,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410129,7 +410179,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410165,7 +410215,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410191,7 +410241,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410227,7 +410277,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410253,7 +410303,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410289,7 +410339,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410315,7 +410365,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410351,7 +410401,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410377,7 +410427,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410413,7 +410463,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410439,7 +410489,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410475,7 +410525,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410501,7 +410551,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410537,7 +410587,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410563,7 +410613,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410599,7 +410649,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410625,7 +410675,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410661,7 +410711,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410687,7 +410737,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410731,7 +410781,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410757,7 +410807,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410801,7 +410851,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410827,7 +410877,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410871,7 +410921,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410897,7 +410947,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410933,7 +410983,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -410959,7 +411009,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -410995,7 +411045,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411021,7 +411071,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411057,7 +411107,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411083,7 +411133,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411119,7 +411169,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411145,7 +411195,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411181,7 +411231,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411207,7 +411257,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411243,7 +411293,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411269,7 +411319,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411313,7 +411363,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411339,7 +411389,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411383,7 +411433,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411409,7 +411459,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411445,7 +411495,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411471,7 +411521,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411515,7 +411565,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411541,7 +411591,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411585,7 +411635,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411611,7 +411661,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411647,7 +411697,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411673,7 +411723,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411709,7 +411759,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411735,7 +411785,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411779,7 +411829,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411805,7 +411855,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411849,7 +411899,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411875,7 +411925,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411919,7 +411969,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -411945,7 +411995,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -411989,7 +412039,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -412015,7 +412065,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -412059,7 +412109,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -412085,7 +412135,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -412129,7 +412179,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -412155,7 +412205,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -412199,7 +412249,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -412225,7 +412275,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -412269,7 +412319,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -412295,7 +412345,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412323,7 +412373,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412351,7 +412401,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412379,7 +412429,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412407,7 +412457,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412435,7 +412485,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412463,7 +412513,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412491,7 +412541,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412519,7 +412569,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412547,7 +412597,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412575,7 +412625,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412603,7 +412653,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412631,7 +412681,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412659,7 +412709,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412687,7 +412737,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412715,7 +412765,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -412743,7 +412793,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -420763,7 +420813,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -420791,7 +420841,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -420813,7 +420863,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -420841,7 +420891,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -420863,7 +420913,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -420891,7 +420941,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -420913,7 +420963,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -420941,7 +420991,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -420963,7 +421013,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -420991,7 +421041,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -421013,7 +421063,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -421073,7 +421123,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -421099,7 +421149,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -421207,7 +421257,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -421233,7 +421283,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -421341,7 +421391,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -421367,7 +421417,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -421475,7 +421525,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -421501,7 +421551,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -421601,7 +421651,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -421627,7 +421677,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -421727,7 +421777,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -421753,7 +421803,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -421853,7 +421903,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -421879,7 +421929,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -421955,7 +422005,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -421981,7 +422031,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -422057,7 +422107,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -422083,7 +422133,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -422143,7 +422193,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -422169,7 +422219,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -422205,7 +422255,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -422231,7 +422281,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -422267,7 +422317,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -422293,7 +422343,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -422345,7 +422395,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -422371,7 +422421,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -422407,7 +422457,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -422433,7 +422483,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -422469,7 +422519,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -422495,7 +422545,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -422531,7 +422581,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -422557,7 +422607,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -422593,7 +422643,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -422619,7 +422669,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -422655,7 +422705,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -422681,7 +422731,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -422717,7 +422767,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -422743,7 +422793,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -422779,7 +422829,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -422805,7 +422855,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -422841,7 +422891,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -422867,7 +422917,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -422903,7 +422953,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -422929,7 +422979,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -425177,7 +425227,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -425221,7 +425271,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -425247,7 +425297,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -425291,7 +425341,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -425317,7 +425367,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -450965,7 +451015,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -450993,7 +451043,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451015,7 +451065,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451043,7 +451093,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451065,7 +451115,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451093,7 +451143,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451115,7 +451165,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451143,7 +451193,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451165,7 +451215,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451193,7 +451243,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451215,7 +451265,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451243,7 +451293,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451265,7 +451315,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451293,7 +451343,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451315,7 +451365,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451343,7 +451393,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451365,7 +451415,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451393,7 +451443,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451415,7 +451465,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451443,7 +451493,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451465,7 +451515,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451493,7 +451543,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451515,7 +451565,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451543,7 +451593,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451565,7 +451615,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451593,7 +451643,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451615,7 +451665,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451643,7 +451693,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451665,7 +451715,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451693,7 +451743,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451715,7 +451765,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451743,7 +451793,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451765,7 +451815,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451793,7 +451843,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451815,7 +451865,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451843,7 +451893,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451865,7 +451915,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451893,7 +451943,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451915,7 +451965,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451943,7 +451993,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -451965,7 +452015,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -451993,7 +452043,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452015,7 +452065,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452043,7 +452093,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452065,7 +452115,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452093,7 +452143,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452115,7 +452165,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452143,7 +452193,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452165,7 +452215,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452193,7 +452243,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452215,7 +452265,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452243,7 +452293,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452265,7 +452315,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452293,7 +452343,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452315,7 +452365,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452343,7 +452393,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452365,7 +452415,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452393,7 +452443,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452415,7 +452465,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452443,7 +452493,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452465,7 +452515,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452493,7 +452543,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452515,7 +452565,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452543,7 +452593,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452565,7 +452615,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452593,7 +452643,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452615,7 +452665,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452643,7 +452693,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452665,7 +452715,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452693,7 +452743,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452715,7 +452765,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452743,7 +452793,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452765,7 +452815,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452793,7 +452843,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452815,7 +452865,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452843,7 +452893,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452865,7 +452915,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452893,7 +452943,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452915,7 +452965,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452943,7 +452993,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -452965,7 +453015,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -452993,7 +453043,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -453015,7 +453065,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -453043,7 +453093,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -453065,7 +453115,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -453093,7 +453143,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -453115,7 +453165,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -453143,7 +453193,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -453165,7 +453215,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -453193,7 +453243,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -453215,7 +453265,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -453243,7 +453293,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -453265,7 +453315,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -453293,7 +453343,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -453315,7 +453365,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -453343,7 +453393,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -453365,7 +453415,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -453393,7 +453443,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -453415,7 +453465,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -453443,7 +453493,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -453465,7 +453515,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -453493,7 +453543,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -453515,7 +453565,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 370
 35
 100
@@ -453543,7 +453593,7 @@ AcDbEntity
   8
 DOORS
  62
-2
+9
 100
 AcDbCircle
  10
@@ -453565,7 +453615,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -453641,7 +453691,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -453667,7 +453717,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -453743,7 +453793,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -453769,7 +453819,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -453845,7 +453895,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -453871,7 +453921,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -453939,7 +453989,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -453965,7 +454015,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -454033,7 +454083,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -454059,7 +454109,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -454127,7 +454177,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -454153,7 +454203,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -454213,7 +454263,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -454239,7 +454289,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -454299,7 +454349,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -454325,7 +454375,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -454385,7 +454435,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -454411,7 +454461,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -454471,7 +454521,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -454497,7 +454547,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -454557,7 +454607,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -454583,7 +454633,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -454643,7 +454693,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -454669,7 +454719,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -454769,7 +454819,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -454795,7 +454845,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -454847,7 +454897,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -454873,7 +454923,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -454925,7 +454975,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -454951,7 +455001,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -454995,7 +455045,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455021,7 +455071,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455057,7 +455107,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455083,7 +455133,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455127,7 +455177,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455153,7 +455203,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455197,7 +455247,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455223,7 +455273,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455259,7 +455309,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455285,7 +455335,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455321,7 +455371,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455347,7 +455397,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455383,7 +455433,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455409,7 +455459,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455453,7 +455503,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455479,7 +455529,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455515,7 +455565,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455541,7 +455591,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455577,7 +455627,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455603,7 +455653,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455639,7 +455689,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455665,7 +455715,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455701,7 +455751,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455727,7 +455777,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455763,7 +455813,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455789,7 +455839,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455825,7 +455875,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455851,7 +455901,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455887,7 +455937,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455913,7 +455963,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -455957,7 +456007,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -455983,7 +456033,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456019,7 +456069,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456045,7 +456095,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456081,7 +456131,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456107,7 +456157,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456151,7 +456201,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456177,7 +456227,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456213,7 +456263,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456239,7 +456289,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456275,7 +456325,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456301,7 +456351,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456337,7 +456387,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456363,7 +456413,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456399,7 +456449,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456425,7 +456475,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456461,7 +456511,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456487,7 +456537,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456523,7 +456573,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456549,7 +456599,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456585,7 +456635,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456611,7 +456661,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456647,7 +456697,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456673,7 +456723,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456709,7 +456759,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456735,7 +456785,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456779,7 +456829,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456805,7 +456855,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456849,7 +456899,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456875,7 +456925,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456919,7 +456969,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -456945,7 +456995,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -456981,7 +457031,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457007,7 +457057,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457043,7 +457093,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457069,7 +457119,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457105,7 +457155,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457131,7 +457181,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457167,7 +457217,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457193,7 +457243,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457229,7 +457279,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457255,7 +457305,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457291,7 +457341,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457317,7 +457367,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457361,7 +457411,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457387,7 +457437,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457431,7 +457481,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457457,7 +457507,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457493,7 +457543,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457519,7 +457569,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457563,7 +457613,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457589,7 +457639,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457633,7 +457683,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457659,7 +457709,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457695,7 +457745,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457721,7 +457771,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457757,7 +457807,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457783,7 +457833,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457827,7 +457877,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457853,7 +457903,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457897,7 +457947,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457923,7 +457973,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -457967,7 +458017,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -457993,7 +458043,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -458037,7 +458087,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -458063,7 +458113,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -458107,7 +458157,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -458133,7 +458183,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -458177,7 +458227,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -458203,7 +458253,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -458247,7 +458297,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -458273,7 +458323,7 @@ AcDbEntity
   8
 ROOMS
  62
-4
+9
 370
 20
 100
@@ -458317,7 +458367,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -458343,7 +458393,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458371,7 +458421,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458399,7 +458449,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458427,7 +458477,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458455,7 +458505,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458483,7 +458533,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458511,7 +458561,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458539,7 +458589,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458567,7 +458617,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458595,7 +458645,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458623,7 +458673,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458651,7 +458701,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458679,7 +458729,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458707,7 +458757,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458735,7 +458785,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458763,7 +458813,7 @@ AcDbEntity
   8
 WALLS
  62
-5
+0
 370
 35
 100
@@ -458791,7 +458841,7 @@ AcDbEntity
   8
 TEXT
  62
-7
+3
 100
 AcDbText
  10
@@ -460791,7 +460841,7 @@ DictionaryVariables
 280
 0
   1
-1.3.5 @ 2025-03-05T12:43:19.879782+00:00
+1.3.5 @ 2025-03-05T13:09:17.240616+00:00
   0
 LAYOUT
   5
@@ -461423,7 +461473,7 @@ DictionaryVariables
 280
 0
   1
-1.3.5 @ 2025-03-05T12:43:20.153954+00:00
+1.3.5 @ 2025-03-05T13:09:17.516159+00:00
   0
 ENDSEC
   0
