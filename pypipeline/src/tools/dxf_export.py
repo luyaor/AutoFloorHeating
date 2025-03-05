@@ -603,7 +603,7 @@ def draw_heating_elements_for_floor(space, floor_data, scale, offset=(0, 0)):
             # 在集水器位置画一个圆
             space.add_circle(
                 (x * scale + offset_x, y * scale + offset_y),
-                radius=10 * scale,  # 增大半径并考虑缩放
+                radius=1.0,  # 使用固定半径，与draw_heating_with_offset保持一致
                 dxfattribs={'layer': 'COLLECTORS', 'lineweight': 35}
             )
             # 添加集水器标签
@@ -611,9 +611,9 @@ def draw_heating_elements_for_floor(space, floor_data, scale, offset=(0, 0)):
                 f"集水器 {collector.get('Id', '')}",
                 dxfattribs={
                     'layer': 'TEXT',
-                    'height': 5 * scale,  # 更合适的高度
+                    'height': 1.5,  # 使用固定高度，与draw_heating_with_offset保持一致
                     'color': 6,  # 设置颜色
-                    'insert': (x * scale + offset_x, (y + 15) * scale + offset_y)  # 应用偏移
+                    'insert': (x * scale + offset_x, (y + 3) * scale + offset_y)  # 应用偏移
                 }
             )
 
@@ -970,8 +970,8 @@ def draw_heating_with_offset(space, heating_data, scale, offset, floor_data=None
                 x, y = position.get("X", 0), position.get("Y", 0)
                 # 在集水器位置画一个圆（应用偏移），增大半径
                 space.add_circle(
-                    (x * scale + offset_x, y * scale + offset_y),
-                    radius=1.0,  # 增大半径，更容易看见
+                    (x * SCALE + offset_x, y * SCALE + offset_y),
+                    radius=1.0,  # 使用固定半径，与draw_heating_with_offset保持一致
                     dxfattribs={'layer': 'COLLECTORS', 'lineweight': 35}
                 )
                 # 添加集水器标签（应用偏移），增大文字
@@ -979,9 +979,9 @@ def draw_heating_with_offset(space, heating_data, scale, offset, floor_data=None
                     f"集水器 {collector.get('Id', '')}",
                     dxfattribs={
                         'layer': 'TEXT',
-                        'height': 1.5,  # 增大文字高度
-                        'color': 6,     # 设置颜色
-                        'insert': (x * scale + offset_x, (y + 3) * scale + offset_y)  # 调整偏移
+                        'height': 1.5,  # 使用固定高度，与draw_heating_with_offset保持一致
+                        'color': 6,  # 设置颜色
+                        'insert': (x * SCALE + offset_x, (y + 3) * SCALE + offset_y)  # 应用偏移
                     }
                 )
                 print(f"    ✓ 成功绘制集水器 {collector.get('Id', '')}")
@@ -998,8 +998,8 @@ def draw_heating_with_offset(space, heating_data, scale, offset, floor_data=None
                         try:
                             # 绘制边界线
                             space.add_line(
-                                (float(start_point.get("x", 0)) * scale + offset_x, float(start_point.get("y", 0)) * scale + offset_y),
-                                (float(end_point.get("x", 0)) * scale + offset_x, float(end_point.get("y", 0)) * scale + offset_y),
+                                (float(start_point.get("x", 0)) * SCALE + offset_x, float(start_point.get("y", 0)) * SCALE + offset_y),
+                                (float(end_point.get("x", 0)) * SCALE + offset_x, float(end_point.get("y", 0)) * SCALE + offset_y),
                                 dxfattribs={'layer': 'COLLECTORS', 'lineweight': 25}
                             )
                             print(f"      ✓ 绘制边界线段 ({start_point.get('x', 0)},{start_point.get('y', 0)}) - ({end_point.get('x', 0)},{end_point.get('y', 0)})")
