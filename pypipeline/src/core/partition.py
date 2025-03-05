@@ -396,8 +396,6 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
 
     # 所有可能的比例
     possible_ratios = [(x, y) for x in [2, 3, 4, 5, 6] for y in [2, 3, 4, 5, 6]]
-
-    possible_ratios = [(3, 3)]
     
     # 获取最接近的5个比例
     closest_ratios = get_closest_ratios(target_aspect_ratio, possible_ratios)
@@ -424,6 +422,7 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
             def is_collinear(p_prev, p_cur, p_next, epsilon=1e-3):
                 return (abs((p_cur[0]-p_prev[0])*(p_next[1]-p_prev[1]) - (p_next[0]-p_prev[0])*(p_cur[1]-p_prev[1])) < epsilon) or (dis(p_cur, p_prev) < 1)
 
+            # 把全局点在区域边界上的点加入到区域中
             new_region_info = []
             for reg in region_info:
                 i = 0
@@ -434,7 +433,6 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
                         if (dis(pi, p) > 1e-3) and (dis(p, pi1) > 1e-3) and \
                         (abs(dis(pi, p) + dis(p, pi1) - dis(pi, pi1)) < 1e-3):
                             reg = reg[:i + 1] + [global_points.index(p)] + reg[i + 1:]
-                            break
                     i += 1
                 new_region_info.append(reg)
             region_info = new_region_info
@@ -560,10 +558,10 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
             
             # plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
 
-    print("WALL_PT_PATH=", best_wall_path)
-    print("SEG_PTS=", best_global_points)
-    print("CAC_REGIONS_FAKE=", best_region_info)
-    print("DESTINATION_POINT=", best_destination_point)
+    print("wall_path=", best_wall_path)
+    print("seg_pts=", best_global_points)
+    print("regions=", best_region_info)
+    print("destination_pt=", best_destination_point)
     print("")
     plot_polygons(best_polygon, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=best_global_points)
 

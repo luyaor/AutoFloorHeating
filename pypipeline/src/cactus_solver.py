@@ -57,7 +57,7 @@ def solve_pipeline(intermediate_data_file: str):
         # seg_pts=seg_pts, 
         seg_pts=[arr(x[0], x[1]) for x in seg_pts],
         wall_pt_path=wall_path, 
-        cac_region_fake=[CacRegion(x[0][::1], x[1]) for x in regions], 
+        cac_regions=[CacRegion(x[0][::1], x[1]) for x in regions], 
         destination_pt=destination_pt, 
         suggested_m0_pipe_interval=suggested_m0_pipe_interval
     )
