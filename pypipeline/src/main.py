@@ -420,6 +420,11 @@ def get_floor_collectors(floor_data, input_data):
                 'AssistCollector' in floor_info['Construction'] and 
                 floor_info['Construction']['AssistCollector']):
                 return True, floor_info['Construction']['AssistCollector']
+            if ('Construction' in floor_info and 
+                floor_info['Construction'] and 
+                'FloorHeating' in floor_info['Construction'] and 
+                floor_info['Construction']['FloorHeating']):
+                return True, floor_info['Construction']['FloorHeating']
             break
     
     return False, []
