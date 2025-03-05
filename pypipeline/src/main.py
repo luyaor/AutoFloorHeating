@@ -637,7 +637,6 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             # points = [(x[0]/100, x[1]/100) for x in points]
 
             print(f"🔷 当前处理多边编号: {key}")
-            # print(f"🔷 当前处理多边形点数: {len(points)}")
 
             output_dir = Path('output')
             output_dir.mkdir(exist_ok=True)
@@ -675,6 +674,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                 'area_key': key,
                 'pipe_pt_seq': pipe_pt_seq
             })
+            break
         
         # 收集当前楼层的数据
         if floor_pipe_data:
@@ -688,6 +688,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             })
             
         print("\n✅ 楼层处理完成!")
+        break
     
     # 所有楼层和区域处理完毕，生成最终的设计文件
     out_file = generate_design_files(all_pipe_data, design_data, input_data)
