@@ -14,7 +14,7 @@ import os
 
 # 全局常量
 SCALE = 0.02  # 原来是0.01，再加大一倍以提高可见性
-HEATING_SCALE = 0.01  # 地暖缩放系数，用于调整地暖比例，与建筑比例一致
+HEATING_SCALE = 0.1  # 地暖缩放系数，用于调整地暖比例，与建筑比例一致
 
 def create_floor_layout(doc, floor_name, ms_block, layout_name=None):
     """创建楼层布局"""
@@ -565,10 +565,20 @@ def draw_heating_elements(space, heating_data, scale):
     
     # 遍历每个楼层数据
     for floor_data in floors_data:
-        draw_heating_elements_for_floor(space, floor_data, scale)
+        draw_heating_elements_for_floor(space, floor_data, scale, (0, 0))
 
-def draw_heating_elements_for_floor(space, floor_data, scale):
-    """绘制单个楼层的地暖元素"""
+def draw_heating_elements_for_floor(space, floor_data, scale, offset=(0, 0)):
+    """
+    绘制单个楼层的地暖元素
+    
+    Args:
+        space: 要绘制到的空间（模型空间或块）
+        floor_data: 楼层数据
+        scale: 坐标缩放因子
+        offset: 坐标偏移量，默认为(0,0)
+    """
+    offset_x, offset_y = offset
+    
     # 绘制管道
     pipes = floor_data.get("Pipes", [])
     for pipe in pipes:
@@ -579,7 +589,7 @@ def draw_heating_elements_for_floor(space, floor_data, scale):
         
         # 创建多段线
         polyline = space.add_lwpolyline(
-            [(p["X"] * scale, p["Y"] * scale) for p in points],
+            [(p["X"] * scale + offset_x, p["Y"] * scale + offset_y) for p in points],
             dxfattribs={'layer': 'HEATING_PIPES'}
         )
     
@@ -592,17 +602,18 @@ def draw_heating_elements_for_floor(space, floor_data, scale):
             x, y = position.get("X", 0), position.get("Y", 0)
             # 在集水器位置画一个圆
             space.add_circle(
-                (x * scale, y * scale),
-                radius=0.1,  # 适当的半径
-                dxfattribs={'layer': 'COLLECTORS'}
+                (x * scale + offset_x, y * scale + offset_y),
+                radius=10 * scale,  # 增大半径并考虑缩放
+                dxfattribs={'layer': 'COLLECTORS', 'lineweight': 35}
             )
             # 添加集水器标签
             space.add_text(
                 f"集水器 {collector.get('Id', '')}",
                 dxfattribs={
                     'layer': 'TEXT',
-                    'height': 0.15,
-                    'insert': (x * scale, (y + 100) * scale)  # 稍微偏移一点
+                    'height': 5 * scale,  # 更合适的高度
+                    'color': 6,  # 设置颜色
+                    'insert': (x * scale + offset_x, (y + 15) * scale + offset_y)  # 应用偏移
                 }
             )
 
