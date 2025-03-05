@@ -1,10 +1,10 @@
-import numpy as np
-import cactus_solver
+
+from pipeline import cactus_solver
 from core import partition
 from pathlib import Path
 from tools import dxf_export
 from tools import visualization_data
-import convert_to_heating_design
+from pipeline import convert_to_heating_design
 import json
 import os
 
@@ -23,7 +23,6 @@ def get_available_json_files(file_type="design"):
     else:
         # 输入数据文件
         return sorted([f.name for f in example_dir.glob("inputData*.json")])
-
 
 def select_input_file(file_type="design"):
     """
@@ -54,7 +53,6 @@ def select_input_file(file_type="design"):
             if filename in available_files:
                 return os.path.join("data", filename)
         print("❌ 无效的选择，请重试")
-
 
 def display_input_info(design_data, input_data):
     """
