@@ -14,6 +14,7 @@ import os
 
 # 全局常量
 SCALE = 0.02  # 原来是0.01，再加大一倍以提高可见性
+HEATING_SCALE = 0.01  # 地暖缩放系数，用于调整地暖比例，与建筑比例一致
 
 def create_floor_layout(doc, floor_name, ms_block, layout_name=None):
     """创建楼层布局"""
@@ -44,14 +45,14 @@ def create_floor_layout(doc, floor_name, ms_block, layout_name=None):
     
     return layout
 
-def export_to_dxf(design_file: str, heating_design_file: str, input_data_file: str, output_file=None) -> str:
+def export_to_dxf(design_file: str, input_data_file: str, heating_design_file: str, output_file=None) -> str:
     """
     将AR设计文件和地暖设计文件导出为DXF格式
     
     Args:
         design_file: AR设计JSON文件路径
-        heating_design_file: 地暖设计JSON文件路径，如果不指定则使用相同文件名但扩展名为.dxf
         input_data_file: 输入数据文件，包含集水器位置信息
+        heating_design_file: 地暖设计JSON文件路径，如果不指定则使用相同文件名但扩展名为.dxf
         output_file: 输出DXF文件路径，如果未指定则使用默认路径
         
     Returns:
@@ -243,7 +244,7 @@ def export_to_dxf(design_file: str, heating_design_file: str, input_data_file: s
             floor_offset = floor_positions[floor_name]
             
             # 绘制地暖元素（不需要偏移，因为每个楼层都在自己的块中）
-            draw_heating_with_offset(floor_block, floor_data['heating'], SCALE, (0, 0), floor_data['design'], floor_data['collectors'])
+            draw_heating_with_offset(floor_block, floor_data['heating'], SCALE * HEATING_SCALE, (0, 0), floor_data['design'], floor_data['collectors'])
             print(f"  ✓ 绘制地暖元素")
         else:
             print(f"  ✗ 没有地暖设计数据")
@@ -758,7 +759,7 @@ def draw_heating_with_offset(space, heating_data, scale, offset, floor_data=None
     offset_x, offset_y = offset
     
     # 开始绘制地暖元素
-    print(f"◆ 绘制地暖元素 (offset: {offset_x}, {offset_y})")
+    print(f"◆ 绘制地暖元素 (scale: {scale}, offset: {offset_x}, {offset_y})")
     
     # 添加原点标记
     try:
@@ -890,7 +891,7 @@ def draw_heating_with_offset(space, heating_data, scale, offset, floor_data=None
                                                                 (x2 * scale + offset_x, y2 * scale + offset_y),
                                                                 dxfattribs={'layer': 'HEATING_PIPES', 'lineweight': 30}
                                                             )
-                                                            print(f"    ✓ 成功绘制线段从 ({x1},{y1}) 到 ({x2},{y2})")
+                                                            # print(f"    ✓ 成功绘制线段从 ({x1},{y1}) 到 ({x2},{y2})")
                                                         except Exception as e:
                                                             print(f"    ✗ 绘制线段失败: {e}")
             
@@ -1010,8 +1011,8 @@ def main():
     try:
         output_file = export_to_dxf(
             design_file="data/ARDesign02.json", 
-            heating_design_file="output/HeatingDesign_All_Floors.json", 
-            input_data_file="data/inputData02.json"
+            input_data_file="data/inputData02.json",
+            heating_design_file="output/HeatingDesign_All_Floors.json"
         )
         print(f"\n✅ DXF文件已成功导出至: {output_file}")
     except Exception as e:

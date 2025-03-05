@@ -691,12 +691,12 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
         break
     
     # 所有楼层和区域处理完毕，生成最终的设计文件
-    out_file = generate_design_files(all_pipe_data, design_data, input_data)
+    heating_design_file = generate_design_files(all_pipe_data, design_data, input_data)
     
     # 导出DXF文件
-    if out_file:
+    if heating_design_file:
         print("\n🔷 正在导出DXF文件...")
-        dxf_file = dxf_export.export_to_dxf(design_json_path, str(out_file), input_json_path)
+        dxf_file = dxf_export.export_to_dxf(design_json_path, input_json_path, heating_design_file)
         print(f"✅ DXF文件已导出至: {dxf_file}")
     else:
         print("\n⚠️ 未生成设计文件，跳过DXF导出")
