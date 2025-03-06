@@ -5,6 +5,8 @@ from tools import dxf_export
 from tools import visualization_data
 from pipeline import cactus_solver
 from pipeline import convert_to_heating_design
+from pipeline import cactus_solver
+from pipeline import convert_to_heating_design
 import json
 import os
 
@@ -41,6 +43,7 @@ def select_input_file(file_type="design"):
     for fname in available_files:
         print(f"  @{fname}")
     
+    default_file = "ARDesign03.json" if file_type == "design" else "inputData03.json"
     default_file = "ARDesign03.json" if file_type == "design" else "inputData03.json"
     
     while True:
@@ -430,6 +433,36 @@ def get_floor_collectors(floor_data, input_data):
     
     return False, []
 
+def get_floor_collectors(floor_data, input_data):
+    """
+    获取指定楼层的集水器列表
+    
+    Args:
+        floor_data: 楼层数据
+        input_data: 输入参数数据
+        
+    Returns:
+        tuple: (是否有集水器(bool), 集水器列表(list))
+    """
+    floor_name = floor_data['Name']
+    
+    # 在input_data中查找当前楼层的集水器信息
+    for floor_info in input_data['AssistData']['Floor']:
+        if floor_info['Name'] == floor_name:
+            if ('Construction' in floor_info and 
+                floor_info['Construction'] and 
+                'AssistCollector' in floor_info['Construction'] and 
+                floor_info['Construction']['AssistCollector']):
+                return True, floor_info['Construction']['AssistCollector']
+            if ('Construction' in floor_info and 
+                floor_info['Construction'] and 
+                'FloorHeating' in floor_info['Construction'] and 
+                floor_info['Construction']['FloorHeating']):
+                return True, floor_info['Construction']['FloorHeating']
+            break
+    
+    return False, []
+
 def process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point):
     # 保存中间数据
     intermediate_data = {
@@ -438,6 +471,7 @@ def process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point):
         'regions': regions,  
         'wall_path': wall_path,
         'destination_pt': start_point,
+        'pipe_interval': 200
         'pipe_interval': 200
     }
 
@@ -615,11 +649,14 @@ def run_pipeline(is_debug: bool, num_x: int = 3, num_y: int = 3):
     for floor_data in design_data["Floor"]:
         # 检查当前楼层是否有集水器
         has_collector, collectors = get_floor_collectors(floor_data, input_data)
+        has_collector, collectors = get_floor_collectors(floor_data, input_data)
         
         if not has_collector:
             print(f"\n👮 楼层 {floor_data['Name']} 没有集水器，跳过处理...")
+            print(f"\n👮 楼层 {floor_data['Name']} 没有集水器，跳过处理...")
             continue
             
+        print(f"\n📊 开始处理楼层: {floor_data['Name']}")
         print(f"\n📊 开始处理楼层: {floor_data['Name']}")
         print(f"✅ 检测到 {len(collectors)} 个集水器，继续处理...")
         
@@ -628,6 +665,7 @@ def run_pipeline(is_debug: bool, num_x: int = 3, num_y: int = 3):
         # # 绘制原始数据
         # input()
         # visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
+        # continue
         # continue
 
         print("\n📊 提取的多边形信息:")
@@ -690,6 +728,9 @@ def run_pipeline(is_debug: bool, num_x: int = 3, num_y: int = 3):
                 'floor_name': floor_data['Name'],  # 保持原始楼层名称不变
                 'level_no': get_level_no(floor_data['Name']),
                 'level_desc': floor_data['Name'],
+                'floor_name': floor_data['Name'],  # 保持原始楼层名称不变
+                'level_no': get_level_no(floor_data['Name']),
+                'level_desc': floor_data['Name'],
                 'pipe_data': floor_pipe_data
             })
             
@@ -704,7 +745,16 @@ def run_pipeline(is_debug: bool, num_x: int = 3, num_y: int = 3):
         print("\n🔷 正在导出DXF文件...")
         dxf_file = dxf_export.export_to_dxf(design_json_path, input_json_path, heating_design_file)
         print(f"✅ DXF文件已导出至: {dxf_file}")
+    heating_design_file = generate_design_files(all_pipe_data, design_data, input_data)
+    
+    # 导出DXF文件
+    if heating_design_file:
+        print("\n🔷 正在导出DXF文件...")
+        dxf_file = dxf_export.export_to_dxf(design_json_path, input_json_path, heating_design_file)
+        print(f"✅ DXF文件已导出至: {dxf_file}")
     else:
+        print("\n⚠️ 未生成设计文件，跳过DXF导出")
+
         print("\n⚠️ 未生成设计文件，跳过DXF导出")
 
     print("\n✅ 管道布线完成!")
