@@ -472,7 +472,6 @@ def process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point):
         'wall_path': wall_path,
         'destination_pt': start_point,
         'pipe_interval': 200
-        'pipe_interval': 200
     }
 
     output_dir = Path('output')
