@@ -763,7 +763,7 @@ def main():
     print("🔷 管道布线系统")
     print('='*50)
     
-    run_pipeline(is_debug=True, num_x=3, num_y=3)
+    run_pipeline(is_debug=False, num_x=3, num_y=3)
 
 if __name__ == "__main__":
     main() 
