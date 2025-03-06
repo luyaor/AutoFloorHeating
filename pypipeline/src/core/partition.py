@@ -388,7 +388,7 @@ def get_closest_ratios(target_aspect_ratio, possible_ratios):
     distances.sort()
     return [(num_x, num_y) for _, num_x, num_y in distances[:5]]
 
-def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
+def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0], is_debug = False):
     polygon_coords = [(round(pt[0], 2), round(pt[1], 2)) for pt in polygon_coords]
 
     polygon = Polygon(polygon_coords)
@@ -563,7 +563,8 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
     print("regions=", best_region_info)
     print("destination_pt=", best_destination_point)
     print("")
-    # plot_polygons(best_polygon, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=best_global_points)
+    if is_debug:   
+        plot_polygons(best_polygon, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=best_global_points)
 
     return best_polygon, best_global_points, best_region_info, best_wall_path, best_destination_point
 

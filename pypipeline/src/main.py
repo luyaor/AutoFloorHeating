@@ -278,7 +278,7 @@ def find_nearest_edge_projection(point, polygon):
     
     return nearest_projection, min_distance, nearest_edge_index
 
-def area_partition(key, floor_data, points, num_x, num_y, collectors):
+def area_partition(key, floor_data, points, num_x, num_y, collectors, is_debug):
     # 将points从列表转换为元组列表以便于后续处理
     points_tuple = [(p[0], p[1]) for p in points]
     
@@ -363,7 +363,8 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors):
     final_polygons, allp, new_region_info, wall_path, destination_pt = partition.partition_work(partition_input['points'], 
                                                                                           num_x=partition_input['num_x'], 
                                                                                           num_y=partition_input['num_y'],
-                                                                                          collector=collector_pt)
+                                                                                          collector=collector_pt,
+                                                                                          is_debug=is_debug)
     
     # (TODO) hardcode.....need improve
     #----------
@@ -572,7 +573,7 @@ def get_level_no(floor_name):
     
     return level_no
 
-def run_pipeline(num_x: int = 3, num_y: int = 3):
+def run_pipeline(is_debug: bool, num_x: int = 3, num_y: int = 3):
     """
     运行管道布线的完整流程
     
@@ -647,7 +648,7 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
             output_dir.mkdir(exist_ok=True)
 
             # 1. 执行分区
-            seg_pts, regions, wall_path, start_point = area_partition(key, floor_data, points, num_x, num_y, collectors)
+            seg_pts, regions, wall_path, start_point = area_partition(key, floor_data, points, num_x, num_y, collectors, is_debug)
             
             # 如果没有集水器或分区处理失败，跳过当前多边形
             if seg_pts is None:
@@ -713,7 +714,7 @@ def main():
     print("🔷 管道布线系统")
     print('='*50)
     
-    run_pipeline(num_x=3, num_y=3)
+    run_pipeline(is_debug=True, num_x=3, num_y=3)
 
 if __name__ == "__main__":
     main() 
