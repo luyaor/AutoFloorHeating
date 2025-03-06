@@ -14,7 +14,10 @@ import os
 
 # 全局常量
 SCALE = 0.02  # 原来是0.01，再加大一倍以提高可见性
-HEATING_SCALE = 0.1  # 地暖缩放系数，用于调整地暖比例，与建筑比例一致
+HEATING_SCALE = 1.0  # 地暖缩放系数，用于调整地暖比例，与建筑比例一致
+PIPE_SCALE = 100.0  # 管道特别放大100倍
+COLLECTOR_SCALE = 1.0  # 集水器缩放因子
+TEXT_SCALE = 1.0  # 文本标签缩放因子
 
 # 颜色配置
 # DXF颜色索引参考：
@@ -267,7 +270,7 @@ def export_to_dxf(design_file: str, input_data_file: str, heating_design_file: s
             floor_offset = floor_positions[floor_name]
             
             # 绘制地暖元素（不需要偏移，因为每个楼层都在自己的块中）
-            draw_heating_with_offset(floor_block, floor_data['heating'], SCALE * HEATING_SCALE, (0, 0), floor_data['design'], floor_data['collectors'])
+            draw_heating_elements_for_floor(floor_block, floor_data['heating'], SCALE * HEATING_SCALE, (0, 0), floor_data['design'], floor_data['collectors'])
             print(f"  ✓ 绘制地暖元素")
         else:
             print(f"  ✗ 没有地暖设计数据")
@@ -588,9 +591,9 @@ def draw_heating_elements(space, heating_data, scale):
     
     # 遍历每个楼层数据
     for floor_data in floors_data:
-        draw_heating_elements_for_floor(space, floor_data, scale, (0, 0))
+        draw_heating_elements_for_floor(space, floor_data, scale, (0, 0), None, None)
 
-def draw_heating_elements_for_floor(space, floor_data, scale, offset=(0, 0)):
+def draw_heating_elements_for_floor(space, floor_data, scale, offset=(0, 0), design_data=None, collectors=None):
     """
     绘制单个楼层的地暖元素
     
@@ -599,11 +602,14 @@ def draw_heating_elements_for_floor(space, floor_data, scale, offset=(0, 0)):
         floor_data: 楼层数据
         scale: 坐标缩放因子
         offset: 坐标偏移量，默认为(0,0)
+        design_data: 对应的AR设计楼层数据（可选）
+        collectors: 集水器信息列表（可选）
     """
     offset_x, offset_y = offset
     
-    # 绘制管道
+    # 绘制管道 - 传统方式
     pipes = floor_data.get("Pipes", [])
+    print(f"  - 传统方式管道数量: {len(pipes)}")
     for pipe in pipes:
         # 获取管道点序列
         points = pipe.get("Points", [])
@@ -612,425 +618,142 @@ def draw_heating_elements_for_floor(space, floor_data, scale, offset=(0, 0)):
         
         # 创建多段线
         polyline = space.add_lwpolyline(
-            [(p["X"] * scale + offset_x, p["Y"] * scale + offset_y) for p in points],
+            [(p["X"] * scale * PIPE_SCALE + offset_x, p["Y"] * scale * PIPE_SCALE + offset_y) for p in points],
             dxfattribs={'layer': 'HEATING_PIPES', 'lineweight': 25, 'color': COLOR_CONFIG['HEATING_PIPES']}
         )
     
-    # 绘制集水器
-    collectors = floor_data.get("Collectors", [])
-    for collector in collectors:
-        # 获取集水器位置
-        position = collector.get("Position", {})
-        if position:
-            x, y = position.get("X", 0), position.get("Y", 0)
-            # 在集水器位置画一个圆
-            space.add_circle(
-                (x * scale + offset_x, y * scale + offset_y),
-                radius=1.0,  # 使用固定半径，与draw_heating_with_offset保持一致
-                dxfattribs={'layer': 'COLLECTORS', 'lineweight': 35, 'color': COLOR_CONFIG['COLLECTORS']}
-            )
-            # 添加集水器标签
-            space.add_text(
-                f"集水器 {collector.get('Id', '')}",
-                dxfattribs={
-                    'layer': 'TEXT',
-                    'height': 1.5,  # 使用固定高度，与draw_heating_with_offset保持一致
-                    'color': COLOR_CONFIG['COLLECTORS'],  # 设置颜色
-                    'insert': (x * scale + offset_x, (y + 3) * scale + offset_y)  # 应用偏移
-                }
-            )
-
-def draw_floor_with_offset(space, floor_data, scale, offset):
-    """
-    绘制单个楼层的建筑元素，应用位置偏移
-    
-    Args:
-        space: 要绘制到的空间（模型空间或块）
-        floor_data: 楼层数据
-        scale: 坐标缩放因子
-        offset: (x, y) 偏移量元组
-    """
-    if 'Construction' not in floor_data:
-        return
-        
-    construction = floor_data['Construction']
-    offset_x, offset_y = offset
-    
-    # 绘制房间
-    for room in construction.get('Room', []):
-        # 绘制房间边界
-        for boundary in room.get('Boundary', []):
-            start = boundary.get('StartPoint', {})
-            end = boundary.get('EndPoint', {})
-            if start and end:
-                space.add_line(
-                    (start['x'] * scale + offset_x, start['y'] * scale + offset_y),
-                    (end['x'] * scale + offset_x, end['y'] * scale + offset_y),
-                    dxfattribs={'layer': 'ROOMS'}
-                )
-        
-        # 添加房间名称文本
-        if 'AnnotationPoint' in room:  # 使用注释点作为文本位置
-            point = room['AnnotationPoint']
-            space.add_text(
-                room.get('Name', ''),
-                dxfattribs={
-                    'layer': 'TEXT',
-                    'height': 0.2,  # 文本高度也需要缩放
-                    'insert': (point['x'] * scale + offset_x, point['y'] * scale + offset_y)
-                }
-            )
-    
-    # 绘制门
-    for door in construction.get('DoorAndWindow', []):
-        if door.get('Type') == '门':  # 只处理门
-            base_line = door.get('BaseLine', {})
-            if base_line:
-                start = base_line.get('StartPoint', {})
-                end = base_line.get('EndPoint', {})
-                if start and end:
-                    space.add_line(
-                        (start['x'] * scale + offset_x, start['y'] * scale + offset_y),
-                        (end['x'] * scale + offset_x, end['y'] * scale + offset_y),
-                        dxfattribs={'layer': 'DOORS'}
-                    )
-
-def extract_ar_design_collectors(floor_data):
-    """提取AR设计文件中的集水器信息"""
-    collectors = []
-    
-    # 检查是否有Construction字段
-    if "Construction" in floor_data:
-        construction = floor_data.get("Construction", {})
-        
-        # 检查是否有AssistCollector字段
-        assist_collectors = construction.get("AssistCollector", [])
-        if assist_collectors:
-            print(f"  - 从AR设计文件中找到 {len(assist_collectors)} 个集水器")
-            
-            for idx, assist_collector in enumerate(assist_collectors, 1):
-                # 获取集水器位置
-                if "Location" in assist_collector:
-                    location = assist_collector.get("Location")
-                    
-                    # 添加到集水器列表
-                    collectors.append({
-                        "Id": f"AR_{idx}",
-                        "Position": {
-                            "X": float(location.get("x", 0)),
-                            "Y": float(location.get("y", 0))
-                        }
-                    })
-                    print(f"    ✓ 找到集水器 AR_{idx} 位置: ({location.get('x', 0)}, {location.get('y', 0)})")
-                
-                # 检查是否有Borders字段（如visualization_data.py中的处理）
-                if "Borders" in assist_collector:
-                    borders = assist_collector.get("Borders", [])
-                    if borders:
-                        print(f"    ✓ 集水器 AR_{idx} 有 {len(borders)} 个边界点")
-                        
-                        # 计算集水器的中心点作为位置
-                        x_coords = []
-                        y_coords = []
-                        for border in borders:
-                            start_point = border.get("StartPoint", {})
-                            end_point = border.get("EndPoint", {})
-                            x_coords.extend([float(start_point.get("x", 0)), float(end_point.get("x", 0))])
-                            y_coords.extend([float(start_point.get("y", 0)), float(end_point.get("y", 0))])
-                        
-                        if x_coords and y_coords:
-                            # 使用边界点的中心作为集水器位置
-                            center_x = sum(x_coords) / len(x_coords)
-                            center_y = sum(y_coords) / len(y_coords)
-                            
-                            collectors.append({
-                                "Id": f"AR_Border_{idx}",
-                                "Position": {
-                                    "X": center_x,
-                                    "Y": center_y
-                                },
-                                "HasBorders": True,
-                                "Borders": borders
-                            })
-                            print(f"    ✓ 从边界计算集水器 AR_Border_{idx} 中心位置: ({center_x}, {center_y})")
-    
-    # 如果没有找到AssistCollector，尝试在Room信息中查找集水器房间
-    if not collectors and "Construction" in floor_data:
-        construction = floor_data.get("Construction", {})
-        rooms = construction.get("Room", [])
-        
-        for idx, room in enumerate(rooms, 1):
-            room_name = room.get("Name", "").lower()
-            if "集水器" in room_name or "水暖井" in room_name or "分集水器" in room_name or "collector" in room_name.lower():
-                print(f"  - 从房间名称识别出可能的集水器: '{room_name}'")
-                
-                # 使用房间的标注点作为集水器位置
-                annotation_point = room.get("AnnotationPoint", {})
-                if annotation_point:
-                    collectors.append({
-                        "Id": f"AR_Room_{idx}_{room_name}",
-                        "Position": {
-                            "X": float(annotation_point.get("x", 0)),
-                            "Y": float(annotation_point.get("y", 0))
-                        }
-                    })
-                    print(f"    ✓ 从房间找到集水器 {room_name} 位置: ({annotation_point.get('x', 0)}, {annotation_point.get('y', 0)})")
-    
-    return collectors
-
-def draw_heating_with_offset(space, heating_data, scale, offset, floor_data=None, collectors=None):
-    """
-    绘制单个楼层的地暖元素，应用位置偏移
-    
-    Args:
-        space: 要绘制到的空间（模型空间或块）
-        heating_data: 地暖数据
-        scale: 坐标缩放因子
-        offset: (x, y) 偏移量元组
-        floor_data: 对应的AR设计楼层数据
-        collectors: 集水器信息列表
-    """
-    offset_x, offset_y = offset
-    
-    # 开始绘制地暖元素
-    print(f"◆ 绘制地暖元素 (scale: {scale}, offset: {offset_x}, {offset_y})")
-    
-    # 添加原点标记
-    try:
-        # 在原点添加一个十字标记
-        cross_size = 100 * scale
-        space.add_line((0, 0), (cross_size, 0), dxfattribs={'color': COLOR_CONFIG['ORIGIN'], 'lineweight': 35})
-        space.add_line((0, 0), (0, cross_size), dxfattribs={'color': COLOR_CONFIG['ORIGIN'], 'lineweight': 35})
-        space.add_text(
-            "原点(0,0)",
-            dxfattribs={
-                'layer': 'TEXT',
-                'height': 50 * scale,
-                'color': COLOR_CONFIG['TEXT'],
-                'insert': (cross_size/2, cross_size/2)
-            }
-        )
-        print(f"  ✓ 添加原点标记")
-    except Exception as e:
-        print(f"  ⚠️ 添加原点标记失败: {e}")
-    
-    # 绘制管道
-    pipes = heating_data.get("Pipes", [])
-    print(f"  - 管道数量: {len(pipes)}")
-    
-    for pipe in pipes:
-        # 获取管道点序列
-        points = pipe.get("Points", [])
-        if len(points) < 2:
-            continue
-        
-        # 创建多段线（应用偏移）
-        try:
-            polyline = space.add_lwpolyline(
-                [(p["X"] * scale + offset_x, p["Y"] * scale + offset_y) for p in points],
-                dxfattribs={'layer': 'HEATING_PIPES', 'lineweight': 25, 'color': COLOR_CONFIG['HEATING_PIPES']}
-            )
-            print(f"  ✓ 成功绘制管道，共 {len(points)} 个点")
-        except Exception as e:
-            print(f"  ✗ 绘制管道失败: {e}")
-    
-    # 创建用于存储集水器的列表
-    all_collectors = []
-    
-    # 检查是否有CollectorCoils数据
-    collector_coils = heating_data.get("CollectorCoils", [])
+    # 处理CoilLoops数据
+    collector_coils = floor_data.get("CollectorCoils", [])
     if collector_coils:
         print(f"  - 使用CollectorCoils数据: {len(collector_coils)} 个集水器线圈")
-        extracted_collectors = []
         
-        for collector_coil in collector_coils:
-            collector_name = collector_coil.get("CollectorName", "未知")
+        for collector_idx, collector_coil in enumerate(collector_coils):
+            collector_name = collector_coil.get("CollectorName", f"未知_{collector_idx}")
             print(f"  - 集水器 {collector_name} 的线圈")
             
-            # 将集水器添加到提取列表，尝试从线圈数据中提取位置
-            collector_position = None
-            
-            # 检查集水器线圈数据结构
-            if isinstance(collector_coil, dict):
-                print(f"  - 集水器线圈数据键: {list(collector_coil.keys())}")
+            # 检查CoilLoops字段
+            coil_loops = collector_coil.get("CoilLoops", [])
+            if isinstance(coil_loops, list):
+                print(f"    - 处理CoilLoops: {len(coil_loops)} 项")
                 
-                # 检查Loops字段
-                loops = collector_coil.get("Loops", None)
-                if loops is not None:
-                    if isinstance(loops, list):
-                        print(f"    - Loops是列表: {len(loops)} 个元素")
-                        # 处理loops列表
-                        for loop in loops:
-                            # 这里处理loops列表的每一项
-                            pass
-                    elif isinstance(loops, dict):
-                        print(f"    - Loops是字典: {list(loops.keys())}")
-                        # 这里处理loops字典
-                        pass
-                    else:
-                        print(f"    - Loops是其他类型: {type(loops)}")
-                
-                # 检查CoilLoops字段
-                coil_loops = collector_coil.get("CoilLoops", None)
-                if coil_loops is not None:
-                    print(f"    - 检查字段 'CoilLoops': {type(coil_loops)}")
-                    if isinstance(coil_loops, list):
-                        print(f"    - 处理CoilLoops: {len(coil_loops)} 项")
+                # 遍历所有CoilLoop
+                for loop_idx, coil_loop in enumerate(coil_loops):
+                    if isinstance(coil_loop, dict):
+                        # 为每个loop分配基于索引的颜色
+                        loop_color = (loop_idx % 7) + 1  # 循环使用从1到7的颜色
                         
-                        # 获取第一个CoilLoop作为示例
-                        if coil_loops:
-                            first_coil_loop = coil_loops[0]
-                            if isinstance(first_coil_loop, dict):
-                                print(f"    - CoilLoop 示例数据键: {list(first_coil_loop.keys())}")
+                        print(f"    - 处理CoilLoop {loop_idx+1}/{len(coil_loops)}，颜色: {loop_color}")
+                        
+                        # 绘制Path中的线段
+                        if "Path" in coil_loop:
+                            path = coil_loop["Path"]
+                            if isinstance(path, list):
+                                print(f"    - Path {loop_idx+1} 包含 {len(path)} 个线段")
                                 
-                                # 尝试从CoilLoop中获取集水器位置 (例如，可能从起点位置推断)
-                                if not collector_position and "Path" in first_coil_loop:
-                                    path = first_coil_loop["Path"]
-                                    if isinstance(path, list) and path:
-                                        print(f"    - 找到Path字段: {type(path)}")
-                                        print(f"    - Path包含 {len(path)} 个点")
-                                        
-                                        # 尝试从第一个Path点获取集水器位置
-                                        first_path_item = path[0]
-                                        print(f"    - 第一个Path点: {first_path_item}")
-                                        
-                                        if isinstance(first_path_item, dict):
-                                            if "StartPoint" in first_path_item:
-                                                start_point = first_path_item["StartPoint"]
-                                                # if isinstance(start_point, dict) and "x" in start_point and "y" in start_point:
-                                                #     # 使用起点作为集水器位置
-                                                #     collector_position = {
-                                                #         "X": float(start_point["x"]),
-                                                #         "Y": float(start_point["y"])
-                                                #     }
-                                                #     print(f"    ✓ 从Path起点提取集水器位置: ({collector_position['X']}, {collector_position['Y']})")
-                                        
-                                        # 绘制Path中的线段，使用更大的线宽
-                                        for path_item in path:
-                                            if isinstance(path_item, dict):
-                                                if "StartPoint" in path_item and "EndPoint" in path_item:
-                                                    start_point = path_item["StartPoint"]
-                                                    end_point = path_item["EndPoint"]
+                                # 创建路径点集合
+                                path_points = []
+                                
+                                # 绘制Path中的线段
+                                for path_item in path:
+                                    if isinstance(path_item, dict):
+                                        if "StartPoint" in path_item and "EndPoint" in path_item:
+                                            start_point = path_item["StartPoint"]
+                                            end_point = path_item["EndPoint"]
+                                            
+                                            if (isinstance(start_point, dict) and "x" in start_point and "y" in start_point and
+                                                isinstance(end_point, dict) and "x" in end_point and "y" in end_point):
+                                                
+                                                try:
+                                                    # 注意：Path中的坐标单位为毫米，需要除以1000转换为米
+                                                    x1, y1 = float(start_point["x"]) / 1000, float(start_point["y"]) / 1000
+                                                    x2, y2 = float(end_point["x"]) / 1000, float(end_point["y"]) / 1000
                                                     
-                                                    if (isinstance(start_point, dict) and "x" in start_point and "y" in start_point and
-                                                        isinstance(end_point, dict) and "x" in end_point and "y" in end_point):
-                                                        
-                                                        try:
-                                                            x1, y1 = float(start_point["x"]), float(start_point["y"])
-                                                            x2, y2 = float(end_point["x"]), float(end_point["y"])
-                                                            
-                                                            # 创建线段（应用偏移和缩放），增加线宽
-                                                            space.add_line(
-                                                                (x1 * scale + offset_x, y1 * scale + offset_y),
-                                                                (x2 * scale + offset_x, y2 * scale + offset_y),
-                                                                dxfattribs={'layer': 'HEATING_PIPES', 'lineweight': 30}
-                                                            )
-                                                            # print(f"    ✓ 成功绘制线段从 ({x1},{y1}) 到 ({x2},{y2})")
-                                                        except Exception as e:
-                                                            print(f"    ✗ 绘制线段失败: {e}")
-            
-            # 如果找到了集水器位置，加入提取列表
-            if collector_position:
-                extracted_collectors.append({
-                    "Id": collector_name,
-                    "Position": collector_position
-                })
-                
-        # 使用提取的集水器信息替代原始集水器列表
-        if extracted_collectors:
-            all_collectors.extend(extracted_collectors)
-            print(f"  - 从CollectorCoils中提取了 {len(extracted_collectors)} 个集水器")
-    else:
-        # 使用原始集水器信息
-        heating_collectors = heating_data.get("Collectors", [])
-        if heating_collectors:
-            all_collectors.extend(heating_collectors)
-            print(f"  - 使用原始Collectors数据: {len(heating_collectors)} 个集水器")
+                                                    # 收集点到path_points
+                                                    if not path_points:  # 如果是第一个点，添加起点
+                                                        path_points.append((x1 * scale * PIPE_SCALE + offset_x, y1 * scale * PIPE_SCALE + offset_y))
+                                                    path_points.append((x2 * scale * PIPE_SCALE + offset_x, y2 * scale * PIPE_SCALE + offset_y))
+                                                    
+                                                    # 创建线段（应用偏移和缩放），使用基于loop_idx的颜色
+                                                    space.add_line(
+                                                        (x1 * scale * PIPE_SCALE + offset_x, y1 * scale * PIPE_SCALE + offset_y),
+                                                        (x2 * scale * PIPE_SCALE + offset_x, y2 * scale * PIPE_SCALE + offset_y),
+                                                        dxfattribs={
+                                                            'layer': 'HEATING_PIPES', 
+                                                            'lineweight': 30,
+                                                            'color': loop_color  # 使用基于索引的颜色
+                                                        }
+                                                    )
+                                                except Exception as e:
+                                                    print(f"        ✗ 绘制线段失败: {e}")
+                                
+                                # 可选：为每个路径添加标签
+                                if path_points:
+                                    # 在路径中间点添加标签
+                                    mid_point_idx = len(path_points) // 2
+                                    mid_point = path_points[mid_point_idx]
+                                    space.add_text(
+                                        f"管道 {loop_idx+1}",
+                                        dxfattribs={
+                                            'layer': 'TEXT',
+                                            'height': 1.5 * TEXT_SCALE,
+                                            'color': loop_color,  # 与管道颜色匹配
+                                            'insert': mid_point
+                                        }
+                                    )
     
-    # 如果提供了AR设计楼层数据，提取其中的集水器信息
-    # ar_collectors = []
-    # if floor_data is not None:
-    #     ar_design_collectors = extract_ar_design_collectors(floor_data)
-    #     if ar_design_collectors:
-    #         ar_collectors.extend(ar_design_collectors)
-    #         print(f"  - 添加了 {len(ar_design_collectors)} 个来自AR设计的集水器")
-    
-    # 从输入数据文件添加集水器信息
-    input_collectors = []
+    # 绘制集水器
     if collectors:
-        print(f"  - 从输入数据文件中获取了 {len(collectors)} 个集水器")
-        for idx, collector in enumerate(collectors, 1):
-            if "Location" in collector:
+        print(f"  - 绘制 {len(collectors)} 个集水器")
+        for collector in collectors:
+            # 获取集水器位置
+            if "Position" in collector:
+                position = collector.get("Position", {})
+                if position:
+                    try:
+                        x, y = position.get("X", 0), position.get("Y", 0)
+                        # 在集水器位置画一个圆
+                        space.add_circle(
+                            (x * SCALE * COLLECTOR_SCALE + offset_x, y * SCALE * COLLECTOR_SCALE + offset_y),
+                            radius=1.0,
+                            dxfattribs={'layer': 'COLLECTORS', 'lineweight': 35, 'color': COLOR_CONFIG['COLLECTORS']}
+                        )
+                        # 添加集水器标签
+                        space.add_text(
+                            f"集水器 {collector.get('Id', '')}",
+                            dxfattribs={
+                                'layer': 'TEXT',
+                                'height': 1.5 * TEXT_SCALE,
+                                'color': COLOR_CONFIG['COLLECTORS'],
+                                'insert': (x * SCALE * COLLECTOR_SCALE + offset_x, (y + 3) * SCALE * COLLECTOR_SCALE + offset_y)
+                            }
+                        )
+                        print(f"    ✓ 成功绘制集水器 {collector.get('Id', '')}")
+                    except Exception as e:
+                        print(f"    ✗ 绘制集水器失败: {e}")
+            elif "Location" in collector:
                 location = collector.get("Location", {})
-                
-                # 添加集水器到列表
-                collector_data = {
-                    "Id": f"InputCollector_{idx}",
-                    "Position": {
-                        "X": float(location.get("x", 0)),
-                        "Y": float(location.get("y", 0))
-                    }
-                }
-                
-                # 检查是否有Borders字段
-                if "Borders" in collector:
-                    borders = collector.get("Borders", [])
-                    collector_data["HasBorders"] = True
-                    collector_data["Borders"] = borders
-                
-                input_collectors.append(collector_data)
-                print(f"    ✓ 输入数据中的集水器 {idx} 位置: ({location.get('x', 0)}, {location.get('y', 0)})")
-        
-        all_collectors.extend(input_collectors)
-    
-    # 绘制集水器，使用更大、更明显的图形
-    print(f"  - 绘制 {len(all_collectors)} 个集水器")
-    for collector in all_collectors:
-        # 获取集水器位置
-        position = collector.get("Position", {})
-        if position:
-            try:
-                x, y = position.get("X", 0), position.get("Y", 0)
-                # 在集水器位置画一个圆（应用偏移），增大半径
-                space.add_circle(
-                    (x * SCALE + offset_x, y * SCALE + offset_y),
-                    radius=1.0,  # 使用固定半径，与draw_heating_with_offset保持一致
-                    dxfattribs={'layer': 'COLLECTORS', 'lineweight': 35, 'color': COLOR_CONFIG['COLLECTORS']}
-                )
-                # 添加集水器标签（应用偏移），增大文字
-                space.add_text(
-                    f"集水器 {collector.get('Id', '')}",
-                    dxfattribs={
-                        'layer': 'TEXT',
-                        'height': 1.5,  # 使用固定高度，与draw_heating_with_offset保持一致
-                        'color': COLOR_CONFIG['COLLECTORS'],  # 设置颜色
-                        'insert': (x * SCALE + offset_x, (y + 3) * SCALE + offset_y)  # 应用偏移
-                    }
-                )
-                print(f"    ✓ 成功绘制集水器 {collector.get('Id', '')}")
-                
-                # 如果有边界信息，绘制集水器边界
-                if collector.get("HasBorders", False) and "Borders" in collector:
-                    borders = collector.get("Borders", [])
-                    print(f"    - 绘制集水器边界 ({len(borders)} 个线段)")
-                    
-                    for border in borders:
-                        start_point = border.get("StartPoint", {})
-                        end_point = border.get("EndPoint", {})
-                        
-                        try:
-                            # 绘制边界线
-                            space.add_line(
-                                (float(start_point.get("x", 0)) * SCALE + offset_x, float(start_point.get("y", 0)) * SCALE + offset_y),
-                                (float(end_point.get("x", 0)) * SCALE + offset_x, float(end_point.get("y", 0)) * SCALE + offset_y),
-                                dxfattribs={'layer': 'COLLECTORS', 'lineweight': 25, 'color': COLOR_CONFIG['COLLECTORS']}
-                            )
-                            print(f"      ✓ 绘制边界线段 ({start_point.get('x', 0)},{start_point.get('y', 0)}) - ({end_point.get('x', 0)},{end_point.get('y', 0)})")
-                        except Exception as e:
-                            print(f"      ✗ 绘制边界线段失败: {e}")
-                
-            except Exception as e:
-                print(f"    ✗ 绘制集水器失败: {e}")
+                if location:
+                    try:
+                        x, y = location.get("x", 0), location.get("y", 0)
+                        # 在集水器位置画一个圆
+                        space.add_circle(
+                            (x * SCALE * COLLECTOR_SCALE + offset_x, y * SCALE * COLLECTOR_SCALE + offset_y),
+                            radius=1.0,
+                            dxfattribs={'layer': 'COLLECTORS', 'lineweight': 35, 'color': COLOR_CONFIG['COLLECTORS']}
+                        )
+                        # 添加集水器标签
+                        space.add_text(
+                            f"集水器 {collector.get('Id', '')}",
+                            dxfattribs={
+                                'layer': 'TEXT',
+                                'height': 1.5 * TEXT_SCALE,
+                                'color': COLOR_CONFIG['COLLECTORS'],
+                                'insert': (x * SCALE * COLLECTOR_SCALE + offset_x, (y + 3) * SCALE * COLLECTOR_SCALE + offset_y)
+                            }
+                        )
+                        print(f"    ✓ 成功绘制集水器 {collector.get('Id', '')}")
+                    except Exception as e:
+                        print(f"    ✗ 绘制集水器失败: {e}")
 
 def get_available_json_files():
     """获取data目录下所有可用的AR设计JSON文件"""

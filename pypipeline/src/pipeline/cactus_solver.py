@@ -39,6 +39,7 @@ def solve_pipeline(intermediate_data_file: str):
         "purple",
         "orange",
         "pink",
+        "brown",
     ]
     cmap = {
         -1: "black",

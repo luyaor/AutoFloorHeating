@@ -18,8 +18,8 @@ def plot_pipe_pt_seq(pipe_pt_seq):
     # 遍历所有路径
     for idx, route in enumerate(pipe_pt_seq):
         # 过滤掉异常值（比如特别大的值）
-        filtered_points = [pt for pt in route if pt[0] < 1000 and pt[1] < 1000]
-        
+        # filtered_points = [pt for pt in route if pt[0] < 1000 and pt[1] < 1000]
+        filtered_points = route
         # 从每个 numpy 数组中提取 x 和 y 坐标
         xs = [pt[0] for pt in filtered_points]
         ys = [pt[1] for pt in filtered_points]

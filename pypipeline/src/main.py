@@ -437,7 +437,7 @@ def process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point):
         'regions': regions,  
         'wall_path': wall_path,
         'destination_pt': start_point,
-        'pipe_interval': 250
+        'pipe_interval': 200
     }
 
     output_dir = Path('output')
@@ -671,8 +671,8 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                 # continue
 
             # 可视化管道布线结果
-            # from plot_pipe_data import plot_pipe_pt_seq
-            # plot_pipe_pt_seq(pipe_pt_seq)
+            from pipeline.plot_pipe_data import plot_pipe_pt_seq
+            plot_pipe_pt_seq(pipe_pt_seq)
             
             # 收集当前区域的管道布线数据
             floor_pipe_data.append({
