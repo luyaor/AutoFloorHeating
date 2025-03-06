@@ -39,3 +39,6 @@ Thumbs.db
 data/*.dxf
 
 output/*.json
+
+# 忽略整个output目录
+output/
