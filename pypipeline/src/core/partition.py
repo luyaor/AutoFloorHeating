@@ -563,7 +563,7 @@ def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0]):
     print("regions=", best_region_info)
     print("destination_pt=", best_destination_point)
     print("")
-    plot_polygons(best_polygon, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=best_global_points)
+    # plot_polygons(best_polygon, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=best_global_points)
 
     return best_polygon, best_global_points, best_region_info, best_wall_path, best_destination_point
 

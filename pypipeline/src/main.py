@@ -671,8 +671,8 @@ def run_pipeline(num_x: int = 3, num_y: int = 3):
                 # continue
 
             # 可视化管道布线结果
-            from pipeline.plot_pipe_data import plot_pipe_pt_seq
-            plot_pipe_pt_seq(pipe_pt_seq)
+            # from pipeline.plot_pipe_data import plot_pipe_pt_seq
+            # plot_pipe_pt_seq(pipe_pt_seq)
             
             # 收集当前区域的管道布线数据
             floor_pipe_data.append({
