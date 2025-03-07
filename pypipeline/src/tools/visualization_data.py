@@ -77,6 +77,9 @@ class Floor:
 class ARDesign:
     Floor: List[Floor]
 
+# 添加独立房间类型的全局配置变量
+INDEPENDENT_ROOM_TYPES = ["电梯","客梯", "前室","阳台", "风井", "设备井", "水暖井", "电井", "设备平台", "不上人屋面", "楼梯"]
+
 def load_json_data(json_path: str) -> dict:
     """Load JSON data from file"""
     with open(json_path, 'r', encoding='utf-8') as f:
@@ -221,9 +224,46 @@ def create_door_rectangle(door: Door) -> List[Tuple[float, float]]:
         return [p1, p2, p3, p4, p1]  # Return closed polygon
     return []
 
+def create_door_rectangle_with_options(door: Door, extension: float = 0) -> List[Tuple[float, float]]:
+    """Create a rectangle for the door based on its location, size and direction with customizable extension"""
+    if door.BaseLine:
+        # Get door direction from baseline
+        dx = door.BaseLine.EndPoint.x - door.BaseLine.StartPoint.x
+        dy = door.BaseLine.EndPoint.y - door.BaseLine.StartPoint.y
+        length = math.sqrt(dx*dx + dy*dy)
+        if length == 0:
+            return []
+        
+        # Normalize direction vector
+        dx, dy = dx/length, dy/length
+        
+        # Get perpendicular vector for door thickness
+        thickness = door.Size.Width 
+        
+        # Use the provided extension parameter
+        px, py = -dy, dx  # Perpendicular vector
+        
+        # Calculate four corners of the door rectangle with controlled extension
+        p1 = (door.BaseLine.StartPoint.x - dx * extension - px * thickness/2, 
+              door.BaseLine.StartPoint.y - dy * extension - py * thickness/2)
+        p2 = (door.BaseLine.EndPoint.x + dx * extension - px * thickness/2, 
+              door.BaseLine.EndPoint.y + dy * extension - py * thickness/2)
+        p3 = (door.BaseLine.EndPoint.x + dx * extension + px * thickness/2, 
+              door.BaseLine.EndPoint.y + dy * extension + py * thickness/2)
+        p4 = (door.BaseLine.StartPoint.x - dx * extension + px * thickness/2, 
+              door.BaseLine.StartPoint.y - dy * extension + py * thickness/2)
+        
+        return [p1, p2, p3, p4, p1]  # Return closed polygon
+    return []
+
 def merge_room_with_doors(room_points: List[Tuple[float, float]], 
-                         door_rectangles: List[List[Tuple[float, float]]]) -> List[Tuple[float, float]]:
+                         door_rectangles: List[List[Tuple[float, float]]],
+                         is_independent_room: bool = False) -> List[Tuple[float, float]]:
     """Merge room polygon with door rectangles to create connections between rooms"""
+    # For independent rooms, skip door merging and return the original room points
+    if is_independent_room:
+        return room_points
+        
     # Convert room points to Shapely polygon
     room_polygon = Polygon(room_points)
     
@@ -339,6 +379,7 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
     
     result = {}
     polygons = {}
+    room_info_map = {}  # 存储房间名称和位置信息
     
     # First, collect all rooms and doors
     room_polygons_by_name = {}
@@ -354,13 +395,30 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
             # 确保点序列是闭合的，第一个点和最后一个点相同
             if points and points[0] != points[-1]:
                 points.append(points[0])
-            result[f"room_{floor.Num}_{i}"] = points
+            room_key = f"room_{floor.Num}_{i}"
+            result[room_key] = points
+            
+            # 计算房间中心点位置，用于标注房间名称
+            centroid = get_centroid(points[:-1] if points and points[0] == points[-1] else points)
+            room_info_map[room_key] = {
+                'name': room.Name,
+                'centroid': centroid,
+                'is_independent': False
+            }
+            
+            # 检查是否为独立房间
+            for independent_type in INDEPENDENT_ROOM_TYPES:
+                if independent_type in room.Name:
+                    room_info_map[room_key]['is_independent'] = True
+                    break
             
             # 存储房间多边形，用于后续处理
-            room_polygons_by_name[f"room_{floor.Num}_{i}"] = {
+            room_polygons_by_name[room_key] = {
                 'poly': Polygon(points),
                 'name': room.Name,
-                'original_points': points
+                'original_points': points,
+                'centroid': centroid,
+                'is_independent': room_info_map[room_key]['is_independent']
             }
         
         # 处理所有门
@@ -370,9 +428,24 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
                 rect = create_door_rectangle(door)
                 if rect:
                     door_poly = Polygon(rect)
-                    # 创建一个更大的缓冲区以确保连接
-                    buffered_door = door_poly.buffer(0)
-                    door_polygons.append((buffered_door, j, rect))
+                    
+                    # 检查门是否与独立房间相交
+                    touches_independent_room = False
+                    for room_key, room_info in room_polygons_by_name.items():
+                        if room_info.get('is_independent', False) and door_poly.intersects(room_info['poly']):
+                            touches_independent_room = True
+                            break
+                    
+                    # 如果门与独立房间相交，不添加缓冲区，否则添加缓冲区确保连接
+                    if touches_independent_room:
+                        # 对于与独立房间相邻的门，不添加缓冲区
+                        buffered_door = door_poly
+                    else:
+                        # 对于普通门，添加更大的缓冲区
+                        buffered_door = door_poly.buffer(0)
+                        
+                    # 添加一个标志表示门是否与独立房间相交
+                    door_polygons.append((buffered_door, j, rect, touches_independent_room))
                     result[f"door_rect_{j}"] = rect
     
     # 2. 确定房间间的连接关系
@@ -380,12 +453,31 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
     from collections import defaultdict
     connections = defaultdict(set)
     
+    # 记录独立房间
+    independent_rooms = set()
+    for room_name in room_names:
+        room_info = room_polygons_by_name[room_name]
+        room_actual_name = room_info.get('name', '')
+        # 检查房间名称或类型是否在独立房间类型列表中
+        for independent_type in INDEPENDENT_ROOM_TYPES:
+            if independent_type in room_actual_name:
+                independent_rooms.add(room_name)
+                break
+    
     # 检查每一个门是否连接两个房间
-    for door_poly, door_idx, _ in door_polygons:
+    for door_poly, door_idx, rect, touches_independent in door_polygons:
+        # 如果门与独立房间相交，跳过这个门
+        if touches_independent:
+            continue
+        
         connected_rooms = []
         
         # 检查哪些房间与这个门相交
         for room_name in room_names:
+            # 跳过独立房间类型
+            if room_name in independent_rooms:
+                continue
+                
             room_info = room_polygons_by_name[room_name]
             if door_poly.intersects(room_info['poly']):
                 connected_rooms.append(room_name)
@@ -418,17 +510,18 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
     visited = set()
     room_groups = []
     
+    # 先将独立房间添加为单独的组
+    for room_name in independent_rooms:
+        if room_name not in visited:
+            visited.add(room_name)
+            room_groups.append({room_name})
+    
     # 分组连接的房间
     for room_name in room_names:
         if room_name not in visited:
             component = find_connected_component(room_name, visited)
             if component:
                 room_groups.append(component)
-                
-    # # 打印分组信息进行调试
-    # print(f"Found {len(room_groups)} room groups:")
-    # for i, group in enumerate(room_groups):
-    #     print(f"Group {i}: {', '.join(group)}")
     
     # 5. 合并每个组中的房间
     for i, group in enumerate(room_groups):
@@ -448,14 +541,23 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
             room_polys.append(room_polygons_by_name[room_name]['poly'])
         
         # 找出所有连接这些房间的门
-        for door_poly, door_idx, rect in door_polygons:
+        for door_poly, door_idx, rect, touches_independent in door_polygons:
+            # 如果门与独立房间相交，跳过这个门
+            if touches_independent:
+                continue
+            
             # 检查门是否连接组内的房间
             connected_to_group_rooms = []
+            
             for room_name in group:
-                if door_poly.intersects(room_polygons_by_name[room_name]['poly']):
+                room_info = room_polygons_by_name[room_name]
+                # 检查该房间是否为独立房间，如果是则跳过
+                if room_info.get('is_independent', False):
+                    continue
+                elif door_poly.intersects(room_info['poly']):
                     connected_to_group_rooms.append(room_name)
             
-            # 如果门连接组内至少两个房间，使用它进行连接
+            # 如果门连接组内至少两个非独立房间，使用它进行连接
             if len(connected_to_group_rooms) >= 2:
                 # 使用原始门形状，但添加更大的缓冲区以确保连接
                 connecting_door_polys.append(door_poly.buffer(0))
@@ -501,14 +603,37 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
     
     # 6. 处理多边形，确保逆时针顺序
     processed_polygons = {}
+    polygon_info_map = {}  # 存储多边形分组的名称和位置信息
+    
     for key, points in polygons.items():
         if key.startswith("polygon"):
             # 确保点序列是逆时针方向
             if is_clockwise(points):
                 points = points[::-1]
             processed_polygons[key] = points
+            
+            # 为每个分组多边形计算中心点，用于标注名称
+            centroid = get_centroid(points)
+            
+            # 查找该多边形所属的房间组
+            group_idx = int(key.split('_')[-1])
+            group_rooms = room_groups[group_idx] if group_idx < len(room_groups) else []
+            
+            # 收集组内所有房间的名称
+            group_names = []
+            for room_name in group_rooms:
+                if room_name in room_polygons_by_name:
+                    room_info = room_polygons_by_name[room_name]
+                    if 'name' in room_info and room_info['name']:
+                        group_names.append(room_info['name'])
+            
+            # 存储多边形分组的名称和位置信息
+            polygon_info_map[key] = {
+                'names': group_names,
+                'centroid': centroid
+            }
     
-    return result, processed_polygons
+    return result, processed_polygons, room_info_map, polygon_info_map
 
 def get_example_data() -> ARDesign:
     """Load and convert real JSON data to ARDesign"""
@@ -584,7 +709,9 @@ def get_example_data() -> ARDesign:
 
 def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]], 
                    polygons: Dict[str, List[Tuple[float, float]]], 
-                   collectors: List[dict] = None):
+                   collectors: List[dict] = None,
+                   room_info: Dict[str, dict] = None,
+                   polygon_info: Dict[str, dict] = None):
     """Plot original points and processed polygons side by side"""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
     
@@ -599,6 +726,15 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
                 ax1.plot([points[i][0], points[j][0]], 
                         [points[i][1], points[j][1]], 
                         'b-', alpha=0.5)
+            
+            # 添加房间名称标注
+            if room_info and key in room_info and 'centroid' in room_info[key]:
+                centroid = room_info[key]['centroid']
+                room_name = room_info[key]['name']
+                if room_name:  # 只有当房间名称存在时才添加标注
+                    ax1.text(centroid[0], centroid[1], room_name, 
+                            fontsize=9, ha='center', va='center', 
+                            bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.5'))
         elif key.startswith("door_rect"):
             points_array = np.array(points)
             ax1.plot(points_array[:, 0], points_array[:, 1], 
@@ -635,6 +771,17 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
                     color=color, alpha=0.3, label=key)
             ax2.plot(points_array[:, 0], points_array[:, 1], 
                     color=color, linewidth=2)
+            
+            # 添加多边形分组的房间名称标注
+            if polygon_info and key in polygon_info and 'centroid' in polygon_info[key]:
+                centroid = polygon_info[key]['centroid']
+                group_names = polygon_info[key]['names']
+                if group_names:  # 只有当有房间名称时才添加标注
+                    # 将组内所有房间名称合并为一个字符串
+                    name_text = "\n".join(group_names)
+                    ax2.text(centroid[0], centroid[1], name_text,
+                            fontsize=9, ha='center', va='center',
+                            bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.5'))
     
     # Plot collectors in the second subplot as well
     if collectors:
@@ -675,7 +822,7 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
 if __name__ == "__main__":
     # Process the real data from file
     json_path = os.path.join("data", "ARDesign.json")
-    processed_data, polygons = process_ar_design(json_path)
+    processed_data, polygons, room_info, polygon_info = process_ar_design(json_path)
     
     # Print the merged polygons points
     print("\nMerged Polygons Points:")
@@ -695,4 +842,4 @@ if __name__ == "__main__":
             print(f"Area (should be positive for CCW): {area/2:.2f}")
     
     # Comment out plotting code
-    # plot_comparison(processed_data, polygons, [])
+    # plot_comparison(processed_data, polygons, [], room_info, polygon_info)
