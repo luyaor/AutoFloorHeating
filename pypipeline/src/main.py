@@ -667,7 +667,7 @@ def run_pipeline(is_debug: bool, num_x: int = 3, num_y: int = 3):
         # input()
         if is_debug:
             visualization_data.plot_comparison(processed_data, polygons, collectors=collectors, room_info=room_info, polygon_info=polygon_info)
-        continue
+        # continue
 
         print("\n📊 提取的多边形信息:")
         
