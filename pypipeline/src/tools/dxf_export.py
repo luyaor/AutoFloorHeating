@@ -14,6 +14,30 @@ import os
 
 # 全局常量
 SCALE = 0.02  # 原来是0.01，再加大一倍以提高可见性
+HEATING_SCALE = 0.1  # 地暖缩放系数，用于调整地暖比例，与建筑比例一致
+
+# 颜色配置
+# DXF颜色索引参考：
+# 0=黑色, 1=红色, 2=黄色, 3=绿色, 4=青色, 5=蓝色, 6=洋红色, 7=白色, 8=灰色, 9=淡红色
+# 详细颜色索引表参考：https://gohtx.com/acadcolors.php
+COLOR_CONFIG = {
+    # 建筑元素 - 使用灰白色系，背景是黑色
+    'WALLS': 0,  # 黑色
+    'DOORS': 9,  # 白色 
+    'WINDOWS': 8,  # 灰色
+    'ROOMS': 9,  # 淡红色
+    
+    # 给水/暖气管道 - 使用饱和度高的彩色
+    'HEATING_PIPES': 1,  # 红色
+    'WATER_PIPES': 3,  # 绿色
+    'HOT_WATER_PIPES': 34,  # 亮橙色
+    'COLD_WATER_PIPES': 4,  # 青色
+    
+    # 集水器和其他元素
+    'COLLECTORS': 2,  # 黄色
+    'ORIGIN': 2,  # 黄色
+    'TEXT': 3,  # 白色
+}
 
 def create_floor_layout(doc, floor_name, ms_block, layout_name=None):
     """创建楼层布局"""
@@ -44,14 +68,14 @@ def create_floor_layout(doc, floor_name, ms_block, layout_name=None):
     
     return layout
 
-def export_to_dxf(design_file: str, heating_design_file: str, input_data_file: str, output_file=None) -> str:
+def export_to_dxf(design_file: str, input_data_file: str, heating_design_file: str, output_file=None) -> str:
     """
     将AR设计文件和地暖设计文件导出为DXF格式
     
     Args:
         design_file: AR设计JSON文件路径
-        heating_design_file: 地暖设计JSON文件路径，如果不指定则使用相同文件名但扩展名为.dxf
         input_data_file: 输入数据文件，包含集水器位置信息
+        heating_design_file: 地暖设计JSON文件路径，如果不指定则使用相同文件名但扩展名为.dxf
         output_file: 输出DXF文件路径，如果未指定则使用默认路径
         
     Returns:
@@ -193,13 +217,13 @@ def export_to_dxf(design_file: str, heating_design_file: str, input_data_file: s
     doc = ezdxf.new('R2010')  # 使用更兼容的版本
     
     # 创建所需的图层
-    doc.layers.new(name='WALLS', dxfattribs={'color': 1})      # 蓝色墙体
-    doc.layers.new(name='DOORS', dxfattribs={'color': 2})      # 绿色门
-    doc.layers.new(name='WINDOWS', dxfattribs={'color': 3})    # 红色窗户
-    doc.layers.new(name='ROOMS', dxfattribs={'color': 4})      # 洋红色房间
-    doc.layers.new(name='TEXT', dxfattribs={'color': 7})       # 白色文本
-    doc.layers.new(name='HEATING_PIPES', dxfattribs={'color': 5})  # 青色地暖管道
-    doc.layers.new(name='COLLECTORS', dxfattribs={'color': 6})  # 紫色集水器
+    doc.layers.new(name='WALLS', dxfattribs={'color': COLOR_CONFIG['WALLS']})      # 白色墙体
+    doc.layers.new(name='DOORS', dxfattribs={'color': COLOR_CONFIG['DOORS']})      # 白色门
+    doc.layers.new(name='WINDOWS', dxfattribs={'color': COLOR_CONFIG['WINDOWS']})    # 灰色窗户
+    doc.layers.new(name='ROOMS', dxfattribs={'color': COLOR_CONFIG['ROOMS']})      # 淡红色房间
+    doc.layers.new(name='TEXT', dxfattribs={'color': COLOR_CONFIG['TEXT']})        # 白色文本
+    doc.layers.new(name='HEATING_PIPES', dxfattribs={'color': COLOR_CONFIG['HEATING_PIPES']})  # 红色地暖管道
+    doc.layers.new(name='COLLECTORS', dxfattribs={'color': COLOR_CONFIG['COLLECTORS']})  # 黄色集水器
     
     # 设置布局
     # ModelSpace是整个设计的总视图
@@ -243,7 +267,7 @@ def export_to_dxf(design_file: str, heating_design_file: str, input_data_file: s
             floor_offset = floor_positions[floor_name]
             
             # 绘制地暖元素（不需要偏移，因为每个楼层都在自己的块中）
-            draw_heating_with_offset(floor_block, floor_data['heating'], SCALE, (0, 0), floor_data['design'], floor_data['collectors'])
+            draw_heating_with_offset(floor_block, floor_data['heating'], SCALE * HEATING_SCALE, (0, 0), floor_data['design'], floor_data['collectors'])
             print(f"  ✓ 绘制地暖元素")
         else:
             print(f"  ✗ 没有地暖设计数据")
@@ -255,7 +279,7 @@ def export_to_dxf(design_file: str, heating_design_file: str, input_data_file: s
                 dxfattribs={
                     'layer': 'TEXT',
                     'height': 200 * SCALE,
-                    'color': 7,  # 白色
+                    'color': COLOR_CONFIG['TEXT'],
                     'insert': (2500 * SCALE, 4500 * SCALE)
                 }
             )
@@ -365,7 +389,7 @@ def draw_building_elements(space, floor_data):
                             line = space.add_line(
                                 (start_point.get("x", 0) * SCALE, start_point.get("y", 0) * SCALE),
                                 (end_point.get("x", 0) * SCALE, end_point.get("y", 0) * SCALE),
-                                dxfattribs={'layer': 'DOORS', 'lineweight': 35, 'color': 2}
+                                dxfattribs={'layer': 'DOORS', 'lineweight': 35, 'color': COLOR_CONFIG['DOORS']}
                             )
                             
                             # 如果有门的位置和尺寸信息，绘制门的轮廓
@@ -384,7 +408,7 @@ def draw_building_elements(space, floor_data):
                                     space.add_circle(
                                         (center_x * SCALE, center_y * SCALE),
                                         radius=20 * SCALE,
-                                        dxfattribs={'layer': 'DOORS', 'color': 2}
+                                        dxfattribs={'layer': 'DOORS', 'color': COLOR_CONFIG['DOORS']}
                                     )
                             
                             building_elements_drawn += 1
@@ -412,7 +436,7 @@ def draw_building_elements(space, floor_data):
                                 # 绘制房间边界多段线
                                 polyline = space.add_lwpolyline(
                                     points,
-                                    dxfattribs={'layer': 'ROOMS', 'lineweight': 20, 'color': 4}
+                                    dxfattribs={'layer': 'ROOMS', 'lineweight': 20, 'color': COLOR_CONFIG['ROOMS']}
                                 )
                                 
                                 # 添加房间名称文本
@@ -425,7 +449,7 @@ def draw_building_elements(space, floor_data):
                                         dxfattribs={
                                             'layer': 'TEXT',
                                             'height': 100 * SCALE,
-                                            'color': 7,
+                                            'color': COLOR_CONFIG['TEXT'],
                                             'insert': (annotation_point.get("x", 0) * SCALE, annotation_point.get("y", 0) * SCALE)
                                         }
                                     )
@@ -451,7 +475,7 @@ def draw_building_elements(space, floor_data):
                                 space.add_line(
                                     (start_point.get("x", 0) * SCALE, start_point.get("y", 0) * SCALE),
                                     (end_point.get("x", 0) * SCALE, end_point.get("y", 0) * SCALE),
-                                    dxfattribs={'layer': 'WALLS', 'lineweight': 35, 'color': 5}
+                                    dxfattribs={'layer': 'WALLS', 'lineweight': 35, 'color': COLOR_CONFIG['WALLS']}
                                 )
                                 building_elements_drawn += 1
                             except Exception as e:
@@ -525,7 +549,7 @@ def draw_building_elements(space, floor_data):
                             )
                             
                             # 绘制房间边界填充
-                            hatch = space.add_hatch(color=4)  # 添加填充，使房间更明显
+                            hatch = space.add_hatch(color=COLOR_CONFIG['ROOMS'])  # 添加填充，使房间更明显
                             hatch.paths.add_polyline_path(
                                 [(p["x"] * SCALE, p["y"] * SCALE) for p in points],
                                 is_closed=True
@@ -564,10 +588,20 @@ def draw_heating_elements(space, heating_data, scale):
     
     # 遍历每个楼层数据
     for floor_data in floors_data:
-        draw_heating_elements_for_floor(space, floor_data, scale)
+        draw_heating_elements_for_floor(space, floor_data, scale, (0, 0))
 
-def draw_heating_elements_for_floor(space, floor_data, scale):
-    """绘制单个楼层的地暖元素"""
+def draw_heating_elements_for_floor(space, floor_data, scale, offset=(0, 0)):
+    """
+    绘制单个楼层的地暖元素
+    
+    Args:
+        space: 要绘制到的空间（模型空间或块）
+        floor_data: 楼层数据
+        scale: 坐标缩放因子
+        offset: 坐标偏移量，默认为(0,0)
+    """
+    offset_x, offset_y = offset
+    
     # 绘制管道
     pipes = floor_data.get("Pipes", [])
     for pipe in pipes:
@@ -578,8 +612,8 @@ def draw_heating_elements_for_floor(space, floor_data, scale):
         
         # 创建多段线
         polyline = space.add_lwpolyline(
-            [(p["X"] * scale, p["Y"] * scale) for p in points],
-            dxfattribs={'layer': 'HEATING_PIPES'}
+            [(p["X"] * scale + offset_x, p["Y"] * scale + offset_y) for p in points],
+            dxfattribs={'layer': 'HEATING_PIPES', 'lineweight': 25, 'color': COLOR_CONFIG['HEATING_PIPES']}
         )
     
     # 绘制集水器
@@ -591,17 +625,18 @@ def draw_heating_elements_for_floor(space, floor_data, scale):
             x, y = position.get("X", 0), position.get("Y", 0)
             # 在集水器位置画一个圆
             space.add_circle(
-                (x * scale, y * scale),
-                radius=0.1,  # 适当的半径
-                dxfattribs={'layer': 'COLLECTORS'}
+                (x * scale + offset_x, y * scale + offset_y),
+                radius=1.0,  # 使用固定半径，与draw_heating_with_offset保持一致
+                dxfattribs={'layer': 'COLLECTORS', 'lineweight': 35, 'color': COLOR_CONFIG['COLLECTORS']}
             )
             # 添加集水器标签
             space.add_text(
                 f"集水器 {collector.get('Id', '')}",
                 dxfattribs={
                     'layer': 'TEXT',
-                    'height': 0.15,
-                    'insert': (x * scale, (y + 100) * scale)  # 稍微偏移一点
+                    'height': 1.5,  # 使用固定高度，与draw_heating_with_offset保持一致
+                    'color': COLOR_CONFIG['COLLECTORS'],  # 设置颜色
+                    'insert': (x * scale + offset_x, (y + 3) * scale + offset_y)  # 应用偏移
                 }
             )
 
@@ -758,20 +793,20 @@ def draw_heating_with_offset(space, heating_data, scale, offset, floor_data=None
     offset_x, offset_y = offset
     
     # 开始绘制地暖元素
-    print(f"◆ 绘制地暖元素 (offset: {offset_x}, {offset_y})")
+    print(f"◆ 绘制地暖元素 (scale: {scale}, offset: {offset_x}, {offset_y})")
     
     # 添加原点标记
     try:
         # 在原点添加一个十字标记
         cross_size = 100 * scale
-        space.add_line((0, 0), (cross_size, 0), dxfattribs={'color': 2, 'lineweight': 35})
-        space.add_line((0, 0), (0, cross_size), dxfattribs={'color': 2, 'lineweight': 35})
+        space.add_line((0, 0), (cross_size, 0), dxfattribs={'color': COLOR_CONFIG['ORIGIN'], 'lineweight': 35})
+        space.add_line((0, 0), (0, cross_size), dxfattribs={'color': COLOR_CONFIG['ORIGIN'], 'lineweight': 35})
         space.add_text(
             "原点(0,0)",
             dxfattribs={
                 'layer': 'TEXT',
                 'height': 50 * scale,
-                'color': 7,
+                'color': COLOR_CONFIG['TEXT'],
                 'insert': (cross_size/2, cross_size/2)
             }
         )
@@ -793,7 +828,7 @@ def draw_heating_with_offset(space, heating_data, scale, offset, floor_data=None
         try:
             polyline = space.add_lwpolyline(
                 [(p["X"] * scale + offset_x, p["Y"] * scale + offset_y) for p in points],
-                dxfattribs={'layer': 'HEATING_PIPES', 'lineweight': 25}
+                dxfattribs={'layer': 'HEATING_PIPES', 'lineweight': 25, 'color': COLOR_CONFIG['HEATING_PIPES']}
             )
             print(f"  ✓ 成功绘制管道，共 {len(points)} 个点")
         except Exception as e:
@@ -890,7 +925,7 @@ def draw_heating_with_offset(space, heating_data, scale, offset, floor_data=None
                                                                 (x2 * scale + offset_x, y2 * scale + offset_y),
                                                                 dxfattribs={'layer': 'HEATING_PIPES', 'lineweight': 30}
                                                             )
-                                                            print(f"    ✓ 成功绘制线段从 ({x1},{y1}) 到 ({x2},{y2})")
+                                                            # print(f"    ✓ 成功绘制线段从 ({x1},{y1}) 到 ({x2},{y2})")
                                                         except Exception as e:
                                                             print(f"    ✗ 绘制线段失败: {e}")
             
@@ -958,18 +993,18 @@ def draw_heating_with_offset(space, heating_data, scale, offset, floor_data=None
                 x, y = position.get("X", 0), position.get("Y", 0)
                 # 在集水器位置画一个圆（应用偏移），增大半径
                 space.add_circle(
-                    (x * scale + offset_x, y * scale + offset_y),
-                    radius=1.0,  # 增大半径，更容易看见
-                    dxfattribs={'layer': 'COLLECTORS', 'lineweight': 35}
+                    (x * SCALE + offset_x, y * SCALE + offset_y),
+                    radius=1.0,  # 使用固定半径，与draw_heating_with_offset保持一致
+                    dxfattribs={'layer': 'COLLECTORS', 'lineweight': 35, 'color': COLOR_CONFIG['COLLECTORS']}
                 )
                 # 添加集水器标签（应用偏移），增大文字
                 space.add_text(
                     f"集水器 {collector.get('Id', '')}",
                     dxfattribs={
                         'layer': 'TEXT',
-                        'height': 1.5,  # 增大文字高度
-                        'color': 6,     # 设置颜色
-                        'insert': (x * scale + offset_x, (y + 3) * scale + offset_y)  # 调整偏移
+                        'height': 1.5,  # 使用固定高度，与draw_heating_with_offset保持一致
+                        'color': COLOR_CONFIG['COLLECTORS'],  # 设置颜色
+                        'insert': (x * SCALE + offset_x, (y + 3) * SCALE + offset_y)  # 应用偏移
                     }
                 )
                 print(f"    ✓ 成功绘制集水器 {collector.get('Id', '')}")
@@ -986,9 +1021,9 @@ def draw_heating_with_offset(space, heating_data, scale, offset, floor_data=None
                         try:
                             # 绘制边界线
                             space.add_line(
-                                (float(start_point.get("x", 0)) * scale + offset_x, float(start_point.get("y", 0)) * scale + offset_y),
-                                (float(end_point.get("x", 0)) * scale + offset_x, float(end_point.get("y", 0)) * scale + offset_y),
-                                dxfattribs={'layer': 'COLLECTORS', 'lineweight': 25}
+                                (float(start_point.get("x", 0)) * SCALE + offset_x, float(start_point.get("y", 0)) * SCALE + offset_y),
+                                (float(end_point.get("x", 0)) * SCALE + offset_x, float(end_point.get("y", 0)) * SCALE + offset_y),
+                                dxfattribs={'layer': 'COLLECTORS', 'lineweight': 25, 'color': COLOR_CONFIG['COLLECTORS']}
                             )
                             print(f"      ✓ 绘制边界线段 ({start_point.get('x', 0)},{start_point.get('y', 0)}) - ({end_point.get('x', 0)},{end_point.get('y', 0)})")
                         except Exception as e:
@@ -1010,8 +1045,8 @@ def main():
     try:
         output_file = export_to_dxf(
             design_file="data/ARDesign02.json", 
-            heating_design_file="output/HeatingDesign_All_Floors.json", 
-            input_data_file="data/inputData02.json"
+            input_data_file="data/inputData02.json",
+            heating_design_file="output/HeatingDesign_All_Floors.json"
         )
         print(f"\n✅ DXF文件已成功导出至: {output_file}")
     except Exception as e:
