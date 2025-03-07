@@ -656,16 +656,15 @@ def run_pipeline(is_debug: bool, num_x: int = 3, num_y: int = 3):
             continue
             
         print(f"\n📊 开始处理楼层: {floor_data['Name']}")
-        print(f"\n📊 开始处理楼层: {floor_data['Name']}")
         print(f"✅ 检测到 {len(collectors)} 个集水器，继续处理...")
         
-        processed_data, polygons = visualization_data.process_ar_design(floor_data)
+        processed_data, polygons, room_info, polygon_info = visualization_data.process_ar_design(floor_data)
         # print("\n✅ 原始图像绘制完成，按任意键继续...")
         # # 绘制原始数据
         # input()
-        # visualization_data.plot_comparison(processed_data, polygons, collectors=collectors)
-        # continue
-        # continue
+        if is_debug:
+            visualization_data.plot_comparison(processed_data, polygons, collectors=collectors, room_info=room_info, polygon_info=polygon_info)
+        continue
 
         print("\n📊 提取的多边形信息:")
         
@@ -763,7 +762,7 @@ def main():
     print("🔷 管道布线系统")
     print('='*50)
     
-    run_pipeline(is_debug=False, num_x=3, num_y=3)
+    run_pipeline(is_debug=True, num_x=3, num_y=3)
 
 if __name__ == "__main__":
     main() 

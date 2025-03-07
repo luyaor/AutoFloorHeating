@@ -279,7 +279,7 @@ def merge_room_with_doors(room_points: List[Tuple[float, float]],
     
     return unique_points
 
-def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, float]]]:
+def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[float, float]]], Dict[str, List[Tuple[float, float]]], Dict[str, dict], Dict[str, dict]]:
     """Process AR design data from a file path and return points in the format similar to test_data.py"""
     # # Load and convert JSON data to ARDesign
     # data = load_json_data(file_path)
@@ -339,6 +339,7 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
     
     result = {}
     polygons = {}
+    room_info_map = {}  # 存储房间名称和位置信息
     
     # First, collect all rooms and doors
     room_polygons_by_name = {}
@@ -354,13 +355,22 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
             # 确保点序列是闭合的，第一个点和最后一个点相同
             if points and points[0] != points[-1]:
                 points.append(points[0])
-            result[f"room_{floor.Num}_{i}"] = points
+            room_key = f"room_{floor.Num}_{i}"
+            result[room_key] = points
+            
+            # 计算房间中心点位置，用于标注房间名称
+            centroid = get_centroid(points[:-1] if points and points[0] == points[-1] else points)
+            room_info_map[room_key] = {
+                'name': room.Name,
+                'centroid': centroid
+            }
             
             # 存储房间多边形，用于后续处理
-            room_polygons_by_name[f"room_{floor.Num}_{i}"] = {
+            room_polygons_by_name[room_key] = {
                 'poly': Polygon(points),
                 'name': room.Name,
-                'original_points': points
+                'original_points': points,
+                'centroid': centroid
             }
         
         # 处理所有门
@@ -501,14 +511,37 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
     
     # 6. 处理多边形，确保逆时针顺序
     processed_polygons = {}
+    polygon_info_map = {}  # 存储多边形分组的名称和位置信息
+    
     for key, points in polygons.items():
         if key.startswith("polygon"):
             # 确保点序列是逆时针方向
             if is_clockwise(points):
                 points = points[::-1]
             processed_polygons[key] = points
+            
+            # 为每个分组多边形计算中心点，用于标注名称
+            centroid = get_centroid(points)
+            
+            # 查找该多边形所属的房间组
+            group_idx = int(key.split('_')[-1])
+            group_rooms = room_groups[group_idx] if group_idx < len(room_groups) else []
+            
+            # 收集组内所有房间的名称
+            group_names = []
+            for room_name in group_rooms:
+                if room_name in room_polygons_by_name:
+                    room_info = room_polygons_by_name[room_name]
+                    if 'name' in room_info and room_info['name']:
+                        group_names.append(room_info['name'])
+            
+            # 存储多边形分组的名称和位置信息
+            polygon_info_map[key] = {
+                'names': group_names,
+                'centroid': centroid
+            }
     
-    return result, processed_polygons
+    return result, processed_polygons, room_info_map, polygon_info_map
 
 def get_example_data() -> ARDesign:
     """Load and convert real JSON data to ARDesign"""
@@ -584,7 +617,9 @@ def get_example_data() -> ARDesign:
 
 def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]], 
                    polygons: Dict[str, List[Tuple[float, float]]], 
-                   collectors: List[dict] = None):
+                   collectors: List[dict] = None,
+                   room_info: Dict[str, dict] = None,
+                   polygon_info: Dict[str, dict] = None):
     """Plot original points and processed polygons side by side"""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
     
@@ -599,6 +634,15 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
                 ax1.plot([points[i][0], points[j][0]], 
                         [points[i][1], points[j][1]], 
                         'b-', alpha=0.5)
+            
+            # 添加房间名称标注
+            if room_info and key in room_info and 'centroid' in room_info[key]:
+                centroid = room_info[key]['centroid']
+                room_name = room_info[key]['name']
+                if room_name:  # 只有当房间名称存在时才添加标注
+                    ax1.text(centroid[0], centroid[1], room_name, 
+                            fontsize=9, ha='center', va='center', 
+                            bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.5'))
         elif key.startswith("door_rect"):
             points_array = np.array(points)
             ax1.plot(points_array[:, 0], points_array[:, 1], 
@@ -635,6 +679,17 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
                     color=color, alpha=0.3, label=key)
             ax2.plot(points_array[:, 0], points_array[:, 1], 
                     color=color, linewidth=2)
+            
+            # 添加多边形分组的房间名称标注
+            if polygon_info and key in polygon_info and 'centroid' in polygon_info[key]:
+                centroid = polygon_info[key]['centroid']
+                group_names = polygon_info[key]['names']
+                if group_names:  # 只有当有房间名称时才添加标注
+                    # 将组内所有房间名称合并为一个字符串
+                    name_text = "\n".join(group_names)
+                    ax2.text(centroid[0], centroid[1], name_text,
+                            fontsize=9, ha='center', va='center',
+                            bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.5'))
     
     # Plot collectors in the second subplot as well
     if collectors:
@@ -675,7 +730,7 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
 if __name__ == "__main__":
     # Process the real data from file
     json_path = os.path.join("data", "ARDesign.json")
-    processed_data, polygons = process_ar_design(json_path)
+    processed_data, polygons, room_info, polygon_info = process_ar_design(json_path)
     
     # Print the merged polygons points
     print("\nMerged Polygons Points:")
@@ -695,4 +750,4 @@ if __name__ == "__main__":
             print(f"Area (should be positive for CCW): {area/2:.2f}")
     
     # Comment out plotting code
-    # plot_comparison(processed_data, polygons, [])
+    # plot_comparison(processed_data, polygons, [], room_info, polygon_info)
