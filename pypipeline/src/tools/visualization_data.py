@@ -77,6 +77,9 @@ class Floor:
 class ARDesign:
     Floor: List[Floor]
 
+# 添加独立房间类型的全局配置变量
+INDEPENDENT_ROOM_TYPES = ["电梯", "阳台", "风井", "设备井", "水暖井", "电井", "设备平台", "不上人屋面", "楼梯"]
+
 def load_json_data(json_path: str) -> dict:
     """Load JSON data from file"""
     with open(json_path, 'r', encoding='utf-8') as f:
@@ -279,7 +282,7 @@ def merge_room_with_doors(room_points: List[Tuple[float, float]],
     
     return unique_points
 
-def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[float, float]]], Dict[str, List[Tuple[float, float]]], Dict[str, dict], Dict[str, dict]]:
+def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, float]]]:
     """Process AR design data from a file path and return points in the format similar to test_data.py"""
     # # Load and convert JSON data to ARDesign
     # data = load_json_data(file_path)
@@ -390,12 +393,27 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
     from collections import defaultdict
     connections = defaultdict(set)
     
+    # 记录独立房间
+    independent_rooms = set()
+    for room_name in room_names:
+        room_info = room_polygons_by_name[room_name]
+        room_actual_name = room_info.get('name', '')
+        # 检查房间名称或类型是否在独立房间类型列表中
+        for independent_type in INDEPENDENT_ROOM_TYPES:
+            if independent_type in room_actual_name:
+                independent_rooms.add(room_name)
+                break
+    
     # 检查每一个门是否连接两个房间
     for door_poly, door_idx, _ in door_polygons:
         connected_rooms = []
         
         # 检查哪些房间与这个门相交
         for room_name in room_names:
+            # 跳过独立房间类型
+            if room_name in independent_rooms:
+                continue
+                
             room_info = room_polygons_by_name[room_name]
             if door_poly.intersects(room_info['poly']):
                 connected_rooms.append(room_name)
@@ -428,17 +446,18 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
     visited = set()
     room_groups = []
     
+    # 先将独立房间添加为单独的组
+    for room_name in independent_rooms:
+        if room_name not in visited:
+            visited.add(room_name)
+            room_groups.append({room_name})
+    
     # 分组连接的房间
     for room_name in room_names:
         if room_name not in visited:
             component = find_connected_component(room_name, visited)
             if component:
                 room_groups.append(component)
-                
-    # # 打印分组信息进行调试
-    # print(f"Found {len(room_groups)} room groups:")
-    # for i, group in enumerate(room_groups):
-    #     print(f"Group {i}: {', '.join(group)}")
     
     # 5. 合并每个组中的房间
     for i, group in enumerate(room_groups):

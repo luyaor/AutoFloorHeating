@@ -10,6 +10,9 @@ from pipeline import convert_to_heating_design
 import json
 import os
 
+# 默认独立房间类型列表
+DEFAULT_INDEPENDENT_ROOM_TYPES = ["电梯", "阳台", "风井", "设备井", "水暖井", "电井"]
+
 def get_available_json_files(file_type="design"):
     """Get list of available JSON files in the example directory
     
