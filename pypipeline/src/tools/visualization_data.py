@@ -1303,11 +1303,55 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
     processed_polygons = {}
     polygon_info_map = {}  # 存储多边形分组的名称和位置信息
     
+    # 新增：收集所有洁具多边形
+    fixture_polygons = []
+    for key, points in result.items():
+        if key.startswith("fixture_rect"):
+            if len(points) >= 3:  # 确保是有效的多边形
+                fixture_polygons.append(Polygon(points))
+    
     for key, points in polygons.items():
         if key.startswith("polygon"):
             # 确保点序列是逆时针方向
             if is_clockwise(points):
                 points = points[::-1]
+            
+            # 新增：从多边形中减去洁具区域
+            try:
+                room_poly = Polygon(points)
+                
+                # 对每个洁具多边形执行差异操作
+                for fixture_poly in fixture_polygons:
+                    if room_poly.intersects(fixture_poly):
+                        # 使用buffer(0)修复可能的无效几何
+                        room_poly = room_poly.buffer(0).difference(fixture_poly.buffer(0.1))  # 添加微小缓冲区确保完全覆盖
+                        
+                        # 如果结果变成多个多边形，取最大的
+                        if isinstance(room_poly, MultiPolygon):
+                            room_poly = max(room_poly.geoms, key=lambda p: p.area)
+                
+                # 转换回坐标点
+                if room_poly.is_empty:
+                    continue
+                
+                # 获取外环坐标
+                exterior_coords = list(room_poly.exterior.coords)
+                
+                # 移除重复点并闭合多边形
+                unique_coords = []
+                for i in range(len(exterior_coords)):
+                    if i == 0 or exterior_coords[i] != exterior_coords[i-1]:
+                        unique_coords.append(exterior_coords[i])
+                
+                # 确保多边形闭合
+                if unique_coords and unique_coords[0] != unique_coords[-1]:
+                    unique_coords.append(unique_coords[0])
+                
+                points = [(x, y) for x, y in unique_coords]
+            
+            except Exception as e:
+                print(f"处理洁具区域时发生错误: {e}")
+            
             processed_polygons[key] = points
             
             # 为每个分组多边形计算中心点，用于标注名称
@@ -1519,6 +1563,7 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
             #         ax1.text(centroid[0], centroid[1], fixture_name, 
             #                 fontsize=8, ha='center', va='center', 
             #                 bbox=dict(facecolor='lightgreen', alpha=0.7, boxstyle='round,pad=0.5'))
+            pass
     
     # Plot collectors if provided
     if collectors:
@@ -1588,12 +1633,12 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
     if fixtures_info:
         for key in fixtures_info:
             if key in original_data:
-                points = original_data[key]
-                points_array = np.array(points)
-                ax2.fill(points_array[:, 0], points_array[:, 1], 
-                        color='green', alpha=0.5)
-                ax2.plot(points_array[:, 0], points_array[:, 1], 
-                        'g-', alpha=0.7, linewidth=2)
+                # points = original_data[key]
+                # points_array = np.array(points)
+                # ax2.fill(points_array[:, 0], points_array[:, 1], 
+                #         color='green', alpha=0.5)
+                # ax2.plot(points_array[:, 0], points_array[:, 1], 
+                #         'g-', alpha=0.7, linewidth=2)
                 
                 # 注释掉添加洁具名称标注的代码
                 # if 'centroid' in fixtures_info[key]:
@@ -1603,6 +1648,7 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
                 #         ax2.text(centroid[0], centroid[1], fixture_name, 
                 #                 fontsize=8, ha='center', va='center', 
                 #                 bbox=dict(facecolor='lightgreen', alpha=0.7, boxstyle='round,pad=0.5'))
+                pass
     
     # Set equal aspect ratio and grid for both subplots
     for ax in [ax1, ax2]:
