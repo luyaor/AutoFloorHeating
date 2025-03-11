@@ -661,12 +661,12 @@ def run_pipeline(is_debug: bool, num_x: int = 3, num_y: int = 3):
         print(f"\n📊 开始处理楼层: {floor_data['Name']}")
         print(f"✅ 检测到 {len(collectors)} 个集水器，继续处理...")
         
-        processed_data, polygons, room_info, polygon_info = visualization_data.process_ar_design(floor_data)
+        processed_data, polygons, room_info, polygon_info, fixtures_info = visualization_data.process_ar_design(floor_data)
         # print("\n✅ 原始图像绘制完成，按任意键继续...")
         # # 绘制原始数据
         # input()
         if is_debug:
-            visualization_data.plot_comparison(processed_data, polygons, collectors=collectors, room_info=room_info, polygon_info=polygon_info)
+            visualization_data.plot_comparison(processed_data, polygons, collectors=collectors, room_info=room_info, polygon_info=polygon_info, fixtures_info=fixtures_info)
         # continue
 
         print("\n📊 提取的多边形信息:")

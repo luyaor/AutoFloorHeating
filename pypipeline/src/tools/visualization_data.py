@@ -61,6 +61,16 @@ class Room:
     Position: str = ""
 
 @dataclass
+class Fixture:
+    """洁具类，如马桶、洗手台等"""
+    Type: str
+    Location: Point
+    Size: Size
+    Name: str = ""
+    FixtureNo: str = ""
+    FixtureDesc: str = ""
+
+@dataclass
 class Construction:
     Wall: List[JCW]
     Room: List[Room]
@@ -107,6 +117,13 @@ def get_points_from_room(room: Room) -> List[Tuple[float, float]]:
     points = []
     for line in room.Boundary:
         points.append((line.StartPoint.x, line.StartPoint.y))
+    return points
+
+def get_points_from_room_dict(room: dict) -> List[Tuple[float, float]]:
+    """Extract points from room boundary dictionary maintaining the original order"""
+    points = []
+    for line in room["Boundary"]:
+        points.append((line["StartPoint"]["x"], line["StartPoint"]["y"]))
     return points
 
 def get_points_from_jcw(jcw: JCW) -> List[Tuple[float, float]]:
@@ -224,6 +241,39 @@ def create_door_rectangle(door: Door) -> List[Tuple[float, float]]:
         return [p1, p2, p3, p4, p1]  # Return closed polygon
     return []
 
+def create_door_rectangle_dict(door: dict) -> List[Tuple[float, float]]:
+    """Create a rectangle for the door based on its location, size and direction (dict version)"""
+    if "BaseLine" in door:
+        # Get door direction from baseline
+        dx = door["BaseLine"]["EndPoint"]["x"] - door["BaseLine"]["StartPoint"]["x"]
+        dy = door["BaseLine"]["EndPoint"]["y"] - door["BaseLine"]["StartPoint"]["y"]
+        length = math.sqrt(dx*dx + dy*dy)
+        if length == 0:
+            return []
+        
+        # Normalize direction vector
+        dx, dy = dx/length, dy/length
+        
+        # Get perpendicular vector for door thickness
+        thickness = door["Size"]["Width"]
+        
+        # Keep original door length without extension
+        extension = 0  # No extension to maintain original door length
+        px, py = -dy, dx  # Perpendicular vector
+        
+        # Calculate four corners of the door rectangle with original length
+        p1 = (door["BaseLine"]["StartPoint"]["x"] - dx * extension - px * thickness/2, 
+              door["BaseLine"]["StartPoint"]["y"] - dy * extension - py * thickness/2)
+        p2 = (door["BaseLine"]["EndPoint"]["x"] + dx * extension - px * thickness/2, 
+              door["BaseLine"]["EndPoint"]["y"] + dy * extension - py * thickness/2)
+        p3 = (door["BaseLine"]["EndPoint"]["x"] + dx * extension + px * thickness/2, 
+              door["BaseLine"]["EndPoint"]["y"] + dy * extension + py * thickness/2)
+        p4 = (door["BaseLine"]["StartPoint"]["x"] - dx * extension + px * thickness/2, 
+              door["BaseLine"]["StartPoint"]["y"] - dy * extension + py * thickness/2)
+        
+        return [p1, p2, p3, p4, p1]  # Return closed polygon
+    return []
+
 def create_door_rectangle_with_options(door: Door, extension: float = 0) -> List[Tuple[float, float]]:
     """Create a rectangle for the door based on its location, size and direction with customizable extension"""
     if door.BaseLine:
@@ -319,10 +369,74 @@ def merge_room_with_doors(room_points: List[Tuple[float, float]],
     
     return unique_points
 
-def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, float]]]:
+def create_fixture_rectangle(fixture: Fixture) -> List[Tuple[float, float]]:
+    """创建洁具的矩形表示"""
+    # 从洁具数据中提取位置和尺寸信息
+    x = fixture.Location.x
+    y = fixture.Location.y
+    width = fixture.Size.Width
+    height = fixture.Size.Height
+    
+    # 创建矩形四个角的坐标
+    half_width = width / 2
+    half_height = height / 2
+    
+    return [
+        (x - half_width, y - half_height),
+        (x + half_width, y - half_height),
+        (x + half_width, y + half_height),
+        (x - half_width, y + half_height),
+        (x - half_width, y - half_height)  # 闭合多边形
+    ]
+
+def create_fixture_rectangle_dict(fixture_location, fixture_size) -> List[Tuple[float, float]]:
+    """创建洁具的矩形表示 (字典版本)"""
+    # 从洁具数据中提取位置和尺寸信息
+    x = fixture_location[0]
+    y = fixture_location[1]
+    width = fixture_size[0]
+    height = fixture_size[1]
+    
+    # 创建矩形四个角的坐标
+    half_width = width / 2
+    half_height = height / 2
+    
+    return [
+        (x - half_width, y - half_height),
+        (x + half_width, y - half_height),
+        (x + half_width, y + half_height),
+        (x - half_width, y + half_height),
+        (x - half_width, y - half_height)  # 闭合多边形
+    ]
+
+def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[float, float]]], Dict[str, List[Tuple[float, float]]], Dict[str, dict], Dict[str, dict], Dict[str, dict]]:
     """Process AR design data from a file path and return points in the format similar to test_data.py"""
     # # Load and convert JSON data to ARDesign
     # data = load_json_data(file_path)
+    
+    # 初始化结果字典和信息
+    result = {}
+    polygons = {}
+    room_info_map = {}  # 存储房间名称和位置信息
+    fixtures_info = {}  # 存储洁具信息
+    
+    # 调试信息：输出设计数据的顶级键
+    print("\n🔍 调试 - 设计数据顶级键:")
+    for key in design_floor_data.keys():
+        print(f"  - {key}")
+    
+    # 查找可能包含洁具信息的字段
+    if "Construction" in design_floor_data:
+        print("\n🔍 调试 - Construction字段的键:")
+        for key in design_floor_data["Construction"].keys():
+            print(f"  - {key}")
+
+        # 探索一些特殊的字段
+        special_fields = ["ToiletAndKitchenConditionHole", "ToiletHole", "Toilet"]
+        for field in special_fields:
+            if field in design_floor_data:
+                print(f"\n🔍 调试 - 发现特殊字段: {field}")
+                print(f"  内容: {design_floor_data[field]}")
     
     # Convert rooms
     rooms = []
@@ -358,28 +472,150 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
             )
             doors.append(door)
     
-    # Create construction
-    construction = Construction(
-        Wall=walls,
-        Room=rooms,
-        Door=doors
-    )
+    # 处理洁具数据
+    fixtures = []
+    fixture_data_list = design_floor_data["Construction"].get("Fixture", [])
     
-    # Create floor
-    floor = Floor(
-        Name=design_floor_data["Name"],
-        Num=design_floor_data["Num"],
-        LevelHeight=float(design_floor_data["LevelHeight"]),
-        Construction=construction
-    )
-    floors = []
-    floors.append(floor)
+    # 输出调试信息
+    print(f"\n🔍 调试 - 直接的Fixture字段存在: {bool(fixture_data_list)}")
     
-    ar_design = ARDesign(Floor=floors)
+    # 检查可能包含洁具信息的其他字段
+    possible_fixture_fields = [
+        "FurnitureAndAccessories", 
+        "SanitaryFixture", 
+        "Furniture", 
+        "Accessories",
+        "Equipment",
+        "SanitaryAppliance",    # 卫生器具
+        "Appliance",            # 器具
+        "Fitting",              # 装置
+        "Plumbing"              # 管道设备
+    ]
     
-    result = {}
-    polygons = {}
-    room_info_map = {}  # 存储房间名称和位置信息
+    print("\n🔍 调试 - 可能包含洁具信息的字段:")
+    for field in possible_fixture_fields:
+        has_field = field in design_floor_data["Construction"]
+        count = len(design_floor_data["Construction"].get(field, []))
+        print(f"  - {field}: {'存在' if has_field else '不存在'} (项目数: {count})")
+        
+        # 如果字段存在并且有数据，输出第一个项目的信息
+        if has_field and count > 0:
+            first_item = design_floor_data["Construction"][field][0]
+            print(f"    示例数据键: {list(first_item.keys())}")
+            if "Name" in first_item:
+                print(f"    名称: {first_item['Name']}")
+    
+    # 从各种可能的字段中查找洁具信息
+    for field in possible_fixture_fields:
+        if field in design_floor_data["Construction"]:
+            items = design_floor_data["Construction"][field]
+            
+            # 输出调试信息
+            if items:
+                print(f"\n🔍 调试 - 从 {field} 字段查找洁具 (共{len(items)}项)")
+                # 输出前几个项目的名称，以便了解数据结构
+                for i, item in enumerate(items[:min(5, len(items))]):
+                    name = item.get("Name", "未知")
+                    print(f"  - 项目 {i+1}: {name}")
+            
+            for item in items:
+                # 根据名称判断是否为洁具
+                name = item.get("Name", "")
+                fixture_keywords = ["马桶", "座便器", "洗手台", "洗脸盆", "浴缸", "淋浴", "洁具", "坐便器"]
+                is_fixture = any(keyword in name for keyword in fixture_keywords)
+                
+                if is_fixture:
+                    print(f"  ✅ 找到洁具: {name}")
+                    try:
+                        fixture = Fixture(
+                            Type="洁具",
+                            Location=convert_json_point(item["Location"]),
+                            Size=Size(
+                                Width=float(item["Size"]["Width"]),
+                                Height=float(item["Size"]["Height"]),
+                                Thickness=float(item.get("Size", {}).get("Thickness", 0.0))
+                            ),
+                            Name=name
+                        )
+                        fixtures.append(fixture)
+                    except Exception as e:
+                        print(f"  ❌ 处理洁具数据出错: {e}")
+    
+    # 特殊场景：检查卫生间房间，看是否可以在其中添加虚拟洁具
+    bathroom_rooms = []
+    
+    # 在设计数据中查找卫生间
+    for room in design_floor_data["Construction"]["Room"]:
+        if any(keyword in room["Name"] for keyword in ["卫生间", "厕所", "洗手间", "toilet", "bathroom"]):
+            bathroom_rooms.append(room)
+    
+    print(f"\n🔍 调试 - 找到 {len(bathroom_rooms)} 间卫生间")
+    
+    # 如果有卫生间但没找到洁具，我们可以在卫生间中放置虚拟洁具
+    if bathroom_rooms and not fixtures:
+        print("  在卫生间中放置虚拟洁具")
+        for i, bathroom in enumerate(bathroom_rooms):
+            # 计算卫生间中心点作为虚拟洁具位置
+            boundary_points = get_points_from_room_dict(bathroom)
+            
+            if boundary_points:
+                # 计算中心点
+                centroid = get_centroid(boundary_points)
+                x, y = centroid
+                
+                # 创建虚拟马桶（避免使用Point类）
+                # 直接创建字典
+                toilet_loc = {"x": x, "y": y, "z": 0.0}
+                toilet_size = {"Width": 600.0, "Height": 700.0, "Thickness": 0.0}
+                
+                # 创建洁具并添加到列表中
+                print(f"  ✅ 添加虚拟马桶在卫生间: {bathroom['Name']}, 位置: ({x}, {y})")
+                rect_points = [
+                    (x - 300, y - 350),  # 左下
+                    (x + 300, y - 350),  # 右下
+                    (x + 300, y + 350),  # 右上
+                    (x - 300, y + 350),  # 左上
+                    (x - 300, y - 350),  # 闭合
+                ]
+                
+                fixture_key = f"fixture_rect_{len(fixtures)}"
+                result[fixture_key] = rect_points
+                
+                # 存储洁具信息
+                fixtures_info[fixture_key] = {
+                    "name": f"虚拟马桶 {i+1} (在{bathroom['Name']})",
+                    "type": "虚拟洁具",
+                    "centroid": (x, y)
+                }
+                
+                # 添加虚拟洗手台（位置稍微偏移）
+                sink_x = x + 800
+                sink_y = y
+                print(f"  ✅ 添加虚拟洗手台在卫生间: {bathroom['Name']}, 位置: ({sink_x}, {sink_y})")
+                
+                sink_rect_points = [
+                    (sink_x - 300, sink_y - 225),  # 左下
+                    (sink_x + 300, sink_y - 225),  # 右下
+                    (sink_x + 300, sink_y + 225),  # 右上
+                    (sink_x - 300, sink_y + 225),  # 左上
+                    (sink_x - 300, sink_y - 225),  # 闭合
+                ]
+                
+                sink_fixture_key = f"fixture_rect_{len(fixtures) + 1}"
+                result[sink_fixture_key] = sink_rect_points
+                
+                # 存储洁具信息
+                fixtures_info[sink_fixture_key] = {
+                    "name": f"虚拟洗手台 {i+1} (在{bathroom['Name']})",
+                    "type": "虚拟洁具",
+                    "centroid": (sink_x, sink_y)
+                }
+                
+                # 增加fixtures列表的计数，以便下一个洁具编号正确
+                fixtures.extend([1, 1])  # 添加两个占位符
+    
+    # 输出找到的洁具数量
+    print(f"\n🔍 调试 - 总共找到 {len(fixtures)} 个洁具")
     
     # First, collect all rooms and doors
     room_polygons_by_name = {}
@@ -388,44 +624,44 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
     from shapely.geometry import LineString, Point, box
     
     # 1. 先处理所有房间和门
-    for floor in ar_design.Floor:
+    for floor in [design_floor_data]:  # 将ar_design.Floor改为包含design_floor_data的列表
         # 处理所有房间
-        for i, room in enumerate(floor.Construction.Room):
-            points = get_points_from_room(room)
+        for i, room in enumerate(floor["Construction"]["Room"]):
+            points = get_points_from_room_dict(room)
             # 确保点序列是闭合的，第一个点和最后一个点相同
             if points and points[0] != points[-1]:
                 points.append(points[0])
-            room_key = f"room_{floor.Num}_{i}"
+            room_key = f"room_{floor['Num']}_{i}"
             result[room_key] = points
             
             # 计算房间中心点位置，用于标注房间名称
             centroid = get_centroid(points[:-1] if points and points[0] == points[-1] else points)
             room_info_map[room_key] = {
-                'name': room.Name,
+                'name': room["Name"],
                 'centroid': centroid,
                 'is_independent': False
             }
             
             # 检查是否为独立房间
             for independent_type in INDEPENDENT_ROOM_TYPES:
-                if independent_type in room.Name:
+                if independent_type in room["Name"]:
                     room_info_map[room_key]['is_independent'] = True
                     break
             
             # 存储房间多边形，用于后续处理
             room_polygons_by_name[room_key] = {
                 'poly': Polygon(points),
-                'name': room.Name,
+                'name': room["Name"],
                 'original_points': points,
                 'centroid': centroid,
                 'is_independent': room_info_map[room_key]['is_independent']
             }
         
         # 处理所有门
-        for j, door in enumerate(floor.Construction.Door):
-            if door.BaseLine:
+        for j, door in enumerate(floor["Construction"]["Door"]):
+            if door["BaseLine"]:
                 # 创建门的矩形表示并添加更大的缓冲区确保连接
-                rect = create_door_rectangle(door)
+                rect = create_door_rectangle_dict(door)
                 if rect:
                     door_poly = Polygon(rect)
                     
@@ -633,7 +869,32 @@ def process_ar_design(design_floor_data: dict) -> Dict[str, List[Tuple[float, fl
                 'centroid': centroid
             }
     
-    return result, processed_polygons, room_info_map, polygon_info_map
+    # 添加所有找到的洁具的矩形到结果中
+    fixtures_list = []  # 创建一个新的列表来存储洁具信息，避免将整数放入fixtures
+    print(f"\n🔍 调试 - 总共找到 {len(fixtures)} 个洁具")
+    
+    for k, fixture in enumerate(fixtures):
+        # 检查是否是Fixture对象实例
+        if hasattr(fixture, 'Location') and hasattr(fixture, 'Size'):
+            # 创建洁具的矩形表示
+            rect = create_fixture_rectangle(fixture)
+            if rect:
+                result[f"fixture_rect_{k}"] = rect
+                fixtures_list.append({
+                    "name": fixture.Name,
+                    "type": fixture.Type,
+                    "location": (fixture.Location.x, fixture.Location.y),
+                    "rect": rect
+                })
+                # 存储洁具信息
+                fixtures_info[f"fixture_rect_{k}"] = {
+                    "name": fixture.Name,
+                    "type": fixture.Type,
+                    "centroid": (fixture.Location.x, fixture.Location.y)
+                }
+    
+    # 返回处理的数据、多边形信息、房间信息和多边形信息
+    return result, processed_polygons, room_info_map, polygon_info_map, fixtures_info
 
 def get_example_data() -> ARDesign:
     """Load and convert real JSON data to ARDesign"""
@@ -711,7 +972,8 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
                    polygons: Dict[str, List[Tuple[float, float]]], 
                    collectors: List[dict] = None,
                    room_info: Dict[str, dict] = None,
-                   polygon_info: Dict[str, dict] = None):
+                   polygon_info: Dict[str, dict] = None,
+                   fixtures_info: Dict[str, dict] = None):
     """Plot original points and processed polygons side by side"""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
     
@@ -739,6 +1001,22 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
             points_array = np.array(points)
             ax1.plot(points_array[:, 0], points_array[:, 1], 
                     'r-', alpha=0.7, linewidth=2)
+        # 绘制洁具
+        elif key.startswith("fixture_rect"):
+            points_array = np.array(points)
+            ax1.fill(points_array[:, 0], points_array[:, 1], 
+                    color='green', alpha=0.5)
+            ax1.plot(points_array[:, 0], points_array[:, 1], 
+                    'g-', alpha=0.7, linewidth=2)
+            
+            # 添加洁具名称标注
+            if fixtures_info and key in fixtures_info and 'centroid' in fixtures_info[key]:
+                centroid = fixtures_info[key]['centroid']
+                fixture_name = fixtures_info[key]['name']
+                if fixture_name:  # 只有当洁具名称存在时才添加标注
+                    ax1.text(centroid[0], centroid[1], fixture_name, 
+                            fontsize=8, ha='center', va='center', 
+                            bbox=dict(facecolor='lightgreen', alpha=0.7, boxstyle='round,pad=0.5'))
     
     # Plot collectors if provided
     if collectors:
@@ -804,6 +1082,26 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
                 ax2.fill(x_coords + [x_coords[0]], y_coords + [y_coords[0]], 
                         color='red', alpha=0.2)
     
+    # 在第二个子图中也绘制洁具
+    if fixtures_info:
+        for key in fixtures_info:
+            if key in original_data:
+                points = original_data[key]
+                points_array = np.array(points)
+                ax2.fill(points_array[:, 0], points_array[:, 1], 
+                        color='green', alpha=0.5)
+                ax2.plot(points_array[:, 0], points_array[:, 1], 
+                        'g-', alpha=0.7, linewidth=2)
+                
+                # 添加洁具名称标注
+                if 'centroid' in fixtures_info[key]:
+                    centroid = fixtures_info[key]['centroid']
+                    fixture_name = fixtures_info[key]['name']
+                    if fixture_name:
+                        ax2.text(centroid[0], centroid[1], fixture_name, 
+                                fontsize=8, ha='center', va='center', 
+                                bbox=dict(facecolor='lightgreen', alpha=0.7, boxstyle='round,pad=0.5'))
+    
     # Set equal aspect ratio and grid for both subplots
     for ax in [ax1, ax2]:
         ax.axis('equal')
@@ -822,7 +1120,7 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
 if __name__ == "__main__":
     # Process the real data from file
     json_path = os.path.join("data", "ARDesign.json")
-    processed_data, polygons, room_info, polygon_info = process_ar_design(json_path)
+    processed_data, polygons, room_info, polygon_info, fixtures_info = process_ar_design(json_path)
     
     # Print the merged polygons points
     print("\nMerged Polygons Points:")
