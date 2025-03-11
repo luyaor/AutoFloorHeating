@@ -409,6 +409,195 @@ def create_fixture_rectangle_dict(fixture_location, fixture_size) -> List[Tuple[
         (x - half_width, y - half_height)  # 闭合多边形
     ]
 
+def extend_fixture_to_nearest_wall(fixture: Fixture, walls: List[JCW]) -> List[Tuple[float, float]]:
+    """
+    选取洁具距离墙面最近的一个边延伸到墙面，扩大洁具的覆盖面积
+    
+    Args:
+        fixture: 洁具对象
+        walls: 墙面列表
+        
+    Returns:
+        List[Tuple[float, float]]: 扩展后的洁具矩形点列表
+    """
+    import math
+    
+    # 1. 获取洁具原始矩形
+    fixture_rect = create_fixture_rectangle(fixture)
+    if not fixture_rect or len(fixture_rect) < 5:  # 确保有足够的点
+        return fixture_rect
+    
+    # 2. 提取洁具的四条边
+    fixture_edges = [
+        (fixture_rect[0], fixture_rect[1]),  # 下边
+        (fixture_rect[1], fixture_rect[2]),  # 右边
+        (fixture_rect[2], fixture_rect[3]),  # 上边
+        (fixture_rect[3], fixture_rect[0])   # 左边
+    ]
+    
+    # 3. 遍历所有墙面，获取所有墙面线段
+    wall_lines = []
+    for wall in walls:
+        # 获取墙的两条边线
+        if wall.FirstLine and wall.SecondLine:
+            first_line = (
+                (wall.FirstLine.StartPoint.x, wall.FirstLine.StartPoint.y),
+                (wall.FirstLine.EndPoint.x, wall.FirstLine.EndPoint.y)
+            )
+            second_line = (
+                (wall.SecondLine.StartPoint.x, wall.SecondLine.StartPoint.y),
+                (wall.SecondLine.EndPoint.x, wall.SecondLine.EndPoint.y)
+            )
+            wall_lines.append(first_line)
+            wall_lines.append(second_line)
+    
+    if not wall_lines:
+        return fixture_rect  # 如果没有墙面，直接返回原始矩形
+    
+    # 4. 找到洁具的每条边到墙面的最小距离
+    min_distance = float('inf')
+    nearest_fixture_edge_index = -1
+    nearest_wall_line = None
+    nearest_proj_point = None
+    
+    # 洁具中心点
+    fixture_center = (fixture.Location.x, fixture.Location.y)
+    
+    for i, (edge_start, edge_end) in enumerate(fixture_edges):
+        # 计算洁具边的中点
+        edge_mid_x = (edge_start[0] + edge_end[0]) / 2
+        edge_mid_y = (edge_start[1] + edge_end[1]) / 2
+        edge_mid_point = (edge_mid_x, edge_mid_y)
+        
+        # 计算边的方向向量
+        edge_dx = edge_end[0] - edge_start[0]
+        edge_dy = edge_end[1] - edge_start[1]
+        edge_length = math.sqrt(edge_dx**2 + edge_dy**2)
+        
+        if edge_length < 1e-6:  # 避免除以零
+            continue
+        
+        # 边的单位方向向量
+        edge_unit_dx = edge_dx / edge_length
+        edge_unit_dy = edge_dy / edge_length
+        
+        # 计算洁具中心点到边的垂直方向向量（指向外部）
+        perp_dx = -edge_unit_dy  # 垂直向量
+        perp_dy = edge_unit_dx
+        
+        # 判断垂直向量是否指向洁具外部
+        center_to_mid_dx = edge_mid_x - fixture_center[0]
+        center_to_mid_dy = edge_mid_y - fixture_center[1]
+        
+        # 如果点积为负，需要反转垂直向量方向
+        if perp_dx * center_to_mid_dx + perp_dy * center_to_mid_dy < 0:
+            perp_dx = -perp_dx
+            perp_dy = -perp_dy
+        
+        # 对于每条墙面线段，计算最短距离
+        for wall_line in wall_lines:
+            wall_start, wall_end = wall_line
+            
+            # 使用点到线段的投影计算距离
+            def calculate_point_to_edge_projection(point, line_start, line_end):
+                x, y = point
+                x1, y1 = line_start
+                x2, y2 = line_end
+                
+                # 计算线段长度的平方
+                line_length_sq = (x2 - x1)**2 + (y2 - y1)**2
+                
+                # 如果线段长度为0，返回起点和点到起点的距离
+                if line_length_sq < 1e-6:
+                    return line_start, math.sqrt((x - x1)**2 + (y - y1)**2)
+                
+                # 计算投影比例 t
+                t = max(0, min(1, ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / line_length_sq))
+                
+                # 计算投影点坐标
+                proj_x = x1 + t * (x2 - x1)
+                proj_y = y1 + t * (y2 - y1)
+                
+                # 计算点到投影点的距离
+                distance = math.sqrt((x - proj_x)**2 + (y - proj_y)**2)
+                
+                return (proj_x, proj_y), distance
+            
+            proj_point, distance = calculate_point_to_edge_projection(edge_mid_point, wall_start, wall_end)
+            
+            # 检查投影的方向是否与洁具朝外的方向一致
+            proj_dx = proj_point[0] - edge_mid_point[0]
+            proj_dy = proj_point[1] - edge_mid_point[1]
+            
+            # 如果投影方向与垂直向量方向一致（点积为正）
+            direction_match = (proj_dx * perp_dx + proj_dy * perp_dy) > 0
+            
+            if direction_match and distance < min_distance:
+                min_distance = distance
+                nearest_fixture_edge_index = i
+                nearest_wall_line = wall_line
+                nearest_proj_point = proj_point
+    
+    # 5. 如果找到最近的墙面，延伸洁具边到墙面
+    if nearest_fixture_edge_index != -1 and nearest_wall_line and nearest_proj_point:
+        # 获取需要延伸的边
+        edge_start, edge_end = fixture_edges[nearest_fixture_edge_index]
+        
+        # 计算边的方向向量
+        edge_dx = edge_end[0] - edge_start[0]
+        edge_dy = edge_end[1] - edge_start[1]
+        
+        # 计算洁具中心点
+        center_x = (fixture_rect[0][0] + fixture_rect[2][0]) / 2
+        center_y = (fixture_rect[0][1] + fixture_rect[2][1]) / 2
+        
+        # 计算从边中点到投影点的向量
+        edge_mid_x = (edge_start[0] + edge_end[0]) / 2
+        edge_mid_y = (edge_start[1] + edge_end[1]) / 2
+        
+        to_wall_dx = nearest_proj_point[0] - edge_mid_x
+        to_wall_dy = nearest_proj_point[1] - edge_mid_y
+        
+        # 创建新的点，将边延伸到墙面
+        if nearest_fixture_edge_index == 0:  # 下边
+            extended_rect = [
+                (nearest_proj_point[0] - edge_dx/2, nearest_proj_point[1]),
+                (nearest_proj_point[0] + edge_dx/2, nearest_proj_point[1]),
+                fixture_rect[2],
+                fixture_rect[3],
+                (nearest_proj_point[0] - edge_dx/2, nearest_proj_point[1])
+            ]
+        elif nearest_fixture_edge_index == 1:  # 右边
+            extended_rect = [
+                fixture_rect[0],
+                (nearest_proj_point[0], nearest_proj_point[1] - edge_dy/2),
+                (nearest_proj_point[0], nearest_proj_point[1] + edge_dy/2),
+                fixture_rect[3],
+                fixture_rect[0]
+            ]
+        elif nearest_fixture_edge_index == 2:  # 上边
+            extended_rect = [
+                fixture_rect[0],
+                fixture_rect[1],
+                (nearest_proj_point[0] + edge_dx/2, nearest_proj_point[1]),
+                (nearest_proj_point[0] - edge_dx/2, nearest_proj_point[1]),
+                fixture_rect[0]
+            ]
+        else:  # 左边
+            extended_rect = [
+                fixture_rect[0],
+                fixture_rect[1],
+                fixture_rect[2],
+                (nearest_proj_point[0], nearest_proj_point[1] + edge_dy/2),
+                (nearest_proj_point[0], nearest_proj_point[1] - edge_dy/2),
+                fixture_rect[0]
+            ]
+        
+        return extended_rect
+    
+    # 如果找不到合适的墙面或边，返回原始矩形
+    return fixture_rect
+
 def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[float, float]]], Dict[str, List[Tuple[float, float]]], Dict[str, dict], Dict[str, dict], Dict[str, dict]]:
     """Process AR design data from a file path and return points in the format similar to test_data.py"""
     # # Load and convert JSON data to ARDesign
@@ -563,13 +752,10 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
                 centroid = get_centroid(boundary_points)
                 x, y = centroid
                 
-                # 创建虚拟马桶（避免使用Point类）
-                # 直接创建字典
-                toilet_loc = {"x": x, "y": y, "z": 0.0}
-                toilet_size = {"Width": 600.0, "Height": 700.0, "Thickness": 0.0}
-                
-                # 创建洁具并添加到列表中
+                # 创建虚拟马桶
                 print(f"  ✅ 添加虚拟马桶在卫生间: {bathroom['Name']}, 位置: ({x}, {y})")
+                
+                # 使用字典创建矩形点
                 rect_points = [
                     (x - 300, y - 350),  # 左下
                     (x + 300, y - 350),  # 右下
@@ -578,8 +764,280 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
                     (x - 300, y - 350),  # 闭合
                 ]
                 
+                # 获取墙体列表
+                walls = []
+                if "Construction" in design_floor_data and "Wall" in design_floor_data["Construction"]:
+                    for wall_data in design_floor_data["Construction"]["Wall"]:
+                        if all(key in wall_data for key in ["FirstLine", "SecondLine", "Height", "Thickness"]):
+                            try:
+                                wall = JCW(
+                                    WallName=wall_data.get("WallName", ""),
+                                    Category=wall_data.get("Category", ""),
+                                    Type=wall_data.get("Type", ""),
+                                    FirstLine=convert_json_line(wall_data["FirstLine"]),
+                                    SecondLine=convert_json_line(wall_data["SecondLine"]),
+                                    Height=float(wall_data.get("Height", 0)),
+                                    Thickness=float(wall_data.get("Thickness", 0))
+                                )
+                                walls.append(wall)
+                            except Exception as e:
+                                print(f"  ❌ 处理墙体数据出错: {e}")
+                
+                # 找到距离墙面最近的矩形边并延伸它
+                # 创建临时点函数来计算位置而非使用Point类
+                def extend_rectangle_to_nearest_wall(rect_points, walls, center_point):
+                    """简化版的洁具延伸，直接处理矩形点"""
+                    import math
+                    
+                    if not walls:
+                        return rect_points
+                    
+                    # 提取矩形的四条边
+                    rect_edges = [
+                        (rect_points[0], rect_points[1]),  # 下边
+                        (rect_points[1], rect_points[2]),  # 右边
+                        (rect_points[2], rect_points[3]),  # 上边
+                        (rect_points[3], rect_points[0])   # 左边
+                    ]
+                    
+                    # 获取所有墙面线段
+                    wall_lines = []
+                    for wall in walls:
+                        # 获取墙的两条边线
+                        if wall.FirstLine and wall.SecondLine:
+                            first_line = (
+                                (wall.FirstLine.StartPoint.x, wall.FirstLine.StartPoint.y),
+                                (wall.FirstLine.EndPoint.x, wall.FirstLine.EndPoint.y)
+                            )
+                            second_line = (
+                                (wall.SecondLine.StartPoint.x, wall.SecondLine.StartPoint.y),
+                                (wall.SecondLine.EndPoint.x, wall.SecondLine.EndPoint.y)
+                            )
+                            wall_lines.append(first_line)
+                            wall_lines.append(second_line)
+                    
+                    # 定义一个交接阈值，如果洁具与墙面距离小于此值，认为已经交接
+                    INTERSECTION_THRESHOLD = 5.0  # 单位通常是毫米
+                    
+                    cx, cy = center_point
+                    
+                    # 首先检查洁具是否已经与墙面交接，如果是则不需要延伸
+                    for i, (edge_start, edge_end) in enumerate(rect_edges):
+                        # 计算边的中点
+                        edge_mid_x = (edge_start[0] + edge_end[0]) / 2
+                        edge_mid_y = (edge_start[1] + edge_end[1]) / 2
+                        edge_mid_point = (edge_mid_x, edge_mid_y)
+                        
+                        # 计算边的方向向量
+                        edge_dx = edge_end[0] - edge_start[0]
+                        edge_dy = edge_end[1] - edge_start[1]
+                        edge_length = math.sqrt(edge_dx**2 + edge_dy**2)
+                        
+                        if edge_length < 1e-6:  # 避免除以零
+                            continue
+                        
+                        # 边的单位方向向量
+                        edge_unit_dx = edge_dx / edge_length
+                        edge_unit_dy = edge_dy / edge_length
+                        
+                        # 计算矩形中心点到边的垂直方向向量（指向外部）
+                        perp_dx = -edge_unit_dy  # 垂直向量
+                        perp_dy = edge_unit_dx
+                        
+                        # 判断垂直向量是否指向矩形外部
+                        center_to_mid_dx = edge_mid_x - cx
+                        center_to_mid_dy = edge_mid_y - cy
+                        
+                        # 如果点积为负，需要反转垂直向量方向
+                        if perp_dx * center_to_mid_dx + perp_dy * center_to_mid_dy < 0:
+                            perp_dx = -perp_dx
+                            perp_dy = -perp_dy
+                        
+                        # 对于每条墙面线段，检查是否已经交接
+                        for wall_line in wall_lines:
+                            wall_start, wall_end = wall_line
+                            
+                            # 使用点到线段的投影计算距离
+                            def calculate_point_to_edge_projection(point, line_start, line_end):
+                                x, y = point
+                                x1, y1 = line_start
+                                x2, y2 = line_end
+                                
+                                # 计算线段长度的平方
+                                line_length_sq = (x2 - x1)**2 + (y2 - y1)**2
+                                
+                                # 如果线段长度为0，返回起点和点到起点的距离
+                                if line_length_sq < 1e-6:
+                                    return line_start, math.sqrt((x - x1)**2 + (y - y1)**2)
+                                
+                                # 计算投影比例 t
+                                t = max(0, min(1, ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / line_length_sq))
+                                
+                                # 计算投影点坐标
+                                proj_x = x1 + t * (x2 - x1)
+                                proj_y = y1 + t * (y2 - y1)
+                                
+                                # 计算点到投影点的距离
+                                distance = math.sqrt((x - proj_x)**2 + (y - proj_y)**2)
+                                
+                                return (proj_x, proj_y), distance
+                            
+                            proj_point, distance = calculate_point_to_edge_projection(edge_mid_point, wall_start, wall_end)
+                            
+                            # 检查投影的方向是否与矩形朝外的方向一致
+                            proj_dx = proj_point[0] - edge_mid_point[0]
+                            proj_dy = proj_point[1] - edge_mid_point[1]
+                            direction_match = (proj_dx * perp_dx + proj_dy * perp_dy) > 0
+                            
+                            # 如果方向匹配且距离小于阈值，认为已经与墙面交接
+                            if direction_match and distance < INTERSECTION_THRESHOLD:
+                                print(f"  🔍 检测到洁具已与墙面交接，距离: {distance:.2f}，不需要延伸")
+                                return rect_points  # 已经交接，直接返回原始矩形
+                    
+                    # 4. 如果没有检测到交接，找到矩形的每条边到墙面的最小距离
+                    min_distance = float('inf')
+                    nearest_rect_edge_index = -1
+                    nearest_wall_line = None
+                    nearest_proj_point = None
+                    
+                    for i, (edge_start, edge_end) in enumerate(rect_edges):
+                        # 计算洁具边的中点
+                        edge_mid_x = (edge_start[0] + edge_end[0]) / 2
+                        edge_mid_y = (edge_start[1] + edge_end[1]) / 2
+                        edge_mid_point = (edge_mid_x, edge_mid_y)
+                        
+                        # 计算边的方向向量
+                        edge_dx = edge_end[0] - edge_start[0]
+                        edge_dy = edge_end[1] - edge_start[1]
+                        edge_length = math.sqrt(edge_dx**2 + edge_dy**2)
+                        
+                        if edge_length < 1e-6:  # 避免除以零
+                            continue
+                        
+                        # 边的单位方向向量
+                        edge_unit_dx = edge_dx / edge_length
+                        edge_unit_dy = edge_dy / edge_length
+                        
+                        # 计算矩形中心点到边的垂直方向向量（指向外部）
+                        perp_dx = -edge_unit_dy  # 垂直向量
+                        perp_dy = edge_unit_dx
+                        
+                        # 判断垂直向量是否指向矩形外部
+                        center_to_mid_dx = edge_mid_x - cx
+                        center_to_mid_dy = edge_mid_y - cy
+                        
+                        # 如果点积为负，需要反转垂直向量方向
+                        if perp_dx * center_to_mid_dx + perp_dy * center_to_mid_dy < 0:
+                            perp_dx = -perp_dx
+                            perp_dy = -perp_dy
+                        
+                        # 对于每条墙面线段，计算最短距离
+                        for wall_line in wall_lines:
+                            wall_start, wall_end = wall_line
+                            
+                            proj_point, distance = calculate_point_to_edge_projection(edge_mid_point, wall_start, wall_end)
+                            
+                            # 检查投影的方向是否与矩形朝外的方向一致
+                            proj_dx = proj_point[0] - edge_mid_point[0]
+                            proj_dy = proj_point[1] - edge_mid_point[1]
+                            
+                            # 如果投影方向与垂直向量方向一致（点积为正）
+                            direction_match = (proj_dx * perp_dx + proj_dy * perp_dy) > 0
+                            
+                            if direction_match and distance < min_distance:
+                                min_distance = distance
+                                nearest_rect_edge_index = i
+                                nearest_wall_line = wall_line
+                                nearest_proj_point = proj_point
+                    
+                    # 5. 如果找到最近的墙面，延伸矩形边到墙面
+                    if nearest_rect_edge_index != -1 and nearest_wall_line and nearest_proj_point:
+                        # 获取需要延伸的边
+                        edge_start, edge_end = rect_edges[nearest_rect_edge_index]
+                        
+                        # 计算边的方向向量
+                        edge_dx = edge_end[0] - edge_start[0]
+                        edge_dy = edge_end[1] - edge_start[1]
+                        
+                        # 计算矩形中心点
+                        center_x = (rect_points[0][0] + rect_points[2][0]) / 2
+                        center_y = (rect_points[0][1] + rect_points[2][1]) / 2
+                        
+                        # 计算从边中点到投影点的向量
+                        edge_mid_x = (edge_start[0] + edge_end[0]) / 2
+                        edge_mid_y = (edge_start[1] + edge_end[1]) / 2
+                        
+                        to_wall_dx = nearest_proj_point[0] - edge_mid_x
+                        to_wall_dy = nearest_proj_point[1] - edge_mid_y
+                        
+                        # 创建新的点，将边延伸到墙面
+                        if nearest_rect_edge_index == 0:  # 下边
+                            # 保持垂直关系，确保左右两点的x坐标与原矩形一致
+                            left_x = rect_points[0][0]
+                            right_x = rect_points[1][0]
+                            # 延伸的y坐标使用投影点的y坐标
+                            new_y = nearest_proj_point[1]
+                            
+                            extended_rect = [
+                                (left_x, new_y),   # 新的左下角
+                                (right_x, new_y),  # 新的右下角
+                                rect_points[2],     # 原来的右上角
+                                rect_points[3],     # 原来的左上角
+                                (left_x, new_y)     # 闭合回新的左下角
+                            ]
+                        elif nearest_rect_edge_index == 1:  # 右边
+                            # 保持垂直关系，确保上下两点的y坐标与原矩形一致
+                            bottom_y = rect_points[1][1]
+                            top_y = rect_points[2][1]
+                            # 延伸的x坐标使用投影点的x坐标
+                            new_x = nearest_proj_point[0]
+                            
+                            extended_rect = [
+                                rect_points[0],     # 原来的左下角
+                                (new_x, bottom_y),  # 新的右下角
+                                (new_x, top_y),     # 新的右上角
+                                rect_points[3],     # 原来的左上角
+                                rect_points[0]      # 闭合回原来的左下角
+                            ]
+                        elif nearest_rect_edge_index == 2:  # 上边
+                            # 保持垂直关系，确保左右两点的x坐标与原矩形一致
+                            left_x = rect_points[3][0]
+                            right_x = rect_points[2][0]
+                            # 延伸的y坐标使用投影点的y坐标
+                            new_y = nearest_proj_point[1]
+                            
+                            extended_rect = [
+                                rect_points[0],     # 原来的左下角
+                                rect_points[1],     # 原来的右下角
+                                (right_x, new_y),   # 新的右上角
+                                (left_x, new_y),    # 新的左上角
+                                rect_points[0]      # 闭合回原来的左下角
+                            ]
+                        else:  # 左边 (nearest_rect_edge_index == 3)
+                            # 保持垂直关系，确保上下两点的y坐标与原矩形一致
+                            bottom_y = rect_points[0][1]
+                            top_y = rect_points[3][1]
+                            # 延伸的x坐标使用投影点的x坐标
+                            new_x = nearest_proj_point[0]
+                            
+                            extended_rect = [
+                                (new_x, bottom_y),  # 新的左下角
+                                rect_points[1],     # 原来的右下角
+                                rect_points[2],     # 原来的右上角
+                                (new_x, top_y),     # 新的左上角
+                                (new_x, bottom_y)   # 闭合回新的左下角
+                            ]
+                        
+                        return extended_rect
+                    
+                    # 如果找不到合适的墙面或边，返回原始矩形
+                    return rect_points
+                
+                # 延伸虚拟马桶到最近的墙面
+                extended_rect_points = extend_rectangle_to_nearest_wall(rect_points, walls, (x, y))
+                
                 fixture_key = f"fixture_rect_{len(fixtures)}"
-                result[fixture_key] = rect_points
+                result[fixture_key] = extended_rect_points
                 
                 # 存储洁具信息
                 fixtures_info[fixture_key] = {
@@ -593,6 +1051,7 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
                 sink_y = y
                 print(f"  ✅ 添加虚拟洗手台在卫生间: {bathroom['Name']}, 位置: ({sink_x}, {sink_y})")
                 
+                # 创建虚拟洗手台的矩形点
                 sink_rect_points = [
                     (sink_x - 300, sink_y - 225),  # 左下
                     (sink_x + 300, sink_y - 225),  # 右下
@@ -601,8 +1060,11 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
                     (sink_x - 300, sink_y - 225),  # 闭合
                 ]
                 
+                # 延伸虚拟洗手台到最近的墙面
+                extended_sink_rect_points = extend_rectangle_to_nearest_wall(sink_rect_points, walls, (sink_x, sink_y))
+                
                 sink_fixture_key = f"fixture_rect_{len(fixtures) + 1}"
-                result[sink_fixture_key] = sink_rect_points
+                result[sink_fixture_key] = extended_sink_rect_points
                 
                 # 存储洁具信息
                 fixtures_info[sink_fixture_key] = {
@@ -876,22 +1338,62 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
     for k, fixture in enumerate(fixtures):
         # 检查是否是Fixture对象实例
         if hasattr(fixture, 'Location') and hasattr(fixture, 'Size'):
+            # 获取墙体列表，用于延伸洁具到墙面
+            walls = []
+            if "Construction" in design_floor_data and "Wall" in design_floor_data["Construction"]:
+                for wall_data in design_floor_data["Construction"]["Wall"]:
+                    if all(key in wall_data for key in ["FirstLine", "SecondLine", "Height", "Thickness"]):
+                        try:
+                            wall = JCW(
+                                WallName=wall_data.get("WallName", ""),
+                                Category=wall_data.get("Category", ""),
+                                Type=wall_data.get("Type", ""),
+                                FirstLine=convert_json_line(wall_data["FirstLine"]),
+                                SecondLine=convert_json_line(wall_data["SecondLine"]),
+                                Height=float(wall_data.get("Height", 0)),
+                                Thickness=float(wall_data.get("Thickness", 0))
+                            )
+                            walls.append(wall)
+                        except Exception as e:
+                            print(f"  ❌ 处理墙体数据出错: {e}")
+            
             # 创建洁具的矩形表示
-            rect = create_fixture_rectangle(fixture)
-            if rect:
-                result[f"fixture_rect_{k}"] = rect
-                fixtures_list.append({
-                    "name": fixture.Name,
-                    "type": fixture.Type,
-                    "location": (fixture.Location.x, fixture.Location.y),
-                    "rect": rect
-                })
-                # 存储洁具信息
-                fixtures_info[f"fixture_rect_{k}"] = {
-                    "name": fixture.Name,
-                    "type": fixture.Type,
-                    "centroid": (fixture.Location.x, fixture.Location.y)
-                }
+            x = fixture.Location.x
+            y = fixture.Location.y
+            width = fixture.Size.Width
+            height = fixture.Size.Height
+            
+            half_width = width / 2
+            half_height = height / 2
+            
+            rect_points = [
+                (x - half_width, y - half_height),
+                (x + half_width, y - half_height),
+                (x + half_width, y + half_height),
+                (x - half_width, y + half_height),
+                (x - half_width, y - half_height)  # 闭合多边形
+            ]
+            
+            # 延伸洁具到最近的墙面
+            if 'extend_rectangle_to_nearest_wall' in locals():
+                rect = extend_rectangle_to_nearest_wall(rect_points, walls, (x, y))
+            else:
+                # 如果函数未定义，直接使用原始矩形
+                rect = rect_points
+            
+            result[f"fixture_rect_{k}"] = rect
+            fixtures_list.append({
+                "name": fixture.Name,
+                "type": fixture.Type,
+                "location": (fixture.Location.x, fixture.Location.y),
+                "rect": rect
+            })
+            # 存储洁具信息
+            fixtures_info[f"fixture_rect_{k}"] = {
+                "name": fixture.Name,
+                "type": fixture.Type,
+                "centroid": (fixture.Location.x, fixture.Location.y)
+            }
     
     # 返回处理的数据、多边形信息、房间信息和多边形信息
     return result, processed_polygons, room_info_map, polygon_info_map, fixtures_info
