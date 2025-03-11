@@ -1009,14 +1009,14 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
             ax1.plot(points_array[:, 0], points_array[:, 1], 
                     'g-', alpha=0.7, linewidth=2)
             
-            # 添加洁具名称标注
-            if fixtures_info and key in fixtures_info and 'centroid' in fixtures_info[key]:
-                centroid = fixtures_info[key]['centroid']
-                fixture_name = fixtures_info[key]['name']
-                if fixture_name:  # 只有当洁具名称存在时才添加标注
-                    ax1.text(centroid[0], centroid[1], fixture_name, 
-                            fontsize=8, ha='center', va='center', 
-                            bbox=dict(facecolor='lightgreen', alpha=0.7, boxstyle='round,pad=0.5'))
+            # 注释掉添加洁具名称标注的代码
+            # if fixtures_info and key in fixtures_info and 'centroid' in fixtures_info[key]:
+            #     centroid = fixtures_info[key]['centroid']
+            #     fixture_name = fixtures_info[key]['name']
+            #     if fixture_name:  # 只有当洁具名称存在时才添加标注
+            #         ax1.text(centroid[0], centroid[1], fixture_name, 
+            #                 fontsize=8, ha='center', va='center', 
+            #                 bbox=dict(facecolor='lightgreen', alpha=0.7, boxstyle='round,pad=0.5'))
     
     # Plot collectors if provided
     if collectors:
@@ -1093,14 +1093,14 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
                 ax2.plot(points_array[:, 0], points_array[:, 1], 
                         'g-', alpha=0.7, linewidth=2)
                 
-                # 添加洁具名称标注
-                if 'centroid' in fixtures_info[key]:
-                    centroid = fixtures_info[key]['centroid']
-                    fixture_name = fixtures_info[key]['name']
-                    if fixture_name:
-                        ax2.text(centroid[0], centroid[1], fixture_name, 
-                                fontsize=8, ha='center', va='center', 
-                                bbox=dict(facecolor='lightgreen', alpha=0.7, boxstyle='round,pad=0.5'))
+                # 注释掉添加洁具名称标注的代码
+                # if 'centroid' in fixtures_info[key]:
+                #     centroid = fixtures_info[key]['centroid']
+                #     fixture_name = fixtures_info[key]['name']
+                #     if fixture_name:
+                #         ax2.text(centroid[0], centroid[1], fixture_name, 
+                #                 fontsize=8, ha='center', va='center', 
+                #                 bbox=dict(facecolor='lightgreen', alpha=0.7, boxstyle='round,pad=0.5'))
     
     # Set equal aspect ratio and grid for both subplots
     for ax in [ax1, ax2]:
