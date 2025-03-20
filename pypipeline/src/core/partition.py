@@ -53,19 +53,13 @@ def split_polygon_by_multiline(polygon, lines):
         pieces = new_pieces
     return pieces
 
-def plot_polygons(polygons, nat_lines=None, title="Polygons", global_points=None):
+def plot_polygons(polygons, title="Polygons", global_points=None):
     fig, ax = plt.subplots(figsize=(10, 10))
     for i, poly in enumerate(polygons):
         x, y = poly.exterior.xy
         label = f"Region {i+1}" if i < 12 else None
         ax.fill(x, y, alpha=0.5, label=label)
         ax.plot(x, y, color='black', linewidth=1)
-    # if nat_lines:
-    #     for line in nat_lines:
-    #         if line.is_empty:
-    #             continue
-    #         x, y = line.xy
-    #         ax.plot(x, y, color='red', linewidth=2, linestyle="--", label="Natural Segmentation")
     if global_points is not None:
         for idx, pt in enumerate(global_points):
             ax.plot(pt[0], pt[1], 'bo', markersize=3)
@@ -84,26 +78,6 @@ def compute_signed_area(points):
         x2, y2 = points[(i+1)%n]
         area += (x1 * y2 - x2 * y1)
     return area/2
-
-# def largest_inscribed_rect(poly):
-#     minx, miny, maxx, maxy = poly.bounds
-#     best_rect = None
-#     max_area = 0
-
-#     # 按行扫描，分割为小块
-#     for y1 in np.linspace(miny, maxy, num=20):
-#         for y2 in np.linspace(y1, maxy, num=20):
-#             for x1 in np.linspace(minx, maxx, num=20):
-#                 for x2 in np.linspace(x1, maxx, num=20):
-#                     rect = Polygon([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
-#                     # 检查矩形是否完全包含在多边形内
-#                     if poly.contains(rect):
-#                         area = rect.area
-#                         if area > max_area:
-#                             max_area = area
-#                             best_rect = rect
-
-#     return best_rect, max_area
 
 def largest_inscribed_rect(poly):
     minx, miny, maxx, maxy = poly.bounds
@@ -166,7 +140,7 @@ def largest_inscribed_rect(poly):
 
     return best_rect, max_area
 
-# 对多边形进行切割，分离出“多余部分”
+# 对多边形进行切割，分离出"多余部分"
 def cut_extra_parts(poly):
     # 获取一个内接的最大内接矩形作为核心区域
     core, core_area = largest_inscribed_rect(poly)
@@ -193,44 +167,97 @@ def cut_extra_parts(poly):
     
     return pieces
 
-def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
-    # -------------------- Step 1: 网格切分 --------------------
+def polygon_grid_partition_and_merge(polygon_coords, threshold, min_area_ratio=0.2):
+    """
+    先使用自然分割线划分多边形，再使用网格划分，并合并小区域
+    
+    Args:
+        polygon_coords: 多边形坐标列表
+        threshold: 区域面积阈值
+        min_area_ratio: 小区域占阈值的比例，用于判断是否为碎片区域
+        
+    Returns:
+        tuple: (最终多边形列表, 全局点列表, 区域信息)
+    """
+    # 将坐标四舍五入到两位小数，以避免浮点精度问题
+    polygon_coords = [(round(pt[0], 2), round(pt[1], 2)) for pt in polygon_coords]
+    
+    # 创建多边形对象
     polygon = Polygon(polygon_coords)
-    minx, miny, maxx, maxy = polygon.bounds
-    x_coords = np.linspace(minx, maxx, num_x + 1)
-    y_coords = np.linspace(miny, maxy, num_y + 1)
     
-    grid_lines = []
-    for x in x_coords:
-        grid_lines.append(LineString([(x, miny), (x, maxy)]))
-    for y in y_coords:
-        grid_lines.append(LineString([(minx, y), (maxx, y)]))
-    
+    # 步骤1: 使用自然分割线进行初步划分
     nat_lines = get_natural_segmentation_lines(polygon)
-    all_lines = grid_lines + nat_lines
-    sub_polygons = split_polygon_by_multiline(polygon, all_lines)
+    if nat_lines:
+        sub_polygons = split_polygon_by_multiline(polygon, nat_lines)
+    else:
+        sub_polygons = [polygon]
     
-    grid_area = (x_coords[1]-x_coords[0])*(y_coords[1]-y_coords[0])
-    merge_threshold = grid_area / 2
-    max_area = grid_area * 4 / 3
-
-    # -------------------- Step 2: 构建邻接图 --------------------
+    # 步骤2: 对面积仍然超过阈值的区域进行网格划分
+    grid_polygons = []
+    for poly in sub_polygons:
+        if poly.area > threshold:
+            # 计算网格划分参数
+            min_x, min_y, max_x, max_y = poly.bounds
+            num_divisions = max(1, int(poly.area / threshold) + 1)
+            
+            # 计算合适的网格划分数量
+            aspect_ratio = (max_x - min_x) / (max_y - min_y)
+            
+            if aspect_ratio > 1.5:
+                # 横向长，增加横向划分
+                num_x = math.ceil(math.sqrt(num_divisions * aspect_ratio))
+                num_y = max(1, math.ceil(num_divisions / num_x))
+            elif aspect_ratio < 0.67:
+                # 纵向长，增加纵向划分
+                num_y = math.ceil(math.sqrt(num_divisions / aspect_ratio))
+                num_x = max(1, math.ceil(num_divisions / num_y))
+            else:
+                # 近似正方形
+                num_x = math.ceil(math.sqrt(num_divisions))
+                num_y = math.ceil(math.sqrt(num_divisions))
+            
+            # 确保至少有一个划分
+            num_x = max(1, num_x)
+            num_y = max(1, num_y)
+            
+            # 生成网格线
+            x_coords = np.linspace(min_x, max_x, num_x + 1)
+            y_coords = np.linspace(min_y, max_y, num_y + 1)
+            
+            grid_lines = []
+            for x in x_coords[1:-1]:  # 排除边界线
+                grid_lines.append(LineString([(x, min_y-1), (x, max_y+1)]))
+            for y in y_coords[1:-1]:  # 排除边界线
+                grid_lines.append(LineString([(min_x-1, y), (max_x+1, y)]))
+            
+            # 使用网格线划分区域
+            grid_sub_polygons = split_polygon_by_multiline(poly, grid_lines)
+            grid_polygons.extend(grid_sub_polygons)
+        else:
+            grid_polygons.append(poly)
+    
+    # 步骤3: 合并小区域
+    # 构建邻接图
     G = nx.Graph()
-    # 为每个多边形分配一个唯一的 ID
-    for i, poly in enumerate(sub_polygons):
-        G.add_node(i, geometry=poly, area=poly.area, bounds=poly.bounds)
     
-    # 添加边时，使用 ID 而不是几何对象
-    for i in range(len(sub_polygons)):
-        for j in range(i + 1, len(sub_polygons)):
-            if sub_polygons[i].touches(sub_polygons[j]):
-                inter = sub_polygons[i].intersection(sub_polygons[j])
-                if inter.length > 1e-7:
+    # 添加所有区域作为节点
+    for i, poly in enumerate(grid_polygons):
+        G.add_node(i, geometry=poly, area=poly.area)
+    
+    # 添加邻接关系
+    for i in range(len(grid_polygons)):
+        for j in range(i+1, len(grid_polygons)):
+            if grid_polygons[i].touches(grid_polygons[j]):
+                # 检查是否真的相邻（共享边，而不仅仅是点）
+                intersection = grid_polygons[i].intersection(grid_polygons[j])
+                if intersection.geom_type == 'LineString' or \
+                   (intersection.geom_type == 'MultiLineString' and len(intersection.geoms) > 0):
                     G.add_edge(i, j)
-
+    
+    # 定义形状评分函数
     def polygon_bounding_rect_area(poly):
         bxmin, bymin, bxmax, bymax = poly.bounds
-        return (bxmax - bxmin) * (bymin - bymax)
+        return (bxmax - bxmin) * (bymax - bymin)
 
     def aspect_ratio(poly):
         bxmin, bymin, bxmax, bymax = poly.bounds
@@ -241,332 +268,523 @@ def polygon_grid_partition_and_merge(polygon_coords, num_x=3, num_y=4):
         return max(w / h, h / w)
 
     def shape_score(poly):
-        area = poly.area
-        if area > max_area:
-            return -999999
-        bound_area = polygon_bounding_rect_area(poly)
-        area_ratio = area / bound_area * 10
+        # 矩形度得分 = 面积 / 边界矩形面积（越接近1越好）
+        rect_ratio = poly.area / polygon_bounding_rect_area(poly)
+        # 长宽比得分，越接近1越好
         ar = aspect_ratio(poly)
-        penalty = (ar - 3) * 5 if ar > 3 else 0
-
-        edge_num = len(poly.exterior.coords)
-
-        score = area_ratio - penalty
-        score = score - edge_num / 3
-
-        return score
-
-
-    # -------------------- Step 3: 循环合并面积较小的分区 --------------------
+        ar_score = 1 / (1 + abs(ar - 1))
+        # 边数得分，边越少越好
+        edge_num = len(poly.exterior.coords) - 1
+        edge_score = 10 / (edge_num + 5)
+        
+        # 综合得分，权重可以调整
+        return rect_ratio * 5 + ar_score * 3 + edge_score * 2
+    
+    # 合并小区域
     merge_count = 0
+    min_area = threshold * min_area_ratio
+    
     while True:
-        # nodes_sorted = sorted(G.nodes, key=lambda n: G.nodes[n]['area'])
-        nodes_list = list(G.nodes)
-        random.shuffle(nodes_list)
+        # 按面积排序，优先处理小区域
+        nodes_by_area = sorted(G.nodes, key=lambda n: G.nodes[n]['area'])
         merged_flag = False
-        for node_id in nodes_list:
+        
+        for node_id in nodes_by_area:
             if node_id not in G:
                 continue
-            area = G.nodes[node_id]['area']
-            if area < merge_threshold:
+                
+            node_area = G.nodes[node_id]['area']
+            if node_area < min_area:  # 只合并被认为是碎片的小区域
                 neighbors = list(G.neighbors(node_id))
                 if not neighbors:
                     continue
-                best_score = -999999
-                best_neighbor_id = None
+                    
+                best_score = -float('inf')
+                best_neighbor = None
                 best_merged_poly = None
                 current_poly = G.nodes[node_id]['geometry']
+                
                 for nb in neighbors:
                     nb_poly = G.nodes[nb]['geometry']
                     merged_poly = current_poly.union(nb_poly)
-                    if merged_poly.area > max_area:
+                    
+                    # 检查合并后的面积是否超过阈值
+                    if merged_poly.area > threshold:
                         continue
+                        
                     sc = shape_score(merged_poly)
                     if sc > best_score:
                         best_score = sc
-                        best_neighbor_id = nb
+                        best_neighbor = nb
                         best_merged_poly = merged_poly
-                if best_neighbor_id is not None and best_merged_poly is not None:
+                
+                if best_neighbor is not None and best_merged_poly is not None:
+                    # 创建新节点
                     new_node_id = max(G.nodes) + 1
-                    G.add_node( new_node_id, geometry=best_merged_poly,
-                                area=best_merged_poly.area,
-                                bounds=best_merged_poly.bounds)
-                    all_adj = set(G.neighbors(node_id)) | set(G.neighbors(best_neighbor_id))
-                    all_adj.discard(node_id)
-                    all_adj.discard(best_neighbor_id)
-                    for adj_id in all_adj:
-                        try:
-                            if best_merged_poly.touches(G.nodes[adj_id]['geometry']):
-                                inter = best_merged_poly.intersection(G.nodes[adj_id]['geometry'])
-                                if inter.length > 1e-7:
-                                    G.add_edge(new_node_id, adj_id)
-                        except Exception as e:
-                            continue
+                    G.add_node(new_node_id, geometry=best_merged_poly, area=best_merged_poly.area)
+                    
+                    # 更新邻接关系
+                    all_neighbors = set(G.neighbors(node_id)) | set(G.neighbors(best_neighbor))
+                    all_neighbors.discard(node_id)
+                    all_neighbors.discard(best_neighbor)
+                    
+                    for neighbor in all_neighbors:
+                        nb_poly = G.nodes[neighbor]['geometry']
+                        if best_merged_poly.touches(nb_poly):
+                            intersection = best_merged_poly.intersection(nb_poly)
+                            if (intersection.geom_type == 'LineString' or 
+                               (intersection.geom_type == 'MultiLineString' and len(intersection.geoms) > 0)):
+                                G.add_edge(new_node_id, neighbor)
+                    
+                    # 移除旧节点
                     G.remove_node(node_id)
-                    G.remove_node(best_neighbor_id)
-                    merge_count += 1
+                    G.remove_node(best_neighbor)
+                    
                     merged_flag = True
+                    merge_count += 1
                     break
+        
         if not merged_flag:
             break
-
+    
+    # 收集最终多边形
     final_polygons = [data['geometry'] for _, data in G.nodes(data=True)]
-
-    # -------------------- 对每个区域进行“内接矩形切割” --------------------
-    refined_polygons = []
-    for poly in final_polygons:
-        # 对每个区域计算最大内接矩形，并将多余部分（核心之外）切割出来
-        pieces = cut_extra_parts(poly)
-        refined_polygons.extend(pieces)
-    final_polygons = refined_polygons
-    # -------------------------------------------------------------------------
-
-    # -------------------- Step 4: 构造全局点列表和区域信息 --------------------
-    # 1. 收集所有多边形的外部边界点
+    
+    # 收集所有点并建立索引
     all_points = []
     for poly in final_polygons:
-        pts = list(poly.exterior.coords)[:-1]
-        # 判断顶点顺序，若是逆时针则反转为顺时针
-        if compute_signed_area(pts) > 0:
-            pts = list(reversed(pts))
-
+        pts = list(poly.exterior.coords)[:-1]  # 排除重复的最后一个点
         all_points.extend(pts)
     
-    # 2. 创建一个字典来存储唯一的点，并为每个点分配一个唯一的索引
-    unique_points = {}
-    global_points = []
-    index = 0
+    # 创建唯一点列表
+    unique_points = []
+    point_to_idx = {}
     for pt in all_points:
-        # 四舍五入坐标以处理浮点精度问题
-        # rounded_pt = (round(pt[0], 3), round(pt[1], 3))
-        rounded_pt = pt
-        if rounded_pt not in unique_points:
-            unique_points[rounded_pt] = index
-            global_points.append(rounded_pt)
-            index += 1
-
-    # 3. 为每个区域创建其边界点的索引列表
+        rounded_pt = (round(pt[0], 4), round(pt[1], 4))  # 四舍五入减少浮点误差
+        if rounded_pt not in point_to_idx:
+            point_to_idx[rounded_pt] = len(unique_points)
+            unique_points.append(pt)
+    
+    # 为每个区域创建点索引列表
     region_info = []
     for poly in final_polygons:
         pts = list(poly.exterior.coords)[:-1]
-        # 判断顶点顺序，若是逆时针则反转为顺时针
+        # 判断顺序，逆时针转为顺时针
         if compute_signed_area(pts) > 0:
             pts = list(reversed(pts))
-        
-        region_idx = []
+            
+        region_indices = []
         for pt in pts:
-            # rounded_pt = (round(pt[0], 3), round(pt[1], 3))
-            rounded_pt = pt
-            idx = unique_points.get(rounded_pt)
+            rounded_pt = (round(pt[0], 4), round(pt[1], 4))
+            idx = point_to_idx.get(rounded_pt)
             if idx is not None:
-                region_idx.append(idx)
-            else:
-                # 这应该不会发生，因为所有点都已经在 unique_points 中
-                print(f"警告：点 {pt} 未在 unique_points 中找到。")
-        region_info.append(region_idx)
+                region_indices.append(idx)
+        
+        if len(region_indices) >= 3:  # 确保至少有3个点
+            region_info.append(region_indices)
     
-    total_score = 0
-    for poly in final_polygons:
-        total_score += shape_score(poly)  # 累加得分
+    return final_polygons, unique_points, region_info
 
-    return final_polygons, nat_lines, global_points, region_info, total_score
+def plot_collector_regions(polygons, unique_points, collector_regions, collector_points_indices, title="Collector Regions"):
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    # 定义颜色列表，不包括黑色（留给集水器标记）
+    colors = ['#FF9999', '#66B2FF', '#99FF99', '#FFCC99', '#FF99CC', '#99FFCC', '#FFB366', '#B366FF']
+    
+    # 获取区域颜色映射（如果存在）
+    region_colors = {}
+    for collector_idx, data in collector_regions.items():
+        if isinstance(data, dict) and 'regions' in data and 'colors' in data:
+            for region, color in zip(data['regions'], data['colors']):
+                region_colors[region] = color
+    
+    # 为每个集水器的区域分配颜色
+    for collector_idx, regions in collector_regions.items():
+        # 根据数据类型获取区域列表
+        region_list = regions
+        if isinstance(regions, dict) and 'regions' in regions:
+            region_list = regions['regions']
+        
+        # 为该集水器的每个区域绘制
+        for i, region_idx in enumerate(region_list):
+            if region_idx < len(polygons):
+                # 如果已有颜色映射，使用映射的颜色
+                if region_idx in region_colors:
+                    color_idx = region_colors[region_idx]
+                    # 如果是0号颜色（包含集水器的区域），使用特殊颜色
+                    if color_idx == 0:
+                        color = '#FFD700'  # 金色
+                    else:
+                        color = colors[(color_idx - 1) % len(colors)]
+                else:
+                    # 否则为每个区域使用不同颜色
+                    color = colors[i % len(colors)]
+                
+                poly = polygons[region_idx]
+                x, y = poly.exterior.xy
+                ax.fill(x, y, alpha=0.5, color=color)
+                ax.plot(x, y, color='black', linewidth=1)
+    
+    if unique_points is not None:
+        for idx, pt in enumerate(unique_points):
+            ax.plot(pt[0], pt[1], 'bo', markersize=3)
+            ax.text(pt[0], pt[1], str(idx), fontsize=5, color='blue',
+                    verticalalignment='bottom', horizontalalignment='right')
 
-def bounding_box_aspect_ratio(polygon):
-    minx, miny, maxx, maxy = polygon.bounds
-    width = maxx - minx
-    height = maxy - miny
-    return max(width / height, height / width)
+    # 绘制集水器位置
+    for i, collector_idx in enumerate(collector_points_indices):
+        collector_point = unique_points[collector_idx]
+        ax.plot(collector_point[0], collector_point[1], 'ko', markersize=10)
+        ax.text(collector_point[0], collector_point[1], f'C{i+1}', 
+                fontsize=10, color='white', 
+                horizontalalignment='center', 
+                verticalalignment='center')
+    
+    ax.set_title(title)
+    ax.set_aspect('equal', 'box')
+    
+    legend_elements = []
+    for i, color in enumerate(colors):
+        legend_elements.append(plt.Line2D([0], [0], marker='o', color='w', 
+                                        markerfacecolor=color,
+                                        markersize=10, label=f'Region {i+1}'))
+    
+    ax.legend(handles=legend_elements, loc='upper right')
+    # ax.grid(True, linestyle='--', alpha=0.7)
+    plt.show()
 
-def get_closest_ratios(target_aspect_ratio, possible_ratios):
-    # 计算每种比例的长宽比，并与目标长宽比进行比较
-    distances = []
-    for (num_x, num_y) in possible_ratios:
-        aspect_ratio = num_x / num_y
-        distance = abs(aspect_ratio - target_aspect_ratio)
-        distances.append((distance, num_x, num_y))
-    # 按照距离排序，选取最接近的 5 个
-    distances.sort()
-    return [(num_x, num_y) for _, num_x, num_y in distances[:5]]
+def color_collector_regions(collector_regions, G, collector_points_indices, unique_points):
+    """
+    为集水器的区域进行染色，为每个集水器的不同区域分配不同颜色，
+    包含集水器的区域使用0号颜色
+    
+    Args:
+        collector_regions: 集水器区域映射字典
+        G: 区域邻接图
+        collector_points_indices: 集水器点索引列表
+        unique_points: 全局点列表
+        
+    Returns:
+        dict: 区域颜色映射字典
+    """
+    # 初始化颜色映射
+    region_colors = {}
+    
+    # 创建集水器点对象
+    collector_points = [Point(unique_points[idx]) for idx in collector_points_indices]
+    
+    # 为每个集水器的区域分配颜色
+    for collector_id, regions in collector_regions.items():
+        if not regions:
+            continue
+            
+        # 将颜色分配给该集水器的区域，颜色从1开始
+        for i, region in enumerate(regions):
+            region_colors[region] = i + 1
 
-def partition_work(polygon_coords, num_x = 1, num_y = 2, collector = [0, 0], is_debug = False):
+            # 检查该区域是否包含集水器
+            region_poly = G.nodes[region]['geometry']
+            collector_point = collector_points[collector_id]
+            
+            if region_poly.contains(collector_point):
+                # 如果包含集水器，使用0号颜色
+                region_colors[region] = 0
+    
+    return region_colors
+
+def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=None, is_debug=False):
+    """
+    按房间划分区域并分配给集水器，使用得分函数优化分配结果
+    
+    Args:
+        polygon_coords: 多边形坐标列表
+        room_infos: 房间信息字典，包含每个房间的点坐标和其他信息
+        threshold: 房间面积阈值，超过此值的房间将被划分
+        collectors: 集水器位置列表，每个元素为(x,y)坐标
+        is_debug: 是否开启调试模式
+        
+    Returns:
+        tuple: (最终多边形列表, 全局点列表, 区域信息, 墙路径, 集水器点索引, 集水器区域映射)
+    """
+    # 将坐标四舍五入到两位小数，以避免浮点精度问题
     polygon_coords = [(round(pt[0], 2), round(pt[1], 2)) for pt in polygon_coords]
 
-    polygon = Polygon(polygon_coords)
-    target_aspect_ratio = bounding_box_aspect_ratio(polygon)
-
-    # 所有可能的比例
-    possible_ratios = [(x, y) for x in [2, 3, 4, 5, 6] for y in [2, 3, 4, 5, 6]]
+    # 如果没有提供集水器位置，则使用多边形中心点
+    if collectors is None or len(collectors) == 0:
+        polygon = Polygon(polygon_coords)
+        centroid = polygon.centroid
+        collectors = [(centroid.x, centroid.y)]
     
-    # 获取最接近的5个比例
-    closest_ratios = get_closest_ratios(target_aspect_ratio, possible_ratios)
-
-    shuffle_times = 3
-
-    best_polygon = None  # 用来保存得分最高的多边形
-    best_wall_path = None  # 用来保存得分最高的墙体路径
-    best_region_info = None  # 用来保存最佳区域信息
-    best_global_points = None  # 用来保存最佳全局点列表
-    best_score = -float('inf')  # 初始化得分为负无穷
-    best_destination_point = None
-
-    closest_ratios = [(3, 3)]
-    # 对于每个比例，运行算法
-    for num_x, num_y in closest_ratios:
-        print(f"Running for {num_x}x{num_y}")
-        for _ in range(shuffle_times):
-            final_polygons, nat_lines, global_points, region_info, score = polygon_grid_partition_and_merge(polygon_coords, num_x=num_x, num_y=num_y)
-
-            def dis(x,y):
-                return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
-            # --- 新增：清理 region_info 中的冗余共线点 ---
-            def is_collinear(p_prev, p_cur, p_next, epsilon=1e-3):
-                return (abs((p_cur[0]-p_prev[0])*(p_next[1]-p_prev[1]) - (p_next[0]-p_prev[0])*(p_cur[1]-p_prev[1])) < epsilon) or (dis(p_cur, p_prev) < 1)
-
-            # 把全局点在区域边界上的点加入到区域中
-            new_region_info = []
-            for reg in region_info:
-                i = 0
-                while i < len(reg):
-                    pi = global_points[reg[i]]
-                    pi1 = global_points[reg[(i + 1) % len(reg)]]
-                    for p in global_points:
-                        if (dis(pi, p) > 1e-3) and (dis(p, pi1) > 1e-3) and \
-                        (abs(dis(pi, p) + dis(p, pi1) - dis(pi, pi1)) < 1e-3):
-                            reg = reg[:i + 1] + [global_points.index(p)] + reg[i + 1:]
-                    i += 1
-                new_region_info.append(reg)
-            region_info = new_region_info
+    # 创建Shapely点对象用于距离计算
+    collector_points = [Point(x, y) for x, y in collectors]
+    
+    # 初始化结果变量
+    all_polygons = []  # 所有区域的多边形
+    all_regions = []   # 所有区域的点索引
+    # all_colors = []    # 所有区域的颜色
+    
+    # 处理每个房间
+    for room_name, room_info in room_infos.items():
+        room_points = room_info['points']
+        room_poly = Polygon(room_points)
+        room_area = room_poly.area
+        
+        if room_area <= threshold:
+            # 小房间不划分，直接添加
+            all_polygons.append(room_poly)
+            region_indices = list(range(len(all_regions), len(all_regions) + len(room_points)))
+            all_regions.append(region_indices)
+            # all_colors.append(1)
+        else:
+            # 大房间需要划分
+            sub_polygons, unique_points, region_info = polygon_grid_partition_and_merge(
+                room_points, threshold, min_area_ratio=0.2
+            )
             
-            freq = {}
-            for reg in region_info:
-                for idx in reg:
-                    freq[idx] = freq.get(idx, 0) + 1
-
-            cleaned_region_info = []
-            for reg in region_info:
-                if len(reg) < 3:
-                    cleaned_region_info.append(reg)
-                    continue
-                cleaned = []
-                n = len(reg)
-                for i in range(n):
-                    prev_idx = reg[i-1]
-                    cur_idx = reg[i]
-                    next_idx = reg[(i+1) % n]
-                    p_prev = global_points[prev_idx]
-                    p_cur = global_points[cur_idx]
-                    p_next = global_points[next_idx]
-                    # 若当前点与前后点共线且只属于本区域，则去除
-                    if is_collinear(p_prev, p_cur, p_next) and freq[cur_idx] == 1:
-                        continue
-                    cleaned.append(cur_idx)
-                if len(cleaned) < 3:
-                    cleaned = reg  # 保证至少有3个点
-                cleaned_region_info.append(cleaned)
-            region_info = cleaned_region_info
-            # --- 清理结束 ---
-
-            # --- 新增：同步更新 global_points ---
-            used_indices = set()
-            for reg in region_info:
-                used_indices.update(reg)
-            new_mapping = {}
-            new_global_points = []
-            for old_idx, pt in enumerate(global_points):
-                if old_idx in used_indices:
-                    new_mapping[old_idx] = len(new_global_points)
-                    new_global_points.append(pt)
-            # 更新 region_info 中的索引
-            region_info = [[ new_mapping[idx] for idx in reg ] for reg in region_info]
-            global_points = new_global_points
-            # --- 同步更新结束 ---
-
-            allp = [x for x in polygon_coords]
-            cleaned_allp = []
-            n = len(allp)
-            for i in range(n):
-                p_prev = allp[i-1]
-                p_cur = allp[i]
-                p_next = allp[(i+1) % n]
-                # 若当前点与前后点共线，则去除
-                if is_collinear(p_prev, p_cur, p_next):
-                    continue
-                cleaned_allp.append(p_cur)
-            allp = cleaned_allp
-            global_points.append((round(collector[0], 2), round(collector[1], 2)))
-            for p in global_points:
-                l = len(allp)
-                for i in range(l):
-                    if (dis(allp[i], p) > 1e-3) and (dis(p, allp[(i + 1) % l]) > 1e-3) and \
-                    (abs(dis(allp[i], p) + dis(p, allp[(i + 1) % l]) - dis(allp[i], allp[(i + 1) % l])) < 1e-3):
-                        allp = allp[:i + 1] + [p] + allp[i + 1:]
-                        break
-            allp = allp[::-1]
-            num_of_nodes = len(allp)
-
-            ind = []
-            for p in global_points:
-                if p not in allp:
-                    allp.append(p)
-                ind.append(allp.index(p))
-
-            new_region_info = []
-            cnt = -1
-            # threshold_area = 200
-            threshold_area = 0
+            # 添加划分后的子区域
+            for sub_poly in sub_polygons:
+                all_polygons.append(sub_poly)
+                sub_points = list(sub_poly.exterior.coords)[:-1]
+                region_indices = list(range(len(all_regions), len(all_regions) + len(sub_points)))
+                all_regions.append(region_indices)
+                # all_colors.append(1)
+    
+    # 构建区域邻接图
+    G = nx.Graph()
+    
+    # 添加所有区域作为节点
+    for i, poly in enumerate(all_polygons):
+        G.add_node(i, geometry=poly, area=poly.area)
+    
+    # 添加邻接关系
+    for i in range(len(all_polygons)):
+        for j in range(i+1, len(all_polygons)):
+            if all_polygons[i].touches(all_polygons[j]):
+                intersection = all_polygons[i].intersection(all_polygons[j])
+                if intersection.geom_type == 'LineString' or \
+                   (intersection.geom_type == 'MultiLineString' and len(intersection.geoms) > 0):
+                    G.add_edge(i, j)
+    
+    # 定义距离计算函数
+    def distance_to_collector(poly, collector_point):
+        centroid = poly.centroid
+        return ((centroid.x - collector_point.x)**2 + (centroid.y - collector_point.y)**2)**0.5
+    
+    # 定义分配质量评分函数
+    def evaluate_assignment(collector_regions, collector_areas):
+        if not collector_regions:
+            return float('-inf')
             
-            is_collector = False
-            p = (round(collector[0], 2), round(collector[1], 2))
-            pid = global_points.index(p)
-            for r in region_info:
-                is_collector = False
-                l = len(r)
-                for i in range(l):
-                    pi = global_points[r[i]]
-                    pi1 = global_points[r[(i + 1) % l]]
-                    if (dis(pi, p) > 1e-3) and (dis(p, pi1) > 1e-3) and \
-                    (abs(dis(pi, p) + dis(p, pi1) - dis(pi, pi1)) < 1e-3):
-                        r = r[:i + 1] + [pid] + r[i + 1:]
-                        is_collector = True
-                        break
-
-                r = [ind[x] for x in r]
-                cnt = cnt + 1
+        # 计算总面积和理想面积
+        total_area = sum(collector_areas.values())
+        ideal_area = total_area / len(collectors)
+        
+        # 1. 面积平衡性得分 (0-1)
+        area_imbalance = sum(abs(area - ideal_area) for area in collector_areas.values()) / total_area
+        balance_score = 1 - area_imbalance
+        
+        # 2. 连通性得分 (0-1)
+        connectivity_score = 1.0
+        for collector_id, regions in collector_regions.items():
+            if not regions:
+                connectivity_score = 0
+                break
+            # 检查该集水器的区域是否连通
+            subG = G.subgraph(regions)
+            if nx.number_connected_components(subG) > 1:
+                connectivity_score = 0
+                break
+        
+        # 3. 距离得分 (0-1)
+        distance_score = 0
+        total_distance = 0
+        for collector_id, regions in collector_regions.items():
+            collector_point = collector_points[collector_id]
+            for region_id in regions:
+                poly = all_polygons[region_id]
+                total_distance += distance_to_collector(poly, collector_point)
+        # 归一化距离得分
+        max_possible_distance = total_area * 2  # 一个估计值
+        distance_score = 1 - (total_distance / max_possible_distance)
+        
+        # 综合得分 (权重可调)
+        weights = {
+            'balance': 0.4,
+            'connectivity': 0.4,
+            'distance': 0.2
+        }
+        
+        return (balance_score * weights['balance'] +
+                connectivity_score * weights['connectivity'] +
+                distance_score * weights['distance'])
+    
+    # 使用模拟退火算法优化分配
+    def simulated_annealing(initial_assignment, initial_areas, temperature=1.0, cooling_rate=0.95, iterations=1000):
+        current_assignment = initial_assignment.copy()
+        current_areas = initial_areas.copy()
+        best_assignment = current_assignment.copy()
+        best_score = evaluate_assignment(current_assignment, current_areas)
+        
+        for _ in range(iterations):
+            # 随机选择一个区域和两个集水器
+            region_id = random.randint(0, len(all_polygons) - 1)
+            collector1 = random.randint(0, len(collectors) - 1)
+            collector2 = random.randint(0, len(collectors) - 1)
+            
+            if collector1 == collector2:
+                continue
                 
-                # 获取区域的面积
-                poly = final_polygons[cnt]  # 根据cnt索引找到对应的区域
-                area = poly.area
-                if area < 1e-5:
-                    continue
-                
-                # 如果区域面积小于阈值，将颜色值设为-1，否则使用cnt
-                color_value = -1 if area < threshold_area else cnt+1
-                if is_collector:
-                    color_value = 0
-                    is_collector = False
-                new_region_info.append((r[::-1], color_value))  # 用color_value代替cnt
-
-
-            # 更新得分最高的多边形
-            if score > best_score:
-                best_score = score
-                best_global_points = allp
-                best_polygon = final_polygons
-                best_wall_path = [i for i in range(num_of_nodes)]
-                best_region_info = new_region_info
-                best_destination_point = allp.index((round(collector[0], 2), round(collector[1], 2)))
+            # 找到当前区域所属的集水器
+            current_collector = None
+            for c, regions in current_assignment.items():
+                if region_id in regions:
+                    current_collector = c
+                    break
             
-            # plot_polygons(final_polygons, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=allp)
+            if current_collector is None:
+                continue
+            
+            # 尝试移动区域
+            region_area = all_polygons[region_id].area
+            new_assignment = current_assignment.copy()
+            new_areas = current_areas.copy()
+            
+            # 从当前集水器移除区域
+            new_assignment[current_collector].remove(region_id)
+            new_areas[current_collector] -= region_area
+            
+            # 添加到新集水器
+            new_assignment[collector2].append(region_id)
+            new_areas[collector2] += region_area
+            
+            # 计算新得分
+            new_score = evaluate_assignment(new_assignment, new_areas)
+            
+            # 决定是否接受新解
+            if new_score > best_score or random.random() < math.exp((new_score - best_score) / temperature):
+                current_assignment = new_assignment
+                current_areas = new_areas
+                if new_score > best_score:
+                    best_assignment = new_assignment.copy()
+                    best_score = new_score
+            
+            temperature *= cooling_rate
+        
+        return best_assignment, new_areas
+    
+    # 初始分配：将所有区域分配给最近的集水器
+    initial_assignment = {i: [] for i in range(len(collectors))}
+    initial_areas = {i: 0 for i in range(len(collectors))}
+    
+    for i, poly in enumerate(all_polygons):
+        collector_id = min(range(len(collectors)), 
+                          key=lambda c: distance_to_collector(poly, collector_points[c]))
+        initial_assignment[collector_id].append(i)
+        initial_areas[collector_id] += poly.area
+    
+    # 使用模拟退火算法优化分配
+    collector_regions, collector_areas = simulated_annealing(initial_assignment, initial_areas)
+    
+    # 收集所有点
+    all_points = []
+    for poly in all_polygons:
+        coords = list(poly.exterior.coords)
+        all_points.extend(coords[:-1])
+    
+    # 创建唯一点索引
+    unique_points = []
+    point_to_idx = {}
+    for pt in all_points:
+        if pt not in point_to_idx:
+            point_to_idx[pt] = len(unique_points)
+            unique_points.append(pt)
+    
+    # 更新区域信息
+    updated_regions = []
+    for region in all_regions:
+        updated_indices = []
+        for idx in region:
+            pt = all_points[idx]
+            updated_indices.append(point_to_idx[pt])
+        updated_regions.append((updated_indices, 1))
+    
+    # 创建墙路径
+    wall_path = []
+    exterior_coords = list(Polygon(polygon_coords).exterior.coords)
+    for pt in exterior_coords[:-1]:
+        if pt in point_to_idx:
+            wall_path.append(point_to_idx[pt])
+    
+    # 添加集水器点
+    collector_points_indices = []
+    for collector in collectors:
+        collector_point = (round(collector[0], 2), round(collector[1], 2))
+        if collector_point not in point_to_idx:
+            unique_points.append(collector_point)
+            collector_points_indices.append(len(unique_points) - 1)
+        else:
+            collector_points_indices.append(point_to_idx[collector_point])
+    
+    # 为集水器区域进行染色
+    region_colors = color_collector_regions(collector_regions, G, collector_points_indices, unique_points)
+    
+    # 更新集水器区域信息，包含颜色信息
+    collector_region_info = {}
+    for i in range(len(collectors)):
+        regions = collector_regions[i]
+        colors = [region_colors.get(region, 1) for region in regions]
+        collector_region_info[i] = {
+            'regions': regions,
+            'colors': colors
+        }
 
-    print("wall_path=", best_wall_path)
-    print("seg_pts=", best_global_points)
-    print("regions=", best_region_info)
-    print("destination_pt=", best_destination_point)
-    print("")
-    if is_debug:   
-        plot_polygons(best_polygon, nat_lines=nat_lines, title="Final Merged Polygons with Global Point Indices", global_points=best_global_points)
-
-    return best_polygon, best_global_points, best_region_info, best_wall_path, best_destination_point
+    if is_debug:
+        # 计算并打印统计信息
+        total_area = sum(collector_areas.values())
+        ideal_area_per_collector = total_area / len(collectors)
+        imbalance = sum(abs(area - ideal_area_per_collector) for area in collector_areas.values()) / total_area
+        
+        print("\n集水器区域统计:")
+        for i, area in collector_areas.items():
+            polys = len(collector_regions[i])
+            print(f"集水器 {i+1}: {polys} 个区域, 面积 {area:.2f} ({area/total_area*100:.1f}%)")
+        print(f"总面积: {total_area:.2f}")
+        print(f"理想面积: {ideal_area_per_collector:.2f}")
+        print(f"不平衡度: {imbalance*100:.2f}%")
+        
+        # 计算连通性
+        connectivity = all(1 == nx.number_connected_components(G.subgraph(regions)) 
+                          for regions in collector_regions.values())
+        print(f"区域连通性: {'是' if connectivity else '否'}")
+        
+        # 计算最终得分
+        final_score = evaluate_assignment(collector_regions, collector_areas)
+        print(f"最终分配得分: {final_score:.4f}")
+        
+        # 统计颜色使用情况
+        color_usage = {}
+        for color in region_colors.values():
+            color_usage[color] = color_usage.get(color, 0) + 1
+        print("\n颜色使用统计:")
+        for color, count in sorted(color_usage.items()):
+            print(f"颜色 {color}: {count} 个区域")
+        
+        # 统计每个集水器的颜色使用情况
+        print("\n集水器颜色使用统计:")
+        for i, info in collector_region_info.items():
+            collector_colors = set(info['colors'])
+            print(f"集水器 {i+1}: 使用颜色 {sorted(collector_colors)}")
+        
+        # 绘制结果
+        plot_collector_regions(
+            all_polygons,
+            unique_points,
+            collector_regions,
+            collector_points_indices,
+            title="Final Merged Polygons with Global Point Indices"
+        )
+   
+    return all_polygons, unique_points, updated_regions, wall_path, collector_points_indices, collector_region_info
 
 
 if __name__ == "__main__":

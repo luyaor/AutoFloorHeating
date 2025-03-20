@@ -1220,6 +1220,7 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
             component = find_connected_component(room_name, visited)
             if component:
                 room_groups.append(component)
+    # print(f"Room groups: {room_groups}")
     
     # 5. 合并每个组中的房间
     for i, group in enumerate(room_groups):
@@ -1298,7 +1299,7 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
                 if points and len(points) > 1 and points[0] == points[-1]:
                     points = points[:-1]
                 polygons[f"polygon_group_{i}"] = points
-    
+
     # 6. 处理多边形，确保逆时针顺序
     processed_polygons = {}
     polygon_info_map = {}  # 存储多边形分组的名称和位置信息
@@ -1310,7 +1311,7 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
             if len(points) >= 3:  # 确保是有效的多边形
                 fixture_polygons.append(Polygon(points))
     
-    for key, points in polygons.items():
+    for i, (key, points) in enumerate(polygons.items()):
         if key.startswith("polygon"):
             # 确保点序列是逆时针方向
             if is_clockwise(points):
@@ -1358,21 +1359,29 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
             centroid = get_centroid(points)
             
             # 查找该多边形所属的房间组
-            group_idx = int(key.split('_')[-1])
-            group_rooms = room_groups[group_idx] if group_idx < len(room_groups) else []
+            # group_idx = int(key.split('_')[-1])
+            # group_rooms = room_groups[group_idx] if group_idx < len(room_groups) else []
             
             # 收集组内所有房间的名称
             group_names = []
-            for room_name in group_rooms:
+            room_infos = {}
+            # for room_name in group_rooms:
+            for room_name in room_groups[i]:
                 if room_name in room_polygons_by_name:
                     room_info = room_polygons_by_name[room_name]
                     if 'name' in room_info and room_info['name']:
                         group_names.append(room_info['name'])
+                    room_basic_info = {
+                        'points': room_info['original_points'][:-1],
+                        'centroid': room_info['centroid']
+                    }
+                    room_infos[room_name] = room_basic_info
             
             # 存储多边形分组的名称和位置信息
             polygon_info_map[key] = {
-                'names': group_names,
-                'centroid': centroid
+                'names': group_names if len(group_names) == 1 else [],
+                'centroid': centroid,
+                'room_infos': room_infos
             }
     
     # 添加所有找到的洁具的矩形到结果中

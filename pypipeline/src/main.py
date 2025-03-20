@@ -284,7 +284,7 @@ def find_nearest_edge_projection(point, polygon):
     
     return nearest_projection, min_distance, nearest_edge_index
 
-def area_partition(key, floor_data, points, num_x, num_y, collectors, is_debug):
+def area_partition(key, floor_data, points, room_infos, threshold, collectors, is_debug):
     # 将points从列表转换为元组列表以便于后续处理
     points_tuple = [(p[0], p[1]) for p in points]
     
@@ -334,13 +334,13 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors, is_debug):
     # 2. 如果当前范围内没有集水器，则跳过这个方法
     if not filtered_collectors:
         print(f"\n👮 当前区域 {key} 没有集水器，跳过处理...")
-        return None, None, None, None
+        return None, None, None, None, None
     
     # 保存分区输入数据
     partition_input = {
         'points': points,
-        'num_x': num_x,
-        'num_y': num_y,
+        'room_infos': room_infos,
+        'threshold': threshold,
         'floor_name': floor_data['Name'],
         'collectors': filtered_collectors
     }
@@ -364,13 +364,19 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors, is_debug):
     inputp = partition_input['points']
     inputp = [(round(pt[0], 2), round(pt[1], 2)) for pt in inputp]
 
-    collector = partition_input['collectors'][0]["projection"]["point"]
-    collector_pt = (collector['x'], collector['y'])
-    final_polygons, allp, new_region_info, wall_path, destination_pt = partition.partition_work(partition_input['points'], 
-                                                                                          num_x=partition_input['num_x'], 
-                                                                                          num_y=partition_input['num_y'],
-                                                                                          collector=collector_pt,
-                                                                                          is_debug=is_debug)
+    # collector = partition_input['collectors'][0]["projection"]["point"]
+    # collector_pt = (collector['x'], collector['y'])
+    collector_points = []
+    for collector in partition_input['collectors']:
+        collector_pt = collector['projection']['point']
+        collector_points.append((collector_pt['x'], collector_pt['y']))
+
+    all_polygons, allp, new_regions, wall_path, collector_points_indices, collector_region_info = partition.partition_work(
+        partition_input['points'],
+        partition_input['room_infos'],
+        threshold=partition_input['threshold'],
+        collectors=collector_points,
+        is_debug=is_debug)
     
     # (TODO) hardcode.....need improve
     #----------
@@ -386,10 +392,11 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors, is_debug):
 
 
     print("\n📊 分区结果:")
-    print(f"  - 分区数量: {len(final_polygons)}")
+    print(f"  - 分区数量: {len(all_polygons)}")
     print(f"  - 分区点数: {len(allp)}")
-    print(f"  - 区域信息: {len(new_region_info)}个区域")
-    print(f"  - 起点位置: {destination_pt}")
+    print(f"  - 区域信息: {len(new_regions)}个区域")
+    print(f"  - 集水器位置索引: {collector_points_indices}")
+    print(f"  - 集水器区域信息: {collector_region_info}")
     
 
     print("\n✅ 分区计算完成...")
@@ -400,11 +407,11 @@ def area_partition(key, floor_data, points, num_x, num_y, collectors, is_debug):
     # 准备输入数据
     # seg_pts = [(x[0]/100, x[1]/100) for x in allp]  # 从原始数据转换并缩放
     seg_pts = [(x[0], x[1]) for x in allp]
-    regions = [(r[0], r[1]) for r in new_region_info]  # 从原始数据转换
+    regions = [(r[0], r[1]) for r in new_regions]  # 从原始数据转换
     # Filter out regions where r[1] == -1
     # regions = [(r[0], r[1]) for r in regions if r[1] != -1]
 
-    return seg_pts, regions, wall_path, destination_pt
+    return seg_pts, regions, wall_path, collector_points_indices, collector_region_info
 
 def get_floor_collectors(floor_data, input_data):
     """
@@ -609,13 +616,12 @@ def get_level_no(floor_name):
     
     return level_no
 
-def run_pipeline(is_debug: bool, num_x: int = 3, num_y: int = 3):
+def run_pipeline(is_debug: bool, threshold: float = 25000000):
     """
     运行管道布线的完整流程
-    
+
     Args:
-        num_x: 网格x方向划分数
-        num_y: 网格y方向划分数
+        threshold: 无需划分的最大房间面积(mm^2)
     """
     # 0. 处理输入数据
     print("🔷 正在处理输入数据...")
@@ -674,11 +680,14 @@ def run_pipeline(is_debug: bool, num_x: int = 3, num_y: int = 3):
         # 收集当前楼层的所有管道布线数据
         floor_pipe_data = []
         
+        # import pdb
+        # pdb.set_trace()
         for key, points in polygons.items():
             print(f"\n📊 当前处理楼层: {floor_data['Name']}")
             if not key.startswith("polygon"):
                 continue
 
+            room_infos = polygon_info[key]['room_infos']
             # points = [(x[0]/100, x[1]/100) for x in points]
 
             print(f"🔷 当前处理多边编号: {key}")
@@ -687,7 +696,7 @@ def run_pipeline(is_debug: bool, num_x: int = 3, num_y: int = 3):
             output_dir.mkdir(exist_ok=True)
 
             # 1. 执行分区
-            seg_pts, regions, wall_path, start_point = area_partition(key, floor_data, points, num_x, num_y, collectors, is_debug)
+            seg_pts, regions, wall_path, collector_points_indices, collector_region_info = area_partition(key, floor_data, points, room_infos, threshold, collectors, is_debug)
             
             # 如果没有集水器或分区处理失败，跳过当前多边形
             if seg_pts is None:
@@ -696,12 +705,19 @@ def run_pipeline(is_debug: bool, num_x: int = 3, num_y: int = 3):
                 
             print(f"🔷 分区结果: {regions}")
 
+            import pdb
+            pdb.set_trace()
 
             # 2. 执行管道布线
             print("\n🔷 开始执行管道布线...")
 
             try:
-                pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point)
+                for collector_idx, collector_point_idx in enumerate(collector_points_indices):
+                    collector_point = seg_pts[collector_point_idx]
+                    collector_regions = collector_region_info[collector_idx]
+                    # {'regions': [], 'colors': []} -> [([], 1), ([], 2), ...]
+                    pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, collector_point)
+                # pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point)
             except Exception as e:
                 print(f"\n❌ 管道布线失败: {e}")
                 import traceback
@@ -765,7 +781,7 @@ def main():
     print("🔷 管道布线系统")
     print('='*50)
     
-    run_pipeline(is_debug=True, num_x=3, num_y=3)
+    run_pipeline(is_debug=True, threshold=25000000)
 
 if __name__ == "__main__":
     main() 
