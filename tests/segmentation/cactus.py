@@ -1211,14 +1211,14 @@ class CactusSolver:
                     color = cmap[pipe_color[pipe_id]]
                     assert len(pipe_pt[pipe_id]) == 2
                     pt0, pt1 = pipe_pt[pipe_id]
-                    st = node_pos[(pipe_id, pt0)]
-                    ed = node_pos[(pipe_id, pt1)]
+                    st = node_pos[G2Node(pipe_id, pt0)]
+                    ed = node_pos[G2Node(pipe_id, pt1)]
                     plt.plot([st[0], ed[0]], [st[1], ed[1]], color=color, linewidth=1.1)
                     # 在中点绘制文字 pipe_id
                     mid = (st + ed) / 2
                     plt.text(
-                        mid[1],
                         mid[0],
+                        mid[1],
                         f"{pipe_id}",
                         color="blue",
                         fontsize=8,
@@ -1299,9 +1299,9 @@ class CactusSolver:
                 st = node_pos_s1[k]
                 ed = node_pos_s1[vv]
                 plt.plot(
-                    [st[1], ed[1]],
                     [st[0], ed[0]],
-                    color=self.cmap[pipe_color[k[0]]],
+                    [st[1], ed[1]],
+                    color=self.cmap[pipe_color[k.pipe_id]],
                     linewidth=1.1,
                 )
         plt.show()
@@ -1366,9 +1366,9 @@ class CactusSolver:
                 st = g2_node_pos_s3[k]
                 ed = g2_node_pos_s3[vv]
                 plt.plot(
-                    [st[1], ed[1]],
                     [st[0], ed[0]],
-                    color=self.cmap[pipe_color[k[0]]],
+                    [st[1], ed[1]],
+                    color=self.cmap[pipe_color[k.pipe_id]],
                     linewidth=1.1,
                 )
         plt.show()
@@ -1915,6 +1915,11 @@ if __name__ == "__main__":
 
     pipe_pt_seq = solver.process(
         CactusSolverDebug(
+            show_regions_with_colors=True,
+            g2s1=True,
+            g2s2=True,
+            g2s3=True,
+            g3=True,
             m1=True,
         )
     )
