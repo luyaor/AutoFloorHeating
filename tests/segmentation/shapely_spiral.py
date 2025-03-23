@@ -4,7 +4,7 @@ from shapely.geometry.base import BaseGeometry
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
-from typing import List, Union, NamedTuple, Optional, Dict, Set
+from typing import List, Union, NamedTuple, Optional, Dict, Set, Tuple
 from typeguard import typechecked
 from dataclasses import dataclass
 from loguru import logger
@@ -48,16 +48,23 @@ def erode_polygon_list(polygon: Polygon, width: float) -> List[Polygon]:
     return [eroded_polygon]
 
 
+@typechecked
 def eroded_and_guarenteed_width(
-    polygon: Polygon, width: float, quad_segs=4
+    polygon: Polygon,
+    width: float,
+    quad_segs=4,
+    guaranteed_width: Optional[float] = None,
 ) -> List[Polygon]:
     """
     对多边形进行向内腐蚀处理后，再进行一次开运算
     """
+    if guaranteed_width is None:
+        guaranteed_width = width
+
     eroded_polygon = (
         polygon.buffer(-width, quad_segs=quad_segs)
-        .buffer(-width / 2.0, quad_segs=quad_segs)
-        .buffer(width / 2.0, quad_segs=quad_segs)
+        .buffer(-guaranteed_width / 2.0, quad_segs=quad_segs)
+        .buffer(guaranteed_width / 2.0, quad_segs=quad_segs)
     )
 
     if eroded_polygon.is_empty or not eroded_polygon.is_valid:
@@ -70,6 +77,51 @@ def eroded_and_guarenteed_width(
     )
 
     return [eroded_polygon]
+
+
+def eroded_and_guranteed_width_and_adjustable(
+    polygon: Polygon,
+    suggested_width: float,
+    quad_segs: int = 4,
+    flexible_width_factors: List[float] = [1.1, 1.2, 1.3, 1.4, 1.5],
+    ratio_min_perimeter: float = 0.7,
+) -> Tuple[List[float], List[Polygon]]:
+    # you can adjust the suggested_width to get a better result
+    eroded_x1 = eroded_and_guarenteed_width(
+        polygon, suggested_width, quad_segs
+    )  # at least 1.5x width
+    if len(eroded_x1) == 0:
+        return [suggested_width] * len(eroded_x1), eroded_x1
+    actual_widths: List[float] = []
+    adjusted_eroded_polygons: List[Polygon] = []
+    for eroded_single in eroded_x1:
+        eroded_x2_try = eroded_and_guarenteed_width(
+            eroded_single, suggested_width, quad_segs
+        )  # at least 2.5x width
+        if len(eroded_x2_try) == 0:
+            for factor in sorted(flexible_width_factors + [1.0], reverse=True):
+                eroded_x_factor = eroded_and_guarenteed_width(
+                    eroded_single,
+                    suggested_width * (factor - 1.0),
+                    quad_segs,
+                    guaranteed_width=suggested_width * factor,
+                )
+                if (
+                    len(eroded_x_factor) > 0
+                    and sum(one.length for one in eroded_x_factor)
+                    / eroded_single.length
+                    > ratio_min_perimeter
+                ):
+                    for one in eroded_x_factor:
+                        actual_widths.append(suggested_width * factor)
+                        adjusted_eroded_polygons.append(one)
+                    break
+        else:
+            actual_widths.append(suggested_width)
+            adjusted_eroded_polygons.append(eroded_single)
+
+    assert len(eroded_x1) <= len(adjusted_eroded_polygons)
+    return actual_widths, adjusted_eroded_polygons
 
 
 @typechecked
@@ -412,7 +464,11 @@ def check_intersection_excluding_endpoints(
 
 @typechecked
 def find_nearest_point_and_create_polygon(
-    ext: Polygon, interior: List[Polygon], width: float, tolerance: float = 1e-10
+    ext: Polygon,
+    interior: List[Polygon],
+    interior_widths: List[float],
+    default_width: float,
+    tolerance: float = 1e-10,
 ) -> tuple[int, LineString, List[PolygonInfo]]:
     """
     在外部多边形上找到距离0号顶点width距离的点pt1，然后根据条件创建新的多边形
@@ -432,7 +488,9 @@ def find_nearest_point_and_create_polygon(
             - FromMid: 从中间点创建的新多边形，包含额外的外部多边形信息
     """
     # 找到外部多边形上距离0号顶点width距离的点
-    pt1, end_idx = find_point_at_distance_or_remove_last_line_string(ext, width)
+    pt1, end_idx = find_point_at_distance_or_remove_last_line_string(
+        ext, min(interior_widths) if len(interior_widths) > 0 else default_width
+    )
     assert end_idx > 0
     # is a LineString
     ext_cut = LineString(list(ext.exterior.coords)[:end_idx] + [pt1])
@@ -440,7 +498,7 @@ def find_nearest_point_and_create_polygon(
     # 存储所有创建的多边形信息
     polygon_infos: List[PolygonInfo] = []
 
-    for curr_interior in interior:
+    for curr_interior, curr_interior_width in zip(interior, interior_widths):
         int_coords = list(curr_interior.exterior.coords)[:-1]
 
         # 找到距离pt1最近的点
@@ -462,8 +520,9 @@ def find_nearest_point_and_create_polygon(
 
         # 检查是否需要使用FromMid逻辑
         connection_line = LineString([pt1, nearest_point])
-        if min_dist > width + tolerance or check_intersection_excluding_endpoints(
-            connection_line, ext_cut
+        if (
+            min_dist > curr_interior_width + tolerance
+            or check_intersection_excluding_endpoints(connection_line, ext_cut)
         ):
             # 遍历内部多边形的端点，找到最优的外部多边形最近点
             vertex_nearest_info = []
@@ -593,6 +652,7 @@ class SpiralNode:
     point: Point
     depth: int
     children: List["SpiralNode"] = None
+    actual_width: float = None
 
     def __post_init__(self):
         if self.children is None:
@@ -601,7 +661,7 @@ class SpiralNode:
 
 @typechecked
 def generate_spiral_tree(
-    polygon: Polygon, width: float, depth: int = 0
+    polygon: Polygon, suggested_width: float, depth: int = 0
 ) -> tuple[Optional[SpiralNode], int, dict[int, int]]:
     """
     生成盘旋图的树形结构
@@ -613,15 +673,17 @@ def generate_spiral_tree(
     返回:
     tuple[SpiralNode, int, dict[int, int]]: (根节点, 外层多边形的终点索引, 本次生成的盘旋图顶点 id 到外围多边形顶点 idx 的映射)
     """
-    # 获取腐蚀后的多边形
-    eroded = eroded_and_guarenteed_width(polygon, width)
+    # 获取一层腐蚀后的多边形
+    interior_widths, eroded_polygons = eroded_and_guranteed_width_and_adjustable(
+        polygon, suggested_width
+    )
 
     # 获取外部多边形的所有顶点
     id_idx_map = {}
 
     # 获取内部多边形信息
     end_idx, ext_cut, polygon_infos = find_nearest_point_and_create_polygon(
-        polygon, eroded, width
+        polygon, eroded_polygons, interior_widths, default_width=suggested_width
     )
     assert end_idx > 0, f"end_idx: {end_idx} 应该大于0"
     # logger.info(f"size: {len(ext_cut.coords)}")
@@ -630,9 +692,13 @@ def generate_spiral_tree(
     ext_nodes = []
     for i, xy in enumerate(ext_cut.coords):
         if len(ext_nodes) == 0:
-            ext_nodes.append(SpiralNode(Point(xy), depth=depth))
+            ext_nodes.append(
+                SpiralNode(Point(xy), depth=depth, actual_width=suggested_width)
+            )
         else:
-            ext_nodes.append(SpiralNode(Point(xy), depth=depth))
+            ext_nodes.append(
+                SpiralNode(Point(xy), depth=depth, actual_width=suggested_width)
+            )
             ext_nodes[-2].children.append(ext_nodes[-1])
         if i != len(ext_cut.coords) - 1:  # 最后一个点必是 cut 新点
             id_idx_map[id(ext_nodes[-1])] = len(ext_nodes) - 1
@@ -643,17 +709,25 @@ def generate_spiral_tree(
     edge_points: Dict[int, List[tuple[Point, SpiralNode, float]]] = {}
 
     # 处理每个内部多边形
-    for info in polygon_infos:
+    assert len(polygon_infos) == len(interior_widths), (
+        f"polygon_infos: {len(polygon_infos)}, interior_widths: {len(interior_widths)}"
+    )
+    for info, actual_width in zip(polygon_infos, interior_widths):
         if isinstance(info, FromEnd):
             # 直接从pt1连接到内部多边形的起点
-            inner_start, _, _ = generate_spiral_tree(info.polygon, width, depth + 1)
+            inner_start, _, _ = generate_spiral_tree(
+                info.polygon, actual_width, depth + 1
+            )
             if inner_start is None:
                 continue
             ext_nodes[-1].children.append(inner_start)
             # 递归处理内部多边形
-        else:  # FromMid
+        else:
+            assert isinstance(info, FromMid)
             # 获取内部多边形的起点
-            inner_start, _, _ = generate_spiral_tree(info.polygon, width, depth + 1)
+            inner_start, _, _ = generate_spiral_tree(
+                info.polygon, actual_width, depth + 1
+            )
             if inner_start is None:
                 continue
             # 将最近点信息添加到对应的边
@@ -677,7 +751,7 @@ def generate_spiral_tree(
         # 创建最近点的链
         current = ext_nodes[edge_end_idx - 1]
         for pt, inner_node, _ in points:
-            pt_node = SpiralNode(pt, depth=depth)
+            pt_node = SpiralNode(pt, depth=depth, actual_width=suggested_width)
             current.children = [pt_node]  # 替换原有的连接
             pt_node.children.append(inner_node)  # 连接到内部多边形
             current = pt_node
@@ -948,7 +1022,7 @@ def iter_ext_segments(polygon: Polygon):
 
 if __name__ == "__main__":
     # 创建8字形多边形
-    width = 0.2
+    width = 0.22
     points = [
         (0, 0),
         (2, 1),
