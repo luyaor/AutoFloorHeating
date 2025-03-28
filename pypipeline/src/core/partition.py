@@ -350,40 +350,46 @@ def polygon_grid_partition_and_merge(polygon_coords, threshold, min_area_ratio=0
     # 收集最终多边形
     final_polygons = [data['geometry'] for _, data in G.nodes(data=True)]
     
-    # 收集所有点并建立索引
-    all_points = []
-    for poly in final_polygons:
-        pts = list(poly.exterior.coords)[:-1]  # 排除重复的最后一个点
-        all_points.extend(pts)
+    # # 收集所有点并建立索引
+    # all_points = []
+    # for poly in final_polygons:
+    #     pts = list(poly.exterior.coords)[:-1]  # 排除重复的最后一个点
+    #     # 判断顶点顺序，若是逆时针则反转为顺时针
+    #     if compute_signed_area(pts) > 0:
+    #         pts = list(reversed(pts))
+    #     all_points.extend(pts)
     
-    # 创建唯一点列表
-    unique_points = []
-    point_to_idx = {}
-    for pt in all_points:
-        rounded_pt = (round(pt[0], 4), round(pt[1], 4))  # 四舍五入减少浮点误差
-        if rounded_pt not in point_to_idx:
-            point_to_idx[rounded_pt] = len(unique_points)
-            unique_points.append(pt)
+    # # 创建唯一点列表
+    # unique_points = []
+    # point_to_idx = {}
+    # for pt in all_points:
+    #     # rounded_pt = (round(pt[0], 4), round(pt[1], 4))  # 四舍五入减少浮点误差
+    #     rounded_pt = pt
+    #     if rounded_pt not in point_to_idx:
+    #         point_to_idx[rounded_pt] = len(unique_points)
+    #         unique_points.append(pt)
     
-    # 为每个区域创建点索引列表
-    region_info = []
-    for poly in final_polygons:
-        pts = list(poly.exterior.coords)[:-1]
-        # 判断顺序，逆时针转为顺时针
-        if compute_signed_area(pts) > 0:
-            pts = list(reversed(pts))
+    # # 为每个区域创建点索引列表
+    # region_info = []
+    # for poly in final_polygons:
+    #     pts = list(poly.exterior.coords)[:-1]
+    #     # 判断顺序，逆时针转为顺时针
+    #     if compute_signed_area(pts) > 0:
+    #         pts = list(reversed(pts))
             
-        region_indices = []
-        for pt in pts:
-            rounded_pt = (round(pt[0], 4), round(pt[1], 4))
-            idx = point_to_idx.get(rounded_pt)
-            if idx is not None:
-                region_indices.append(idx)
+    #     region_indices = []
+    #     for pt in pts:
+    #         # rounded_pt = (round(pt[0], 4), round(pt[1], 4))
+    #         rounded_pt = pt
+    #         idx = point_to_idx.get(rounded_pt)
+    #         if idx is not None:
+    #             region_indices.append(idx)
         
-        if len(region_indices) >= 3:  # 确保至少有3个点
-            region_info.append(region_indices)
+    #     if len(region_indices) >= 3:  # 确保至少有3个点
+    #         region_info.append(region_indices)
     
-    return final_polygons, unique_points, region_info
+    # return final_polygons, unique_points, region_info
+    return final_polygons
 
 def plot_collector_regions(polygons, unique_points, collector_regions, collector_points_indices, title="Collector Regions"):
     fig, ax = plt.subplots(figsize=(12, 8))
@@ -508,6 +514,7 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
     """
     # 将坐标四舍五入到两位小数，以避免浮点精度问题
     polygon_coords = [(round(pt[0], 2), round(pt[1], 2)) for pt in polygon_coords]
+    print(f"多边形点数: {len(polygon_coords)}")
 
     # 如果没有提供集水器位置，则使用多边形中心点
     if collectors is None or len(collectors) == 0:
@@ -520,8 +527,8 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
     
     # 初始化结果变量
     all_polygons = []  # 所有区域的多边形
-    all_regions = []   # 所有区域的点索引
-    # all_colors = []    # 所有区域的颜色
+    # all_regions = []   # 所有区域的点索引
+    all_region_points = []  # 所有区域的边界点
     
     # 处理每个房间
     for room_name, room_info in room_infos.items():
@@ -532,22 +539,25 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
         if room_area <= threshold:
             # 小房间不划分，直接添加
             all_polygons.append(room_poly)
-            region_indices = list(range(len(all_regions), len(all_regions) + len(room_points)))
-            all_regions.append(region_indices)
-            # all_colors.append(1)
+            # region_indices = list(range(len(all_regions), len(all_regions) + len(room_points)))
+            # all_regions.append(region_indices)
+            all_region_points.append(room_points)
         else:
             # 大房间需要划分
-            sub_polygons, unique_points, region_info = polygon_grid_partition_and_merge(
-                room_points, threshold, min_area_ratio=0.2
-            )
+            import pdb
+            pdb.set_trace()
+            # sub_polygons, unique_points, region_info = polygon_grid_partition_and_merge(
+            #     room_points, threshold, min_area_ratio=0.2
+            # )
+            sub_polygons = polygon_grid_partition_and_merge(room_points, threshold, min_area_ratio=0.2)
             
             # 添加划分后的子区域
             for sub_poly in sub_polygons:
                 all_polygons.append(sub_poly)
                 sub_points = list(sub_poly.exterior.coords)[:-1]
-                region_indices = list(range(len(all_regions), len(all_regions) + len(sub_points)))
-                all_regions.append(region_indices)
-                # all_colors.append(1)
+                # region_indices = list(range(len(all_regions), len(all_regions) + len(sub_points)))
+                # all_regions.append(region_indices)
+                all_region_points.append(sub_points)
     
     # 构建区域邻接图
     G = nx.Graph()
@@ -685,45 +695,172 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
     # 使用模拟退火算法优化分配
     collector_regions, collector_areas = simulated_annealing(initial_assignment, initial_areas)
     
-    # 收集所有点
-    all_points = []
-    for poly in all_polygons:
-        coords = list(poly.exterior.coords)
-        all_points.extend(coords[:-1])
+    unique_points = list(polygon_coords)  # 全局唯一点列表
+    point_to_idx = {}  # 点坐标到索引的映射
+    for pt in unique_points:
+        rounded_pt = (round(pt[0], 2), round(pt[1], 2))
+        if rounded_pt not in point_to_idx:
+            point_to_idx[rounded_pt] = len(unique_points)
+            unique_points.append(rounded_pt)
     
-    # 创建唯一点索引
-    unique_points = []
-    point_to_idx = {}
-    for pt in all_points:
-        if pt not in point_to_idx:
-            point_to_idx[pt] = len(unique_points)
-            unique_points.append(pt)
+    # 收集区域中的所有点，并建立映射
+    for region_points in all_region_points:
+        # 判断顶点顺序，若是逆时针则反转为顺时针
+        if compute_signed_area(region_points) > 0:
+            region_points = list(reversed(region_points))
+        for pt in region_points:
+            rounded_pt = (round(pt[0], 2), round(pt[1], 2))
+            if rounded_pt not in point_to_idx:
+                point_to_idx[pt] = len(unique_points)
+                unique_points.append(pt)
+
+    # 为每个区域创建边界点索引列表
+    region_info = []
+    for region_points in all_region_points:
+        # 判断顶点顺序，若是逆时针则反转为顺时针
+        if compute_signed_area(region_points) > 0:
+            region_points = list(reversed(region_points))
+        region_indices = []
+        for pt in region_points:
+            rounded_pt = (round(pt[0], 2), round(pt[1], 2))
+            idx = point_to_idx.get(rounded_pt)
+            if idx is not None:
+                region_indices.append(idx)
+        if len(region_indices) >= 3:
+            region_info.append(region_indices)
+
+    def distance(x,y):
+        return math.sqrt((x[0] - y[0]) * (x[0] - y[0]) + (x[1] - y[1]) * (x[1] - y[1]))
+
+    def is_collinear(p_prev, p_cur, p_next, epsilon=1e-3):
+        return (abs((p_cur[0]-p_prev[0])*(p_next[1]-p_prev[1]) - \
+            (p_next[0]-p_prev[0])*(p_cur[1]-p_prev[1])) < epsilon) or \
+            (distance(p_cur, p_prev) < 1)
+
+    # 把全局点在区域边界上的点加入到区域中
+    new_region_info = []
+    for region in region_info:
+        i = 0
+        for p in unique_points:
+            while i < len(region):
+                p1 = unique_points[region[i]]
+                p2 = unique_points[region[(i + 1) % len(region)]]
+                if (distance(p1, p) > 1e-3) and (distance(p, p2) > 1e-3) and \
+                    (abs(distance(p1, p) + distance(p, p2) - distance(p1, p2)) < 1e-3):
+                    region = region[:i + 1] + [unique_points.index(p)] + region[i + 1:]
+                    break
+                i += 1
+        new_region_info.append(region)
+    region_info = new_region_info
     
-    # 更新区域信息
-    updated_regions = []
-    for region in all_regions:
-        updated_indices = []
+    freq = {}
+    for region in region_info:
         for idx in region:
-            pt = all_points[idx]
-            updated_indices.append(point_to_idx[pt])
-        updated_regions.append((updated_indices, 1))
-    
-    # 创建墙路径
-    wall_path = []
-    exterior_coords = list(Polygon(polygon_coords).exterior.coords)
-    for pt in exterior_coords[:-1]:
-        if pt in point_to_idx:
-            wall_path.append(point_to_idx[pt])
-    
+            freq[idx] = freq.get(idx, 0) + 1
+
+    cleaned_region_info = []
+    for region in region_info:
+        if len(region) < 3:
+            cleaned_region_info.append(region)
+            continue
+        cleaned = []
+        n = len(region)
+        for i in range(n):
+            prev_idx = region[i-1]
+            cur_idx = region[i]
+            next_idx = region[(i+1) % n]
+            p_prev = unique_points[prev_idx]
+            p_cur = unique_points[cur_idx]
+            p_next = unique_points[next_idx]
+            # 若当前点与前后点共线且只属于本区域，则去除
+            if is_collinear(p_prev, p_cur, p_next) and freq[cur_idx] == 1:
+                continue
+            cleaned.append(cur_idx)
+        if len(cleaned) < 3:
+            cleaned = region  # 保证至少有3个点
+        cleaned_region_info.append(cleaned)
+    region_info = cleaned_region_info
+    # --- 清理结束 ---
+
+    # --- 新增：同步更新 unique_points ---
+    used_indices = set()
+    for region in region_info:
+        used_indices.update(region)
+    new_mapping = {}
+    new_unique_points = []
+    for old_idx, pt in enumerate(unique_points):
+        if old_idx in used_indices:
+            new_mapping[old_idx] = len(new_unique_points)
+            new_unique_points.append(pt)
+    # 更新 region_info 中的索引
+    region_info = [[new_mapping[idx] for idx in region] for region in region_info]
+    unique_points = new_unique_points
+    # --- 同步更新结束 ---
+
+    allp = [x for x in polygon_coords]
+    cleaned_allp = []
+    n = len(allp)
+    for i in range(n):
+        p_prev = allp[i-1]
+        p_cur = allp[i]
+        p_next = allp[(i+1) % n]
+        # 若当前点与前后点共线，则去除
+        if is_collinear(p_prev, p_cur, p_next):
+            continue
+        cleaned_allp.append(p_cur)
+    allp = cleaned_allp
+
+    # 添加集水器点到全局点列表
+    for collector in collectors:
+        collector_point = (round(collector[0], 2), round(collector[1], 2))
+        unique_points.append(collector_point)
+
+    for p in unique_points:
+        l = len(allp)
+        for i in range(l):
+            if (distance(allp[i], p) > 1e-3) and (distance(p, allp[(i + 1) % l]) > 1e-3) and \
+                (abs(distance(allp[i], p) + distance(p, allp[(i + 1) % l]) - distance(allp[i], allp[(i + 1) % l])) < 1e-3):
+                allp = allp[:i + 1] + [p] + allp[i + 1:]
+                break
+    allp = allp[::-1]
+    num_of_nodes = len(allp)
+    unique_points = allp
+
+    indices = []
+    for p in unique_points:
+        if p not in allp:
+            allp.append(p)
+        indices.append(allp.index(p))
+
+    new_region_info = []
+    for collector in collectors:
+        p = (round(collector[0], 2), round(collector[1], 2))
+        idx = unique_points.index(p)
+
+        for r in region_info:
+            l = len(r)
+            for i in range(l):
+                p1 = unique_points[r[i]]
+                p2 = unique_points[r[(i + 1) % l]]
+                if (distance(p1, p) > 1e-3) and (distance(p, p2) > 1e-3) and \
+                    (abs(distance(p1, p) + distance(p, p2) - distance(p1, p2)) < 1e-3):
+                    r = r[:i + 1] + [idx] + r[i + 1:]
+                    break
+            r = [indices[x] for x in r]
+            new_region_info.append(r[::-1])
+    region_info = new_region_info
+
     # 添加集水器点
     collector_points_indices = []
     for collector in collectors:
         collector_point = (round(collector[0], 2), round(collector[1], 2))
-        if collector_point not in point_to_idx:
-            unique_points.append(collector_point)
-            collector_points_indices.append(len(unique_points) - 1)
-        else:
-            collector_points_indices.append(point_to_idx[collector_point])
+        # if collector_point not in point_to_idx:
+        #     point_to_idx[collector_point] = len(unique_points)
+        #     unique_points.append(collector_point)
+        #     collector_points_indices.append(len(unique_points) - 1)
+        # else:
+        #     collector_points_indices.append(point_to_idx[collector_point])
+        collector_points_indices.append(unique_points.index(collector_point))
     
     # 为集水器区域进行染色
     region_colors = color_collector_regions(collector_regions, G, collector_points_indices, unique_points)
@@ -737,6 +874,14 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
             'regions': regions,
             'colors': colors
         }
+
+    # 创建墙路径
+    # wall_path = []
+    # for pt in unique_points:
+    #     if pt in point_to_idx:
+    #         rounded_pt = (round(pt[0], 2), round(pt[1], 2))
+    #         wall_path.append(point_to_idx[rounded_pt])
+    wall_path = [i for i in range(num_of_nodes)]
 
     if is_debug:
         # 计算并打印统计信息
@@ -784,7 +929,7 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
             title="Final Merged Polygons with Global Point Indices"
         )
    
-    return all_polygons, unique_points, updated_regions, wall_path, collector_points_indices, collector_region_info
+    return all_polygons, unique_points, region_info, wall_path, collector_points_indices, collector_region_info
 
 
 if __name__ == "__main__":
