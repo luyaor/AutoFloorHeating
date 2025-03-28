@@ -1311,7 +1311,7 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
             if len(points) >= 3:  # 确保是有效的多边形
                 fixture_polygons.append(Polygon(points))
     
-    for i, (key, points) in enumerate(polygons.items()):
+    for idx, (key, points) in enumerate(polygons.items()):
         if key.startswith("polygon"):
             # 确保点序列是逆时针方向
             if is_clockwise(points):
@@ -1365,8 +1365,7 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
             # 收集组内所有房间的名称
             group_names = []
             room_infos = {}
-            # for room_name in group_rooms:
-            for room_name in room_groups[i]:
+            for room_name in room_groups[idx]:
                 if room_name in room_polygons_by_name:
                     room_info = room_polygons_by_name[room_name]
                     if 'name' in room_info and room_info['name']:
