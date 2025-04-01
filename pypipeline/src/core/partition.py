@@ -545,7 +545,7 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
         else:
             # 大房间需要划分
             import pdb
-            pdb.set_trace()
+            # pdb.set_trace()
             # sub_polygons, unique_points, region_info = polygon_grid_partition_and_merge(
             #     room_points, threshold, min_area_ratio=0.2
             # )

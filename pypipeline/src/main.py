@@ -710,7 +710,7 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
             print(f"🔷 分区结果: {regions}")
 
             import pdb
-            pdb.set_trace()
+            # pdb.set_trace()
 
             # 2. 执行管道布线
             print("\n🔷 开始执行管道布线...")

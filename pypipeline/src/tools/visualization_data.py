@@ -642,7 +642,8 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
     processed_polygons = {}
     polygon_info_map = {}  # 存储多边形分组的名称和位置信息
     
-    for key, points in polygons.items():
+    # for key, points in polygons.items():
+    for idx, (key, points) in enumerate(polygons.items()):
         if key.startswith("polygon"):
             # 确保点序列是逆时针方向
             if is_clockwise(points):
@@ -660,7 +661,7 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
             # 收集组内所有房间的名称
             group_names = []
             room_infos = {}
-            for room_name in group_rooms:
+            for room_name in room_groups[idx]:
                 if room_name in room_polygons_by_name:
                     room_info = room_polygons_by_name[room_name]
                     if 'name' in room_info and room_info['name']:
