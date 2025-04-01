@@ -362,7 +362,7 @@ def merge_room_with_doors(room_points: List[Tuple[float, float]],
     return unique_points
 
 
-def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[float, float]]], Dict[str, List[Tuple[float, float]]], Dict[str, dict], Dict[str, dict], Dict[str, dict]]:
+def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[float, float]]], Dict[str, List[Tuple[float, float]]], Dict[str, dict], Dict[str, dict], Dict[str, dict], Dict[str, dict]]:
     """Process AR design data from a file path and return points in the format similar to test_data.py"""
     
     # 初始化结果字典和信息
@@ -370,6 +370,7 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
     polygons = {}
     room_info_map = {}  # 存储房间名称和位置信息
     fixtures_info = {}  # 空字典，保留这个参数以维持接口一致性
+    door_info_map = {}  # 新增：存储连接两个房间的门信息
     
     # 调试信息：输出设计数据的顶级键
     print("\n🔍 调试 - 设计数据顶级键:")
@@ -524,12 +525,52 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
             if door_poly.intersects(room_info['poly']):
                 connected_rooms.append(room_name)
         
-        # 如果门连接了两个或更多房间，记录连接关系
+        # 如果门连接了两个或更多房间，记录连接关系和交汇的四个点
         if len(connected_rooms) >= 2:
+            # 记录门与房间的交汇点信息
+            intersection_points = []
+            for room_name in connected_rooms:
+                room_info = room_polygons_by_name[room_name]
+                # 计算门与房间的交汇区域
+                intersection = door_poly.intersection(room_info['poly'])
+                if not intersection.is_empty:
+                    # 提取交汇区域的点
+                    if hasattr(intersection, 'exterior'):
+                        # 多边形交集
+                        points = list(intersection.exterior.coords)
+                        intersection_points.extend(points[:-1])  # 去除重复的闭合点
+                    elif hasattr(intersection, 'coords'):
+                        # 线段交集
+                        points = list(intersection.coords)
+                        intersection_points.extend(points)
+            
+            # 去除重复点并保留最多四个点
+            unique_points = []
+            for point in intersection_points:
+                if point not in unique_points:
+                    unique_points.append(point)
+            
+            # 确保最多只有四个点（如果有更多，选择最外围的四个点）
+            if len(unique_points) > 4:
+                # 计算点的中心
+                centroid = get_centroid(unique_points)
+                # 计算每个点到中心的距离，选择距离最远的四个点
+                points_with_distance = [(p, math.sqrt((p[0]-centroid[0])**2 + (p[1]-centroid[1])**2)) for p in unique_points]
+                points_with_distance.sort(key=lambda x: x[1], reverse=True)  # 按距离降序排序
+                unique_points = [p[0] for p in points_with_distance[:4]]  # 取距离最远的四个点
+            
+            # 存储门信息
+            door_info_map[f"door_{door_idx}"] = {
+                # 'connected_rooms': connected_rooms,
+                'intersection_points': unique_points,
+                # 'rect': rect
+            }
+            
             for i in range(len(connected_rooms)):
                 for j in range(i+1, len(connected_rooms)):
                     connections[connected_rooms[i]].add(connected_rooms[j])
                     connections[connected_rooms[j]].add(connected_rooms[i])
+                    
     
     # 4. 寻找连通分量（连接房间的组）
     def find_connected_component(start, visited):
@@ -680,8 +721,8 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
             }
     
     
-    # 返回处理的数据、多边形信息、房间信息和多边形信息
-    return result, processed_polygons, room_info_map, polygon_info_map, fixtures_info
+    # 返回处理的数据、多边形信息、房间信息、多边形信息、设备信息和门信息
+    return result, processed_polygons, room_info_map, polygon_info_map, fixtures_info, door_info_map
 
 def get_example_data() -> ARDesign:
     """Load and convert real JSON data to ARDesign"""
@@ -870,8 +911,9 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
 
 if __name__ == "__main__":
     # Process the real data from file
-    json_path = os.path.join("data", "ARDesign.json")
-    processed_data, polygons, room_info, polygon_info, fixtures_info = process_ar_design(json_path)
+    json_path = os.path.join("..", "data", "ARDesign.json")
+    data = load_json_data(json_path)
+    processed_data, polygons, room_info, polygon_info, fixtures_info, door_info = process_ar_design(data["Floor"][0])
     
     # Print the merged polygons points
     print("\nMerged Polygons Points:")
@@ -889,6 +931,14 @@ if __name__ == "__main__":
                 j = (i + 1) % len(points)
                 area += points[i][0] * points[j][1] - points[j][0] * points[i][1]
             print(f"Area (should be positive for CCW): {area/2:.2f}")
+    
+    # 打印门信息
+    if door_info:
+        print("\n门信息:")
+        for key, info in door_info.items():
+            print(f"\n{key}:")
+            print(f"  连接的房间: {info['connected_rooms']}")
+            print(f"  交汇点: {info['intersection_points']}")
     
     # Comment out plotting code
     # plot_comparison(processed_data, polygons, [], room_info, polygon_info)

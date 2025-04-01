@@ -498,7 +498,7 @@ def color_collector_regions(collector_regions, G, collector_points_indices, uniq
     
     return region_colors
 
-def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=None, is_debug=False):
+def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=None, is_debug=False, door_info=None):
     """
     按房间划分区域并分配给集水器，使用得分函数优化分配结果
     
@@ -508,7 +508,7 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
         threshold: 房间面积阈值，超过此值的房间将被划分
         collectors: 集水器位置列表，每个元素为(x,y)坐标
         is_debug: 是否开启调试模式
-        
+        door_info: 门信息字典，包含每个门的连接信息
     Returns:
         tuple: (最终多边形列表, 全局点列表, 区域信息, 墙路径, 集水器点索引, 集水器区域映射)
     """

@@ -284,7 +284,7 @@ def find_nearest_edge_projection(point, polygon):
     
     return nearest_projection, min_distance, nearest_edge_index
 
-def area_partition(key, floor_data, points, room_infos, threshold, collectors, is_debug):
+def area_partition(key, floor_data, points, room_infos, threshold, collectors, is_debug, door_info):
     # 将points从列表转换为元组列表以便于后续处理
     points_tuple = [(p[0], p[1]) for p in points]
     
@@ -376,7 +376,8 @@ def area_partition(key, floor_data, points, room_infos, threshold, collectors, i
         partition_input['room_infos'],
         threshold=partition_input['threshold'],
         collectors=collector_points,
-        is_debug=is_debug)
+        is_debug=is_debug,
+        door_info=door_info)
     
     # (TODO) hardcode.....need improve
     #----------
@@ -667,10 +668,17 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
         print(f"\n📊 开始处理楼层: {floor_data['Name']}")
         print(f"✅ 检测到 {len(collectors)} 个集水器，继续处理...")
         
-        processed_data, polygons, room_info, polygon_info, fixtures_info = visualization_data.process_ar_design(floor_data)
-        # print("\n✅ 原始图像绘制完成，按任意键继续...")
-        # # 绘制原始数据
-        # input()
+        processed_data, polygons, room_info, polygon_info, fixtures_info, door_info = visualization_data.process_ar_design(floor_data)
+        
+        # 打印门的信息
+        if door_info:
+            print(f"\n📊 门的连接信息 (共{len(door_info)}个):")
+            for key, info in door_info.items():
+                print(f"  - {key}:")
+                # print(f"    连接的房间: {info['connected_rooms']}")
+                print(f"    交汇点数量: {len(info['intersection_points'])}个")
+                print(f"    交汇点坐标: {info['intersection_points']}")
+        
         if is_debug:
             visualization_data.plot_comparison(processed_data, polygons, collectors=collectors, room_info=room_info, polygon_info=polygon_info, fixtures_info=fixtures_info)
         # continue
@@ -700,7 +708,7 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
             output_dir.mkdir(exist_ok=True)
 
             # 1. 执行分区
-            seg_pts, regions, wall_path, collector_points_indices, collector_region_info = area_partition(key, floor_data, points, room_infos, threshold, collectors, is_debug)
+            seg_pts, regions, wall_path, collector_points_indices, collector_region_info = area_partition(key, floor_data, points, room_infos, threshold, collectors, is_debug, door_info)
             
             # 如果没有集水器或分区处理失败，跳过当前多边形
             if seg_pts is None:
