@@ -687,6 +687,10 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
             if not key.startswith("polygon"):
                 continue
 
+            print(f"polygon_info[key]: {polygon_info[key]}")
+            if 'room_infos' not in polygon_info[key]:
+                print(f"\n👮 多边形 {key} 没有房间信息，跳过处理...")
+                continue
             room_infos = polygon_info[key]['room_infos']
             # points = [(x[0]/100, x[1]/100) for x in points]
 
