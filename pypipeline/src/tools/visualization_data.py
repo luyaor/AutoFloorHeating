@@ -659,17 +659,25 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
             
             # 收集组内所有房间的名称
             group_names = []
+            room_infos = {}
             for room_name in group_rooms:
                 if room_name in room_polygons_by_name:
                     room_info = room_polygons_by_name[room_name]
                     if 'name' in room_info and room_info['name']:
                         group_names.append(room_info['name'])
+                    room_basic_info = {
+                        'points': room_info['original_points'][:-1],
+                        'centroid': room_info['centroid']
+                    }
+                    room_infos[room_name] = room_basic_info
             
             # 存储多边形分组的名称和位置信息
             polygon_info_map[key] = {
-                'names': group_names,
-                'centroid': centroid
+                'names': group_names if len(group_names) == 1 else [],
+                'centroid': centroid,
+                'room_infos': room_infos
             }
+    
     
     # 返回处理的数据、多边形信息、房间信息和多边形信息
     return result, processed_polygons, room_info_map, polygon_info_map, fixtures_info
