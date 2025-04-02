@@ -680,7 +680,7 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
                 print(f"    交汇点坐标: {info['intersection_points']}")
         
         if is_debug:
-            visualization_data.plot_comparison(processed_data, polygons, collectors=collectors, room_info=room_info, polygon_info=polygon_info, fixtures_info=fixtures_info)
+            visualization_data.plot_comparison(processed_data, polygons, collectors=collectors, room_info=room_info, polygon_info=polygon_info, fixtures_info=fixtures_info, door_info=door_info)
         # continue
 
         print("\n📊 提取的多边形信息:")

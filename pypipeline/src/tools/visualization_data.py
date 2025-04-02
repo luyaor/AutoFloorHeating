@@ -5,7 +5,7 @@ import os
 import math
 import matplotlib.pyplot as plt
 import numpy as np
-from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import Polygon, MultiPolygon, LineString, Point
 from shapely.ops import unary_union
 
 @dataclass
@@ -59,8 +59,6 @@ class Room:
     Area: float = 0.0
     Category: str = ""
     Position: str = ""
-
-@dataclass
 
 @dataclass
 class Construction:
@@ -531,31 +529,43 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
             intersection_points = []
             for room_name in connected_rooms:
                 room_info = room_polygons_by_name[room_name]
-                # 计算门与房间的交汇区域
-                intersection = door_poly.intersection(room_info['poly'])
+                # 计算门边界线与房间边界线的交点
+                door_boundary = LineString(rect)
+                room_boundary = LineString(room_info['original_points'])
+                
+                # 计算门边界与房间边界的交点
+                intersection = door_boundary.intersection(room_boundary)
                 if not intersection.is_empty:
-                    # 提取交汇区域的点
-                    if hasattr(intersection, 'exterior'):
-                        # 多边形交集
-                        points = list(intersection.exterior.coords)
-                        intersection_points.extend(points[:-1])  # 去除重复的闭合点
-                    elif hasattr(intersection, 'coords'):
-                        # 线段交集
-                        points = list(intersection.coords)
-                        intersection_points.extend(points)
+                    if hasattr(intersection, 'geoms'):
+                        # 多个交点
+                        for geom in intersection.geoms:
+                            if isinstance(geom, Point):
+                                intersection_points.append((geom.x, geom.y))
+                    elif isinstance(intersection, Point):
+                        # 单个交点
+                        intersection_points.append((intersection.x, intersection.y))
             
-            # 去除重复点并保留最多四个点
+            # 去除重复点
             unique_points = []
             for point in intersection_points:
-                if point not in unique_points:
+                is_duplicate = False
+                for existing_point in unique_points:
+                    # 使用小的阈值检查点是否重复
+                    distance = math.sqrt((point[0]-existing_point[0])**2 + (point[1]-existing_point[1])**2)
+                    if distance < 0.1:  # 小阈值
+                        is_duplicate = True
+                        break
+                if not is_duplicate:
                     unique_points.append(point)
             
-            # 确保最多只有四个点（如果有更多，选择最外围的四个点）
-            if len(unique_points) > 4:
+            # 如果交点少于2个，则可能是计算错误，回退到原始方法
+            if len(unique_points) < 2:
                 # 计算点的中心
-                centroid = get_centroid(unique_points)
+                centroid = get_centroid(list(door_poly.exterior.coords)[:-1])
                 # 计算每个点到中心的距离，选择距离最远的四个点
-                points_with_distance = [(p, math.sqrt((p[0]-centroid[0])**2 + (p[1]-centroid[1])**2)) for p in unique_points]
+                boundary_points = list(door_poly.exterior.coords)[:-1]
+                points_with_distance = [(p, math.sqrt((p[0]-centroid[0])**2 + (p[1]-centroid[1])**2)) 
+                                        for p in boundary_points]
                 points_with_distance.sort(key=lambda x: x[1], reverse=True)  # 按距离降序排序
                 unique_points = [p[0] for p in points_with_distance[:4]]  # 取距离最远的四个点
             
@@ -801,7 +811,8 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
                    collectors: List[dict] = None,
                    room_info: Dict[str, dict] = None,
                    polygon_info: Dict[str, dict] = None,
-                   fixtures_info: Dict[str, dict] = None):
+                   fixtures_info: Dict[str, dict] = None,
+                   door_info: Dict[str, dict] = None):
     """Plot original points and processed polygons side by side"""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
     
@@ -829,6 +840,24 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
             points_array = np.array(points)
             ax1.plot(points_array[:, 0], points_array[:, 1], 
                     'r-', alpha=0.7, linewidth=2)
+    
+    # 绘制门的交汇点
+    if door_info:
+        for door_key, info in door_info.items():
+            if 'intersection_points' in info and info['intersection_points']:
+                # 提取交汇点
+                intersect_points = np.array(info['intersection_points'])
+                # 绘制交汇点
+                ax1.scatter(intersect_points[:, 0], intersect_points[:, 1], 
+                          color='orange', s=80, marker='x', linewidth=2, 
+                          label=f'{door_key} 交汇点')
+                # 连接交汇点
+                if len(intersect_points) >= 2:
+                    for i in range(len(intersect_points)):
+                        for j in range(i+1, len(intersect_points)):
+                            ax1.plot([intersect_points[i][0], intersect_points[j][0]],
+                                   [intersect_points[i][1], intersect_points[j][1]],
+                                   'orange', linestyle='--', alpha=0.7)
     
     # Plot collectors if provided
     if collectors:
@@ -872,6 +901,24 @@ def plot_comparison(original_data: Dict[str, List[Tuple[float, float]]],
                     ax2.text(centroid[0], centroid[1], name_text,
                             fontsize=9, ha='center', va='center',
                             bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.5'))
+    
+    # 在第二个子图中也绘制门的交汇点
+    if door_info:
+        for door_key, info in door_info.items():
+            if 'intersection_points' in info and info['intersection_points']:
+                # 提取交汇点
+                intersect_points = np.array(info['intersection_points'])
+                # 绘制交汇点
+                ax2.scatter(intersect_points[:, 0], intersect_points[:, 1], 
+                          color='orange', s=80, marker='x', linewidth=2, 
+                          label=f'{door_key} 交汇点')
+                # 连接交汇点
+                if len(intersect_points) >= 2:
+                    for i in range(len(intersect_points)):
+                        for j in range(i+1, len(intersect_points)):
+                            ax2.plot([intersect_points[i][0], intersect_points[j][0]],
+                                   [intersect_points[i][1], intersect_points[j][1]],
+                                   'orange', linestyle='--', alpha=0.7)
     
     # Plot collectors in the second subplot as well
     if collectors:
