@@ -391,7 +391,6 @@ def area_partition(key, floor_data, points, room_infos, threshold, collectors, i
     # assert (st_in_area_cnt == 1)
     #----------
 
-
     print("\n📊 分区结果:")
     print(f"  - 分区数量: {len(all_polygons)}")
     print(f"  - 分区点数: {len(allp)}")
@@ -408,7 +407,8 @@ def area_partition(key, floor_data, points, room_infos, threshold, collectors, i
     # 准备输入数据
     # seg_pts = [(x[0]/100, x[1]/100) for x in allp]  # 从原始数据转换并缩放
     seg_pts = [(x[0], x[1]) for x in allp]
-    regions = [(r[0], r[1]) for r in new_regions]  # 从原始数据转换
+    regions = new_regions
+    # regions = [(r[0], r[1]) for r in new_regions]  # 从原始数据转换
     # Filter out regions where r[1] == -1
     # regions = [(r[0], r[1]) for r in regions if r[1] != -1]
 
@@ -688,8 +688,6 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
         # 收集当前楼层的所有管道布线数据
         floor_pipe_data = []
         
-        # import pdb
-        # pdb.set_trace()
         for key, points in polygons.items():
             print(f"\n📊 当前处理楼层: {floor_data['Name']}")
             if not key.startswith("polygon"):
@@ -717,7 +715,7 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
                 
             print(f"🔷 分区结果: {regions}")
 
-            import pdb
+            # import pdb
             # pdb.set_trace()
 
             # 2. 执行管道布线
@@ -726,8 +724,10 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
             try:
                 for collector_idx, collector_point_idx in enumerate(collector_points_indices):
                     collector_point = seg_pts[collector_point_idx]
-                    collector_regions = collector_region_info[collector_idx]
+                    collector_regions = collector_region_info[collector_idx]['regions']
+                    collector_colors = collector_region_info[collector_idx]['colors']
                     # {'regions': [], 'colors': []} -> [([], 1), ([], 2), ...]
+                    regions = [(regions[r], c) for r, c in zip(collector_regions, collector_colors)]
                     pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, collector_point)
                 # pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point)
             except Exception as e:

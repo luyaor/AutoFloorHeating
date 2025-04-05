@@ -253,7 +253,7 @@ def polygon_grid_partition_and_merge(polygon_coords, threshold, min_area_ratio=0
                 if intersection.geom_type == 'LineString' or \
                    (intersection.geom_type == 'MultiLineString' and len(intersection.geoms) > 0):
                     G.add_edge(i, j)
-    
+
     # 定义形状评分函数
     def polygon_bounding_rect_area(poly):
         bxmin, bymin, bxmax, bymax = poly.bounds
@@ -346,10 +346,10 @@ def polygon_grid_partition_and_merge(polygon_coords, threshold, min_area_ratio=0
         
         if not merged_flag:
             break
-    
+
     # 收集最终多边形
     final_polygons = [data['geometry'] for _, data in G.nodes(data=True)]
-    
+
     # # 收集所有点并建立索引
     # all_points = []
     # for poly in final_polygons:
@@ -417,7 +417,7 @@ def plot_collector_regions(polygons, unique_points, collector_regions, collector
                 # 如果已有颜色映射，使用映射的颜色
                 if region_idx in region_colors:
                     color_idx = region_colors[region_idx]
-                    # 如果是0号颜色（包含集水器的区域），使用特殊颜色
+                    # 如果是0号颜色（包含集水器的区域或门区域），使用特殊颜色
                     if color_idx == 0:
                         color = '#FFD700'  # 金色
                     else:
@@ -431,6 +431,7 @@ def plot_collector_regions(polygons, unique_points, collector_regions, collector
                 ax.fill(x, y, alpha=0.5, color=color)
                 ax.plot(x, y, color='black', linewidth=1)
     
+    # 绘制全局点
     if unique_points is not None:
         for idx, pt in enumerate(unique_points):
             ax.plot(pt[0], pt[1], 'bo', markersize=3)
@@ -445,21 +446,21 @@ def plot_collector_regions(polygons, unique_points, collector_regions, collector
                 fontsize=10, color='white', 
                 horizontalalignment='center', 
                 verticalalignment='center')
-    
+      
     ax.set_title(title)
     ax.set_aspect('equal', 'box')
     
+    # 准备图例元素
     legend_elements = []
     for i, color in enumerate(colors):
         legend_elements.append(plt.Line2D([0], [0], marker='o', color='w', 
-                                        markerfacecolor=color,
-                                        markersize=10, label=f'Region {i+1}'))
+                               markerfacecolor=color,
+                               markersize=10, label=f'Region {i+1}'))
     
     ax.legend(handles=legend_elements, loc='upper right')
-    # ax.grid(True, linestyle='--', alpha=0.7)
     plt.show()
 
-def color_collector_regions(collector_regions, G, collector_points_indices, unique_points):
+def color_collector_regions(collector_regions, G, collector_points_indices, unique_points, door_regions):
     """
     为集水器的区域进行染色，为每个集水器的不同区域分配不同颜色，
     包含集水器的区域使用0号颜色
@@ -485,8 +486,22 @@ def color_collector_regions(collector_regions, G, collector_points_indices, uniq
             continue
             
         # 将颜色分配给该集水器的区域，颜色从1开始
+        # for i, region in enumerate(regions):
+        #     region_colors[region] = i + 1
+
+        #     # 检查该区域是否包含集水器
+        #     region_poly = G.nodes[region]['geometry']
+        #     collector_point = collector_points[collector_id]
+            
+        #     if region_poly.contains(collector_point):
+        #         # 如果包含集水器，使用0号颜色
+        #         region_colors[region] = 0
+        color = 0
         for i, region in enumerate(regions):
-            region_colors[region] = i + 1
+            # 将门区域的颜色设置为0
+            if region in door_regions:
+                region_colors[region] = 0
+                continue
 
             # 检查该区域是否包含集水器
             region_poly = G.nodes[region]['geometry']
@@ -495,7 +510,10 @@ def color_collector_regions(collector_regions, G, collector_points_indices, uniq
             if region_poly.contains(collector_point):
                 # 如果包含集水器，使用0号颜色
                 region_colors[region] = 0
-    
+            else:
+                color += 1
+                region_colors[region] = color
+
     return region_colors
 
 def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=None, is_debug=False, door_info=None):
@@ -527,7 +545,6 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
     
     # 初始化结果变量
     all_polygons = []  # 所有区域的多边形
-    # all_regions = []   # 所有区域的点索引
     all_region_points = []  # 所有区域的边界点
     
     # 处理每个房间
@@ -539,25 +556,63 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
         if room_area <= threshold:
             # 小房间不划分，直接添加
             all_polygons.append(room_poly)
-            # region_indices = list(range(len(all_regions), len(all_regions) + len(room_points)))
-            # all_regions.append(region_indices)
             all_region_points.append(room_points)
         else:
             # 大房间需要划分
-            import pdb
-            # pdb.set_trace()
-            # sub_polygons, unique_points, region_info = polygon_grid_partition_and_merge(
-            #     room_points, threshold, min_area_ratio=0.2
-            # )
             sub_polygons = polygon_grid_partition_and_merge(room_points, threshold, min_area_ratio=0.2)
             
             # 添加划分后的子区域
             for sub_poly in sub_polygons:
                 all_polygons.append(sub_poly)
                 sub_points = list(sub_poly.exterior.coords)[:-1]
-                # region_indices = list(range(len(all_regions), len(all_regions) + len(sub_points)))
-                # all_regions.append(region_indices)
                 all_region_points.append(sub_points)
+    
+    # 处理门信息，将门作为区域添加
+    door_regions = []  # 存储门区域的索引
+    if door_info:
+        for door_id, door_data in door_info.items():
+            if 'intersection_points' in door_data and len(door_data['intersection_points']) >= 2:
+                # 获取门的交点
+                door_points = door_data['intersection_points']
+                door_points = [(round(pt[0], 2), round(pt[1], 2)) for pt in door_points]
+                
+                # 检查门的坐标是否都在多边形顶点列表中
+                all_valid = True
+                for point in door_points:
+                    # 检查点是否在多边形顶点列表中（允许小误差）
+                    found = False
+                    for poly_point in polygon_coords:
+                        dist = math.sqrt((point[0] - poly_point[0])**2 + (point[1] - poly_point[1])**2)
+                        if dist < 0.1:  # 允许小误差
+                            found = True
+                            break
+                    if not found:
+                        all_valid = False
+                        break
+                
+                if not all_valid:
+                    print(f"门 {door_id} 的坐标不在多边形顶点列表中，将被丢弃")
+                    continue
+                
+                # 确保点是顺时针排序的
+                if compute_signed_area(door_points) > 0:
+                    door_points = list(reversed(door_points))
+                
+                try:
+                    # 创建门的多边形
+                    door_poly = Polygon(door_points)
+                    
+                    # 检查多边形是否有效且面积大于0
+                    if door_poly.is_valid and door_poly.area > 0:
+                        # 添加到多边形列表和区域点列表
+                        all_polygons.append(door_poly)
+                        all_region_points.append(door_points)
+                        # 记录这个区域是门
+                        door_regions.append(len(all_polygons) - 1)
+                    else:
+                        print(f"门 {door_id} 创建的多边形无效或面积为0，将被丢弃")
+                except Exception as e:
+                    print(f"处理门 {door_id} 时发生错误: {e}")
     
     # 构建区域邻接图
     G = nx.Graph()
@@ -695,13 +750,12 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
     # 使用模拟退火算法优化分配
     collector_regions, collector_areas = simulated_annealing(initial_assignment, initial_areas)
     
+    # 后续代码保持不变...
     unique_points = list(polygon_coords)  # 全局唯一点列表
     point_to_idx = {}  # 点坐标到索引的映射
-    for pt in unique_points:
+    for i, pt in enumerate(unique_points):
         rounded_pt = (round(pt[0], 2), round(pt[1], 2))
-        if rounded_pt not in point_to_idx:
-            point_to_idx[rounded_pt] = len(unique_points)
-            unique_points.append(rounded_pt)
+        point_to_idx[rounded_pt] = i
     
     # 收集区域中的所有点，并建立映射
     for region_points in all_region_points:
@@ -742,6 +796,8 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
     for region in region_info:
         i = 0
         for p in unique_points:
+            # if p in region:
+            #     continue
             while i < len(region):
                 p1 = unique_points[region[i]]
                 p2 = unique_points[region[(i + 1) % len(region)]]
@@ -824,7 +880,6 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
                 break
     allp = allp[::-1]
     num_of_nodes = len(allp)
-    unique_points = allp
 
     indices = []
     for p in unique_points:
@@ -850,20 +905,21 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
             new_region_info.append(r[::-1])
     region_info = new_region_info
 
+    unique_points = allp
     # 添加集水器点
     collector_points_indices = []
     for collector in collectors:
         collector_point = (round(collector[0], 2), round(collector[1], 2))
-        # if collector_point not in point_to_idx:
-        #     point_to_idx[collector_point] = len(unique_points)
-        #     unique_points.append(collector_point)
-        #     collector_points_indices.append(len(unique_points) - 1)
-        # else:
-        #     collector_points_indices.append(point_to_idx[collector_point])
         collector_points_indices.append(unique_points.index(collector_point))
     
     # 为集水器区域进行染色
-    region_colors = color_collector_regions(collector_regions, G, collector_points_indices, unique_points)
+    region_colors = color_collector_regions(collector_regions, G, collector_points_indices, unique_points, door_regions)
+    
+    # # 将门区域的颜色设置为0
+    # for door_idx in door_regions:
+    #     for collector_id, regions in collector_regions.items():
+    #         if door_idx in regions:
+    #             region_colors[door_idx] = 0
     
     # 更新集水器区域信息，包含颜色信息
     collector_region_info = {}
@@ -876,11 +932,6 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
         }
 
     # 创建墙路径
-    # wall_path = []
-    # for pt in unique_points:
-    #     if pt in point_to_idx:
-    #         rounded_pt = (round(pt[0], 2), round(pt[1], 2))
-    #         wall_path.append(point_to_idx[rounded_pt])
     wall_path = [i for i in range(num_of_nodes)]
 
     if is_debug:

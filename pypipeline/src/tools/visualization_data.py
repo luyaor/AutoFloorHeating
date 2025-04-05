@@ -461,6 +461,20 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
                 'centroid': centroid,
                 'is_independent': room_info_map[room_key]['is_independent']
             }
+
+        # 去除重复房间
+        unique_room_info_map = {}
+        for room_name in room_polygons_by_name.keys():
+            is_duplicate = False
+            polygon = room_polygons_by_name[room_name]['poly']
+            for unique_room_name in unique_room_info_map.keys():
+                unique_polygon = unique_room_info_map[unique_room_name]['poly']
+                if polygon.equals(unique_polygon):
+                    is_duplicate = True
+                    break
+            if not is_duplicate:
+                unique_room_info_map[room_name] = room_polygons_by_name[room_name]
+        room_polygons_by_name = unique_room_info_map
         
         # 处理所有门
         for j, door in enumerate(floor["Construction"]["Door"]):
@@ -557,17 +571,9 @@ def process_ar_design(design_floor_data: dict) -> Tuple[Dict[str, List[Tuple[flo
                         break
                 if not is_duplicate:
                     unique_points.append(point)
-            
-            # 如果交点少于2个，则可能是计算错误，回退到原始方法
-            if len(unique_points) < 2:
-                # 计算点的中心
-                centroid = get_centroid(list(door_poly.exterior.coords)[:-1])
-                # 计算每个点到中心的距离，选择距离最远的四个点
-                boundary_points = list(door_poly.exterior.coords)[:-1]
-                points_with_distance = [(p, math.sqrt((p[0]-centroid[0])**2 + (p[1]-centroid[1])**2)) 
-                                        for p in boundary_points]
-                points_with_distance.sort(key=lambda x: x[1], reverse=True)  # 按距离降序排序
-                unique_points = [p[0] for p in points_with_distance[:4]]  # 取距离最远的四个点
+
+            # 将门与房间的交汇点按逆时针方向排列
+            unique_points = sort_points_ccw(unique_points)
             
             # 存储门信息
             door_info_map[f"door_{door_idx}"] = {
