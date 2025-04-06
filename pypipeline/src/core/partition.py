@@ -794,10 +794,8 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
     # 把全局点在区域边界上的点加入到区域中
     new_region_info = []
     for region in region_info:
-        i = 0
         for p in unique_points:
-            # if p in region:
-            #     continue
+            i = 0
             while i < len(region):
                 p1 = unique_points[region[i]]
                 p2 = unique_points[region[(i + 1) % len(region)]]

@@ -723,7 +723,7 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
 
             try:
                 for collector_idx, collector_point_idx in enumerate(collector_points_indices):
-                    collector_point = seg_pts[collector_point_idx]
+                    # collector_point = seg_pts[collector_point_idx]
                     collector_regions = collector_region_info[collector_idx]['regions']
                     collector_colors = collector_region_info[collector_idx]['colors']
                     # {'regions': [], 'colors': []} -> [([], 1), ([], 2), ...]
