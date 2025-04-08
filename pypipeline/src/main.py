@@ -728,7 +728,7 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
                     collector_colors = collector_region_info[collector_idx]['colors']
                     # {'regions': [], 'colors': []} -> [([], 1), ([], 2), ...]
                     regions = [(regions[r], c) for r, c in zip(collector_regions, collector_colors)]
-                    pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, collector_point)
+                    pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, collector_point_idx)
                 # pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point)
             except Exception as e:
                 print(f"\n❌ 管道布线失败: {e}")
