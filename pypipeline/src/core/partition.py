@@ -1,4 +1,5 @@
 import math
+import copy
 import random
 import numpy as np
 import networkx as nx
@@ -659,7 +660,18 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
             if nx.number_connected_components(subG) > 1:
                 connectivity_score = 0
                 break
-        
+        # connectivity_score = 0
+        # for collector_id, regions in collector_regions.items():
+        #     if not regions:
+        #         connectivity_score += 0
+        #         continue
+        #     # 检查该集水器的区域是否连通
+        #     subG = G.subgraph(regions)
+        #     if nx.number_connected_components(subG) > 1:
+        #         connectivity_score += 0
+        #     else:
+        #         connectivity_score += 10.0
+
         # 3. 距离得分 (0-1)
         distance_score = 0
         total_distance = 0
@@ -685,34 +697,32 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
     
     # 使用模拟退火算法优化分配
     def simulated_annealing(initial_assignment, initial_areas, temperature=1.0, cooling_rate=0.95, iterations=1000):
-        current_assignment = initial_assignment.copy()
-        current_areas = initial_areas.copy()
-        best_assignment = current_assignment.copy()
+        current_assignment = copy.deepcopy(initial_assignment) # initial_assignment.copy()
+        current_areas = copy.deepcopy(initial_areas) # initial_areas.copy()
+        best_assignment = copy.deepcopy(current_assignment) # current_assignment.copy()
+        best_areas = copy.deepcopy(current_areas) # current_areas.copy()
         best_score = evaluate_assignment(current_assignment, current_areas)
         
         for _ in range(iterations):
             # 随机选择一个区域和两个集水器
             region_id = random.randint(0, len(all_polygons) - 1)
-            collector1 = random.randint(0, len(collectors) - 1)
-            collector2 = random.randint(0, len(collectors) - 1)
-            
-            if collector1 == collector2:
-                continue
-                
+            collector_ids = random.sample(range(len(collectors)), k=2)
+
             # 找到当前区域所属的集水器
             current_collector = None
             for c, regions in current_assignment.items():
                 if region_id in regions:
                     current_collector = c
-                    break
-            
-            if current_collector is None:
+                    break            
+            if current_collector not in collector_ids:
                 continue
-            
+            idx = collector_ids.index(current_collector)
+            collector2 = collector_ids[1 - idx]
+
             # 尝试移动区域
             region_area = all_polygons[region_id].area
-            new_assignment = current_assignment.copy()
-            new_areas = current_areas.copy()
+            new_assignment = copy.deepcopy(current_assignment) # current_assignment.copy()
+            new_areas = copy.deepcopy(current_areas) # current_areas.copy()
             
             # 从当前集水器移除区域
             new_assignment[current_collector].remove(region_id)
@@ -727,21 +737,25 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
             
             # 决定是否接受新解
             if new_score > best_score or random.random() < math.exp((new_score - best_score) / temperature):
-                current_assignment = new_assignment
-                current_areas = new_areas
+                current_assignment = copy.deepcopy(new_assignment) # new_assignment
+                current_areas = copy.deepcopy(new_areas) # new_areas
                 if new_score > best_score:
-                    best_assignment = new_assignment.copy()
+                    best_assignment = copy.deepcopy(new_assignment) # new_assignment.copy()
+                    best_areas = copy.deepcopy(new_areas) # new_areas.copy()
                     best_score = new_score
             
             temperature *= cooling_rate
         
-        return best_assignment, new_areas
+        return best_assignment, best_areas
     
     # 初始分配：将所有区域分配给最近的集水器
     initial_assignment = {i: [] for i in range(len(collectors))}
     initial_areas = {i: 0 for i in range(len(collectors))}
     
+    # import pdb
+    # pdb.set_trace()
     for i, poly in enumerate(all_polygons):
+        # print(f"Polygon {i} has area {poly.area}")
         collector_id = min(range(len(collectors)), 
                           key=lambda c: distance_to_collector(poly, collector_points[c]))
         initial_assignment[collector_id].append(i)
@@ -765,8 +779,8 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
         for pt in region_points:
             rounded_pt = (round(pt[0], 2), round(pt[1], 2))
             if rounded_pt not in point_to_idx:
-                point_to_idx[pt] = len(unique_points)
-                unique_points.append(pt)
+                point_to_idx[rounded_pt] = len(unique_points)
+                unique_points.append(rounded_pt)
 
     # 为每个区域创建边界点索引列表
     region_info = []
@@ -889,6 +903,7 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
     for collector in collectors:
         p = (round(collector[0], 2), round(collector[1], 2))
         idx = unique_points.index(p)
+        new_region_info = []
 
         for r in region_info:
             l = len(r)
@@ -933,6 +948,7 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
     wall_path = [i for i in range(num_of_nodes)]
 
     if is_debug:
+        print(f"\n区域信息: {region_info}")
         # 计算并打印统计信息
         total_area = sum(collector_areas.values())
         ideal_area_per_collector = total_area / len(collectors)
@@ -941,7 +957,8 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
         print("\n集水器区域统计:")
         for i, area in collector_areas.items():
             polys = len(collector_regions[i])
-            print(f"集水器 {i+1}: {polys} 个区域, 面积 {area:.2f} ({area/total_area*100:.1f}%)")
+            # print(f"集水器 {i+1}: {polys} 个区域, 面积 {area:.2f} ({area/total_area*100:.1f}%)")
+            print(f"集水器 {i+1}: 区域 {collector_regions[i]} , 面积 {area:.2f} ({area/total_area*100:.1f}%)")
         print(f"总面积: {total_area:.2f}")
         print(f"理想面积: {ideal_area_per_collector:.2f}")
         print(f"不平衡度: {imbalance*100:.2f}%")
