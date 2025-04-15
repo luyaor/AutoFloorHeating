@@ -727,7 +727,18 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
                     collector_regions = collector_region_info[collector_idx]['regions']
                     collector_colors = collector_region_info[collector_idx]['colors']
                     # {'regions': [], 'colors': []} -> [([], 1), ([], 2), ...]
-                    regions = [(regions[r], c) for r, c in zip(collector_regions, collector_colors)]
+                    # regions = [(regions[r], c) for r, c in zip(collector_regions, collector_colors)]
+                    def getc(r, i):
+                        if collector_point_idx in r:
+                            return 0
+                        return i
+                    regions = [(regions[i], getc(regions[i], i)) for i in range(len(regions))]
+
+                    print("[rly]")
+                    print(regions)
+                    print(wall_path)
+                    print(collector_point_idx)
+
                     pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, collector_point_idx)
                 # pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point)
             except Exception as e:
