@@ -722,6 +722,7 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
             print("\n🔷 开始执行管道布线...")
 
             try:
+
                 for collector_idx, collector_point_idx in enumerate(collector_points_indices):
                     # collector_point = seg_pts[collector_point_idx]
                     collector_regions = collector_region_info[collector_idx]['regions']
@@ -734,21 +735,22 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
                     #     if r not in myr:
                     #         myr.append(r)
                     # regions = myr
-                    
+
+                    collector_point_idx = 43
                     def getc(r, i):
                         if len(r) == 4:
                             return 0
                         if collector_point_idx in r:
                             return 0
                         return i
-                    regions = [(regions[i], getc(regions[i], i + 1)) for i in range(len(regions))]
+                    myregions = [(regions[i], getc(regions[i], i + 1)) for i in range(len(regions))]
 
                     print("[rly]")
                     print(regions)
                     print(wall_path)
                     print(collector_point_idx)
 
-                    pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, collector_point_idx)
+                    pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, myregions, wall_path, collector_point_idx)
                 # pipe_pt_seq = process_pipeline(key, floor_data, seg_pts, regions, wall_path, start_point)
             except Exception as e:
                 print(f"\n❌ 管道布线失败: {e}")
