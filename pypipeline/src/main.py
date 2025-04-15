@@ -728,6 +728,13 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
                     collector_colors = collector_region_info[collector_idx]['colors']
                     # {'regions': [], 'colors': []} -> [([], 1), ([], 2), ...]
                     # regions = [(regions[r], c) for r, c in zip(collector_regions, collector_colors)]
+
+                    # myr = []
+                    # for r in regions:
+                    #     if r not in myr:
+                    #         myr.append(r)
+                    # regions = myr
+                    
                     def getc(r, i):
                         if len(r) == 4:
                             return 0
