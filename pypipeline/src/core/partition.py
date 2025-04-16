@@ -461,16 +461,16 @@ def plot_collector_regions(polygons, unique_points, collector_regions, collector
     ax.legend(handles=legend_elements, loc='upper right')
     plt.show()
 
-def color_collector_regions(collector_regions, G, collector_points_indices, unique_points, door_regions):
+def color_collector_regions(collector_regions, collector_points_indices, region_info, door_regions):
     """
     为集水器的区域进行染色，为每个集水器的不同区域分配不同颜色，
     包含集水器的区域使用0号颜色
     
     Args:
         collector_regions: 集水器区域映射字典
-        G: 区域邻接图
         collector_points_indices: 集水器点索引列表
-        unique_points: 全局点列表
+        region_info: 区域信息列表
+        door_regions: 门区域列表
         
     Returns:
         dict: 区域颜色映射字典
@@ -478,25 +478,11 @@ def color_collector_regions(collector_regions, G, collector_points_indices, uniq
     # 初始化颜色映射
     region_colors = {}
     
-    # 创建集水器点对象
-    collector_points = [Point(unique_points[idx]) for idx in collector_points_indices]
-    
     # 为每个集水器的区域分配颜色
     for collector_id, regions in collector_regions.items():
         if not regions:
             continue
             
-        # 将颜色分配给该集水器的区域，颜色从1开始
-        # for i, region in enumerate(regions):
-        #     region_colors[region] = i + 1
-
-        #     # 检查该区域是否包含集水器
-        #     region_poly = G.nodes[region]['geometry']
-        #     collector_point = collector_points[collector_id]
-            
-        #     if region_poly.contains(collector_point):
-        #         # 如果包含集水器，使用0号颜色
-        #         region_colors[region] = 0
         color = 0
         for i, region in enumerate(regions):
             # 将门区域的颜色设置为0
@@ -505,10 +491,9 @@ def color_collector_regions(collector_regions, G, collector_points_indices, uniq
                 continue
 
             # 检查该区域是否包含集水器
-            region_poly = G.nodes[region]['geometry']
-            collector_point = collector_points[collector_id]
+            collector_point_idx = collector_points_indices[collector_id]
             
-            if region_poly.contains(collector_point):
+            if collector_point_idx in region_info[region]:
                 # 如果包含集水器，使用0号颜色
                 region_colors[region] = 0
             else:
@@ -903,9 +888,9 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
     for collector in collectors:
         p = (round(collector[0], 2), round(collector[1], 2))
         idx = unique_points.index(p)
-        new_region_info = []
 
-        for r in region_info:
+        new_region_info = []
+        for ri, r in enumerate(region_info):
             l = len(r)
             for i in range(l):
                 p1 = unique_points[r[i]]
@@ -914,11 +899,12 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
                     (abs(distance(p1, p) + distance(p, p2) - distance(p1, p2)) < 1e-3):
                     r = r[:i + 1] + [idx] + r[i + 1:]
                     break
+            region_info[ri] = r
             r = [indices[x] for x in r]
             new_region_info.append(r[::-1])
     region_info = new_region_info
-
     unique_points = allp
+
     # 添加集水器点
     collector_points_indices = []
     for collector in collectors:
@@ -926,7 +912,7 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
         collector_points_indices.append(unique_points.index(collector_point))
     
     # 为集水器区域进行染色
-    region_colors = color_collector_regions(collector_regions, G, collector_points_indices, unique_points, door_regions)
+    region_colors = color_collector_regions(collector_regions, collector_points_indices, region_info, door_regions)
     
     # # 将门区域的颜色设置为0
     # for door_idx in door_regions:
