@@ -619,6 +619,8 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
     # 定义距离计算函数
     def distance_to_collector(poly, collector_point):
         centroid = poly.centroid
+        if (collector_point in poly.exterior.coords) or (poly.contains(collector_point)):
+            return 0
         return ((centroid.x - collector_point.x)**2 + (centroid.y - collector_point.y)**2)**0.5
     
     # 定义分配质量评分函数
@@ -635,16 +637,20 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
         balance_score = 1 - area_imbalance
         
         # 2. 连通性得分 (0-1)
-        connectivity_score = 1.0
+        connectivity_score = 0
+        connectivity = []
         for collector_id, regions in collector_regions.items():
             if not regions:
                 connectivity_score = 0
                 break
             # 检查该集水器的区域是否连通
             subG = G.subgraph(regions)
-            if nx.number_connected_components(subG) > 1:
-                connectivity_score = 0
-                break
+            num = nx.number_connected_components(subG)
+            connectivity += [1.0 / (num * num)]
+        connectivity_score = sum(connectivity) / len(connectivity)
+            # if nx.number_connected_components(subG) > 1:
+            #     connectivity_score = 0
+            #     break
         # connectivity_score = 0
         # for collector_id, regions in collector_regions.items():
         #     if not regions:
@@ -704,6 +710,18 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
             idx = collector_ids.index(current_collector)
             collector2 = collector_ids[1 - idx]
 
+            flag = False
+            for c, regions in current_assignment.items():
+                if collector2 == c:
+                    for nb_region in regions:
+                        if G.has_edge(nb_region, region_id):
+                            flag = True
+                            break
+                if flag:
+                    break
+            if not flag:
+                continue
+            
             # 尝试移动区域
             region_area = all_polygons[region_id].area
             new_assignment = copy.deepcopy(current_assignment) # current_assignment.copy()
