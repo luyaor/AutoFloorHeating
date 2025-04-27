@@ -647,7 +647,7 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
             subG = G.subgraph(regions)
             num = nx.number_connected_components(subG)
             connectivity += [1.0 / (num * num)]
-        connectivity_score = sum(connectivity) / len(connectivity)
+        connectivity_score =  0.8 * min(connectivity) + 0.2 * sum(connectivity) / len(connectivity)
             # if nx.number_connected_components(subG) > 1:
             #     connectivity_score = 0
             #     break
