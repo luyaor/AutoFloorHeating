@@ -697,6 +697,8 @@ def partition_work(polygon_coords, room_infos, threshold=25000000, collectors=No
         for _ in range(iterations):
             # 随机选择一个区域和两个集水器
             region_id = random.randint(0, len(all_polygons) - 1)
+            if len(collectors) == 1:
+                continue
             collector_ids = random.sample(range(len(collectors)), k=2)
 
             # 找到当前区域所属的集水器

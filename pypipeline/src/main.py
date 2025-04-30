@@ -667,6 +667,8 @@ def run_pipeline(is_debug: bool, threshold: float = 25000000):
             
         print(f"\n📊 开始处理楼层: {floor_data['Name']}")
         print(f"✅ 检测到 {len(collectors)} 个集水器，继续处理...")
+
+        collectors = [collectors[0]]
         
         processed_data, polygons, room_info, polygon_info, fixtures_info, door_info = visualization_data.process_ar_design(floor_data)
         
